@@ -27,24 +27,27 @@ Agent Native Init 把这些约定收敛为一套项目级初始化协议，让 A
 
 ## 核心产物
 
-本仓库真正可迁移的核心是：
+本仓库真正可迁移的核心分为两类：
 
 ```text
 init/
+skills/
 ```
 
-`init/` 是协议源目录。把 Agent Native Init 接入其他项目时，应该迁移或引用 `init/`，再由其中的协议指导目标项目生成自己的 Agent 协作层。
+`init/` 是协议源目录。它用于维护 Agent Native Init 的完整设计和初始化流程。
 
-仓库根目录中的 `AGENTS.md`、`vault/`、`skills/`、`app/`、`tests/` 等，是当前沙盒根据协议生成出来的验证产物，不是迁移源。
+`skills/` 是可直接安装的自包含 Skill 包。它从 `init/` 协议源收敛而来，内含主工作流、协议精华 reference 和可复制模板，不依赖本仓库本地路径。
+
+仓库根目录中的 `AGENTS.md`、`vault/`、`app/`、`tests/` 等，是当前沙盒根据协议生成出来的验证产物，不是迁移源。
 
 如果只想安装一个自包含 Skill，而不是迁移完整协议源，可以使用：
 
 ```text
-init/skills/agent-native-init/
-init/skills/agent-native-init-zh/
+skills/agent-native-init/
+skills/agent-native-init-zh/
 ```
 
-这是从 `init/` 协议收敛出的开源 Skill 包，内含主工作流、协议精华 reference 和可复制模板，不依赖本仓库本地路径。`agent-native-init` 是英文版，`agent-native-init-zh` 是中文版。
+`agent-native-init` 是英文版，`agent-native-init-zh` 是中文版。
 
 ## 目录结构
 
@@ -65,9 +68,11 @@ init/
     90-collaboration-profile.md   # 可演化协作画像
     profiles/
       python-backend.md           # Python 后端最小 profile
-  skills/
-    agent-native-init/             # 自包含开源 Skill 包
-    agent-native-init-zh/          # 自包含开源 Skill 包中文版
+skills/
+  agent-native-init/               # 自包含开源 Skill 包
+  agent-native-init-zh/            # 自包含开源 Skill 包中文版
+scripts/
+  agent-init.py                    # 接入目标项目的辅助脚本
 ```
 
 ## 使用方式
@@ -121,8 +126,8 @@ init/protocol/70-adoption-flow.md
 如果你的 Agent 环境支持安装 Skills，可以将以下目录作为 Skill 包安装或复制：
 
 ```text
-init/skills/agent-native-init/
-init/skills/agent-native-init-zh/
+skills/agent-native-init/
+skills/agent-native-init-zh/
 ```
 
 使用该 Skill 时，Agent 会按包内 reference 和 templates 在目标项目中生成或合并：
@@ -135,6 +140,58 @@ init/skills/agent-native-init-zh/
 
 该 Skill 适合跨项目复用；完整 `init/protocol/` 更适合继续设计和维护协议本身。
 
+### 使用 Codex 安装 Skill
+
+推荐使用 Codex 内置的 `skill-installer`，从 GitHub 仓库直接安装本 Skill。用户不需要 clone 本仓库，只需要本机已安装 Codex 且能访问 GitHub。
+
+中文版：
+
+```bash
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
+  --repo zlin101/agent-init \
+  --path skills/agent-native-init-zh
+```
+
+英文版：
+
+```bash
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
+  --repo zlin101/agent-init \
+  --path skills/agent-native-init
+```
+
+安装后重启 Codex，让新 Skill 生效。
+
+如果仓库尚未推送到 GitHub，先推送包含 `skills/agent-native-init-zh/` 或 `skills/agent-native-init/` 的提交，再让 Codex 安装。
+
+### 使用脚本接入项目
+
+本仓库还提供一个轻量脚本，用于在本地 checkout 中直接把 Agent 协作层接入目标项目。它不负责安装 Codex Skill。
+
+对既有项目接入 Agent 协作层：
+
+```bash
+python3 scripts/agent-init.py adopt /path/to/project
+```
+
+`adopt` 默认只新增缺失的 Agent 协作文件：
+
+- `AGENTS.md`
+- `vault/`
+- `vault/tasks/README.md`
+- `skills/agent-task/SKILL.md`
+
+如果目标项目已经有 `AGENTS.md`，脚本会追加一个带标记的 Agent Native Init 小节，而不是覆盖原文件。已有的 `vault/*` 和 `skills/*` 文件默认跳过；需要替换时显式传入 `--force`。
+
+接入后，在目标项目里让 Agent 读取：
+
+```text
+AGENTS.md
+vault/index.md
+vault/runtime.md
+vault/governance.md
+```
+
 ### 修订协议
 
 如果要改 Agent Native Init 本身，只修改：
@@ -144,7 +201,7 @@ init/INIT.md
 init/protocol/*
 ```
 
-当前仓库里的 `vault/`、`skills/` 和测试骨架可以用来验证协议是否合理，但它们不是协议源。
+当前仓库里的 `vault/`、`app/` 和测试骨架可以用来验证协议是否合理，但它们不是协议源。根目录 `skills/` 是从协议源提炼出的可分发 Skill 包，修改协议后应同步检查它是否仍与 `init/` 对齐。
 
 ## 协议理念
 
@@ -181,18 +238,24 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 
 不要把当前仓库的生成物整体复制到新项目。
 
-正确方式是：
+使用完整协议源时，正确方式是：
 
 1. 迁移或引用 `init/`；
 2. 让 Agent 读取 `init/INIT.md`；
 3. 按协议在目标项目中生成属于它自己的协作层；
 4. 根据目标项目实际情况更新 `vault/`、`skills/` 和 profile 产物。
 
+使用 Skill 包时，正确方式是：
+
+1. 安装或复制 `skills/agent-native-init-zh/` 或 `skills/agent-native-init/`；
+2. 在目标项目调用该 Skill；
+3. 让 Skill 根据内置模板生成目标项目自己的 `AGENTS.md`、`vault/` 和 `skills/agent-task/`。
+
 ## 当前状态
 
 本仓库仍处于协议设计和初始化脚手架迭代阶段。
 
-当前重点是打磨 `init/`，让它成为稳定、轻量、可迁移的 Agent 协作协议源。根目录的其他文件主要用于验证协议生成结果。
+当前重点是打磨 `init/` 和 `skills/`：前者作为协议源，后者作为可安装 Skill 分发包。根目录中的其他生成物主要用于验证协议是否合理。
 
 ## 本地验证
 
@@ -210,7 +273,9 @@ uv run pytest
 
 ```text
 init/
+skills/
 README.md
+scripts/
 ```
 
-除非明确需要更新当前沙盒状态，否则不要把 `vault/`、`skills/`、`app/`、`tests/` 等生成物作为协议源提交。
+除非明确需要更新当前沙盒状态，否则不要把 `vault/`、`app/`、`tests/` 或目标项目生成的 `skills/agent-task/` 等产物作为协议源提交。根目录 `skills/agent-native-init*` 是分发包，可以随协议变化同步提交。

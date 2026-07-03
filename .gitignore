@@ -2,3 +2,9 @@
 !.gitignore
 !README.md
 !init/
+!skills/
+!skills/**
+!scripts/
+!scripts/**
+scripts/**/__pycache__/
+scripts/**/*.pyc

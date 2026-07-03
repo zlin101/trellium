@@ -52,12 +52,7 @@ skills/
 
 ## 开源 Skill 包
 
-当目标是发布、安装或迁移一个不依赖本仓库 `init/` 路径的自包含 Skill 时，使用：
-
-```text
-init/skills/agent-native-init/
-init/skills/agent-native-init-zh/
-```
+当目标是发布、安装或迁移一个不依赖本仓库 `init/` 路径的自包含 Skill 时，应将协议核心提炼为独立 Skill 包。
 
 该包应包含：
 
