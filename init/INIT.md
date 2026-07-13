@@ -30,9 +30,10 @@
 9. `init/protocol/80-execution-patterns.md`
 10. `init/protocol/90-collaboration-profile.md`
 
-如果项目类型已明确，还要读取对应 profile。当前脚手架使用：
+如果项目类型已明确，还要读取对应 profile。当前提供：
 
 - `init/protocol/profiles/python-backend.md`
+- `init/protocol/profiles/go-backend.md`
 
 ## 生成目标
 

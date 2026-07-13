@@ -67,6 +67,7 @@ init/
     80-execution-patterns.md      # Agentic 执行模式
     90-collaboration-profile.md   # 可演化协作画像
     profiles/
+      go-backend.md               # Go 后端 profile
       python-backend.md           # Python 后端最小 profile
 skills/
   agent-native-init/               # 自包含开源 Skill 包
@@ -91,6 +92,7 @@ init/protocol/60-initialization-flow.md
 
 ```text
 init/protocol/profiles/python-backend.md
+init/protocol/profiles/go-backend.md
 ```
 
 Agent 应根据协议在目标项目中生成自己的：
@@ -265,7 +267,7 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 uv run pytest
 ```
 
-这不代表 Agent Native Init 绑定 Python。Python profile 只是当前已有的一个最小示例。
+这不代表 Agent Native Init 绑定 Python。Python 和 Go profile 只是当前已有的项目类型示例。
 
 ## 提交边界
 

@@ -17,7 +17,10 @@
 9. `80-execution-patterns.md`
 10. `90-collaboration-profile.md`
 
-`profiles/` 下的文件是可选的项目类型 profile。
+`profiles/` 下的文件是可选的项目类型 profile：
+
+- `profiles/python-backend.md`：Python 后端默认值。
+- `profiles/go-backend.md`：Go 后端默认值。
 
 ## 源文件边界
 
