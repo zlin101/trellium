@@ -36,7 +36,7 @@ skills/
 
 `init/` 是协议源目录。它用于维护 Agent Native Init 的完整设计和初始化流程。
 
-`skills/` 是可直接安装的自包含 Skill 包。它从 `init/` 协议源收敛而来，内含主工作流、协议精华 reference 和可复制模板，不依赖本仓库本地路径。
+`skills/` 是可直接安装的自包含 Skill 包。它从 `init/` 协议源收敛而来，内含主工作流、协议精华 reference、自动同步的权威协议快照和可复制模板，不依赖本仓库本地路径。
 
 仓库根目录中的 `AGENTS.md`、`vault/`、`app/`、`tests/` 等，是当前沙盒根据协议生成出来的验证产物，不是迁移源。
 
@@ -74,6 +74,9 @@ skills/
   agent-native-init-zh/            # 自包含开源 Skill 包中文版
 scripts/
   agent-init.py                    # 接入目标项目的辅助脚本
+  sync-skills.py                   # 将 init/ 同步到 Skill 分发包
+.github/workflows/
+  skill-sync.yml                   # 检查协议源和 Skill 快照是否一致
 ```
 
 ## 使用方式
@@ -140,7 +143,7 @@ skills/agent-native-init-zh/
 - handoff 和 collaboration profile；
 - `skills/agent-task/SKILL.md` starter workflow。
 
-该 Skill 适合跨项目复用；完整 `init/protocol/` 更适合继续设计和维护协议本身。
+该 Skill 适合跨项目复用；完整 `init/protocol/` 更适合继续设计和维护协议本身。每个 Skill 的 `references/protocol-source/` 是由 `init/` 自动生成的权威快照，不要直接修改。
 
 ### 使用 Codex 安装 Skill
 
@@ -163,6 +166,8 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 ```
 
 安装后重启 Codex，让新 Skill 生效。
+
+已安装的 Skill 不会随 GitHub 仓库自动升级。发布新版后，现有用户需要移除旧的本地 Skill 目录再重新安装；Codex installer 默认拒绝覆盖已存在目录。重新安装前应确认本地 Skill 目录没有需要保留的自定义修改。
 
 如果仓库尚未推送到 GitHub，先推送包含 `skills/agent-native-init-zh/` 或 `skills/agent-native-init/` 的提交，再让 Codex 安装。
 
@@ -204,6 +209,20 @@ init/protocol/*
 ```
 
 当前仓库里的 `vault/`、`app/` 和测试骨架可以用来验证协议是否合理，但它们不是协议源。根目录 `skills/` 是从协议源提炼出的可分发 Skill 包，修改协议后应同步检查它是否仍与 `init/` 对齐。
+
+修改 `init/` 后生成中英文 Skill 内的权威协议快照：
+
+```bash
+python3 scripts/sync-skills.py
+```
+
+只检查是否存在漂移，不写文件：
+
+```bash
+python3 scripts/sync-skills.py --check
+```
+
+该脚本只用于本仓库的发布维护，不是 Skill 用户的安装依赖。CI 会运行相同检查。`references/protocol-source/` 完全由脚本维护；`SKILL.md`、精简的 `references/protocol-model.md` 和 `assets/templates/` 仍需在协议行为变化时人工审查和调整。同步脚本保证协议源进入安装包，但不会假装自动完成中英文语义翻译或模板设计。
 
 ## 协议理念
 

@@ -18,6 +18,15 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 - `references/protocol-model.md`：核心概念和验收门。
 - `references/templates-guide.md`：如何使用模板。
 
+`references/protocol-source/` 是从仓库自动生成的权威协议快照，并保留完整的 `init/...` 路径。按任务读取：
+
+- 新项目初始化：读取 `references/protocol-source/init/protocol/60-initialization-flow.md`。
+- 既有项目接入：读取 `references/protocol-source/init/protocol/70-adoption-flow.md`。
+- 项目类型明确：读取 `references/protocol-source/init/protocol/profiles/` 下匹配的 profile。
+- 任务涉及特定治理主题：按 `references/protocol-source/init/INIT.md` 路由到对应协议模块，并将其中的 `init/...` 路径解析到 `references/protocol-source/` 下。
+
+精简 reference 与权威协议冲突时，以 `references/protocol-source/init/` 为准。不要直接修改该生成目录。
+
 使用 `assets/templates/` 下的文件作为起点。必须根据目标项目替换项目名称、检查命令和真实事实，不要盲目复制占位内容。
 
 ## 模式选择

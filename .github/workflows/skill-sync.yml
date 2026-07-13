@@ -1,0 +1,17 @@
+name: Skill protocol sync
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test sync behavior
+        run: python3 -m unittest scripts/test_sync_skills.py
+      - name: Verify generated protocol snapshots
+        run: python3 scripts/sync-skills.py --check

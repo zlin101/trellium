@@ -18,6 +18,15 @@ Read these bundled references before editing a target project:
 - `references/protocol-model.md` for the concepts and acceptance gates.
 - `references/templates-guide.md` for how to use the bundled templates.
 
+`references/protocol-source/` is the authoritative generated protocol snapshot and preserves the complete `init/...` path layout. The canonical source is currently authored in Chinese; use the English concise references for the normal flow and consult the source selectively:
+
+- New project initialization: read `references/protocol-source/init/protocol/60-initialization-flow.md`.
+- Existing project adoption: read `references/protocol-source/init/protocol/70-adoption-flow.md`.
+- Known project type: read the matching profile under `references/protocol-source/init/protocol/profiles/`.
+- Work involving a specific governance topic: use `references/protocol-source/init/INIT.md` to locate the relevant module, resolving its `init/...` paths under `references/protocol-source/`.
+
+If a concise reference conflicts with the authoritative protocol, follow `references/protocol-source/init/`. Do not edit this generated directory directly.
+
 Use files under `assets/templates/` as starting points. Adapt names, checks, and project facts to the target project; do not copy placeholders blindly.
 
 ## Mode Decision
