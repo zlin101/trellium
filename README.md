@@ -1,5 +1,7 @@
 # Agent Native Init
 
+[English](README.en.md) | 简体中文
+
 Agent Native Init 是一套可迁移的 Agent 协作初始化协议。
 
 它的目标不是生成某个固定技术栈的应用模板，而是给任何项目接入一层稳定的 Agent 协作能力：入口规则、项目记忆、任务治理、验收门、交接机制、可复用工作流和协作画像。
