@@ -153,6 +153,14 @@ def sync(source: Path, targets: list[Path], check: bool) -> int:
         write_snapshot(target, expected)
         print(f"synced {len(expected) - 1} source files to {target}")
 
+    if check and drift_found:
+        print(
+            "Protocol snapshots are out of sync with init/.\n"
+            "Fix: run `python3 scripts/sync-skills.py` and commit the regenerated\n"
+            "files under skills/*/references/protocol-source/. CI runs the same check.",
+            file=sys.stderr,
+        )
+
     return 1 if drift_found else 0
 
 

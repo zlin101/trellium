@@ -64,6 +64,17 @@ class SyncSkillsTest(unittest.TestCase):
         with self.assertRaises(sync_skills.SyncError):
             sync_skills.sync(self.source, [self.source / "generated"], check=False)
 
+    def test_check_drift_output_names_the_fix(self) -> None:
+        self.assertEqual(self.run_sync(check=False), 0)
+        (self.source / "INIT.md").write_text("# Updated Init\n", encoding="utf-8")
+
+        out, err = StringIO(), StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = sync_skills.sync(self.source, self.targets, check=True)
+
+        self.assertEqual(code, 1)
+        self.assertIn("python3 scripts/sync-skills.py", err.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
