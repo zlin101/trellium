@@ -45,6 +45,20 @@
 - 覆盖确定性的核心逻辑。
 - 行为变化时添加或更新聚焦测试。
 
+## 质量入口与提交规范
+
+优先使用仓库已有的统一任务入口（Makefile、Taskfile 或 scripts），本地与 CI 走同一入口。
+
+- 统一入口提供常见目标，如 `test`、`lint`、`format`、`check`；不绕过项目规定的验证脚本。
+- 仓库没有统一入口时，按语言 profile 的默认命令执行质量检查。
+- 提交前运行质量入口。
+
+提交信息默认遵循 Conventional Commits 风格；仓库已有 gitlint、commitlint 或自有规范时沿用其约定。
+
+- 类型前缀如 `feat`、`fix`、`refactor`、`docs`、`test`、`optimize` 等；仓库可自定义类型列表。
+- 标题简明、可检索；不写无意义占位（如 `wip`、`update`）。
+- 具体格式以仓库现有约定为准，本协议只提供默认。
+
 ## 文档同步
 
 以下内容变化时更新 vault：
