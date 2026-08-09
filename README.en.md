@@ -192,6 +192,8 @@ python3 scripts/agent-init.py adopt /path/to/project
 
 If the target project already has an `AGENTS.md`, the script appends a marked Agent Native Init section instead of overwriting the file. Existing `vault/*` and `skills/*` files are skipped by default; pass `--force` explicitly to replace them.
 
+Before writing anything, the script preflights every output path. If preflight finds that an output file or any parent path inside the target is a symbolic link, an output file has multiple hard links, or a resolved path escapes the target, adoption fails before any write. File content is replaced atomically through a temporary file in the same directory. On platforms with `dir_fd` and `O_NOFOLLOW`, actual writes also walk from the filesystem root through anchored directory descriptors, preventing a post-preflight link swap from redirecting output. If a filesystem race is detected or an I/O failure occurs while writing, the script stops and explicitly warns that the target may contain partial changes.
+
 After adoption, have the Agent read the following in the target project:
 
 ```text

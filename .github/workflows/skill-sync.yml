@@ -27,8 +27,8 @@ jobs:
           # back to the pushed ref.
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
-      - name: Run sync unit tests
-        run: python3 -m unittest scripts/test_sync_skills.py
+      - name: Run unit tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Detect protocol snapshot drift
         id: drift
