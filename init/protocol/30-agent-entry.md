@@ -27,8 +27,13 @@ Agent 入口文件是项目级 Agent 指令。
 入口文件必须要求非琐碎任务读取：
 
 ```text
-vault/index.md
+vault/index.md    # 含任务等级与授权速查表
 vault/runtime.md
+```
+
+任务为 Level B 或 Level C、等级或授权判定模糊、或任务涉及治理规则本身时，追加读取完整：
+
+```text
 vault/governance.md
 ```
 
