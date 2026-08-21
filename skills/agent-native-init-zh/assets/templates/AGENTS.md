@@ -8,9 +8,12 @@
 
 执行任何非琐碎任务前，读取：
 
-1. `vault/index.md`
+1. `vault/index.md`（含任务等级与授权速查表）
 2. `vault/runtime.md`
-3. `vault/governance.md`
+
+任务为 Level B 或 Level C、判定模糊或涉及治理规则时，追加读取：
+
+- `vault/governance.md`
 
 第一次进入项目时，还要读取：
 
@@ -33,7 +36,7 @@
 ## Task Workflow
 
 1. 读取必要上下文。
-2. 根据 `vault/governance.md` 判断任务等级和授权等级。
+2. 根据 `vault/index.md` 速查表判断任务等级和授权等级；判定模糊或 Level B/C 时读取 `vault/governance.md`。
 3. 明确范围、不做范围、验收标准和检查。
 4. Level B 或 Level C 任务创建或更新任务文件。
 5. 做最小必要修改。
@@ -43,6 +46,8 @@
 9. 更新 `vault/runtime.md`。
 10. 长期决策写入 `vault/decisions.md`。
 11. 中断或交接时更新 `vault/handoff.md`。
+12. 记忆更新时检查预算线；任一热文件超出时执行或提议压缩（测量→分类→重组→校验→记录）。
+13. 任务中出现用户协作偏好或纠正信号时，记入 `vault/collaboration.md`。
 
 ## Forbidden
 

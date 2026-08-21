@@ -1,8 +1,18 @@
 # Decisions
 
-在这里记录长期决策。当前任务进展放在 `vault/runtime.md` 或 `vault/tasks/*`。
+长期决策记录。当前任务进展放 `vault/runtime.md` 或 `vault/tasks/*`。
+
+每条决策标注状态：`Active`、`Superseded by D-xxxx`、`Merged into D-xxxx` 或 `Expired`。默认 `Active`。
+
+超过 150 行或 8 条完整记录时索引化：本文件变纯索引（每条 1-2 行），正文迁入 `vault/decisions/D-xxxx-slug.md`。ID 顺序分配。
+
+## 决策索引（索引化后使用）
+
+- D-0001 · 决策标题 · Active · 一句话实质 · 2026-01-01
 
 ## YYYY-MM-DD - Decision Title
+
+Status: Active
 
 ### Background
 

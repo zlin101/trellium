@@ -7,7 +7,7 @@ description: 用于执行需要上下文读取、限定范围修改、验证、�
 
 ## Steps
 
-1. 读取 `AGENTS.md`、`vault/index.md`、`vault/runtime.md` 和 `vault/governance.md`。
+1. 读取 `AGENTS.md`、`vault/index.md`（含速查表）和 `vault/runtime.md`；Level B/C、判定模糊或涉及治理规则时读取 `vault/governance.md`。
 2. 按 `vault/index.md` 读取任务特定上下文。
 3. 将任务归类为 Level A、Level B 或 Level C。
 4. 判断授权等级和是否需要用户确认。
@@ -20,6 +20,12 @@ description: 用于执行需要上下文读取、限定范围修改、验证、�
 11. 检查验收门；测试通过不等于完成。
 12. 更新 `vault/runtime.md`。
 13. 长期决策写入 `vault/decisions.md`。
+14. 记忆更新时检查预算线（runtime ≤ 120 行、handoff ≤ 3 条、decisions ≤ 150 行或 8 条）；超出时把溢出内容迁到正确去向。
+15. 任一热文件超出预算线时，执行压缩五阶段：测量→分类→重组→校验→记录。压缩规则：
+    - decisions 索引化与任务归档是零信息损失的搬运，可自主执行。
+    - Superseded/Merged/Expired 判定只出提案清单，用户确认前一律保持 Active。
+    - 压缩前 `vault/` 必须无未提交变更；压缩形成只含 `vault/` 变更的独立提交；校验失败即恢复。
+16. 本次任务中出现用户协作偏好或纠正信号时，按观察记入 `vault/collaboration.md`；重复出现或用户确认后升为偏好。
 
 ## Constraints
 
