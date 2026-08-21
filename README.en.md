@@ -147,6 +147,8 @@ When the Skill is used, the Agent generates or merges the following into the tar
 
 This Skill is suited for cross-project reuse; the full `init/protocol/` is better suited for continuing to design and maintain the protocol itself. Each Skill's `references/protocol-source/` is an authoritative snapshot generated from `init/` — do not edit it directly.
 
+The new Skill version includes memory-compaction capability. For an existing vault in an already-adopted project, reinstall the Skill and have the Agent run one compaction to complete structural migrations such as decisions indexing; an older `agent-task` can be upgraded manually against protocol-source module 15.
+
 ### Installing the Skill via Codex
 
 The recommended approach is to use Codex's built-in `skill-installer` to install this Skill directly from the GitHub repository. You do not need to clone this repo — you only need Codex installed locally and access to GitHub.
@@ -258,6 +260,12 @@ The protocol generates a `vault/` in the target project to carry:
 - Collaboration preferences.
 
 This way, when a new Agent, a different model, or a different tool enters the project, it can recover context from files instead of depending on chat history.
+
+### Memory Compaction
+
+The hot files (runtime, handoff, decisions) have explicit budget lines. The agent-task workflow checks budgets at task close; when a line is exceeded, it runs the five-phase compaction (measure → classify → restructure → verify → record): runtime is rewritten rather than trimmed, handoff keeps a rolling window, and decisions are indexed once past the threshold (bodies move to `vault/decisions/`, leaving a read-only-by-default index). Semantic judgments such as Superseded/Merged/Expired are only ever proposed and confirmed by the user in batch — compaction is always zero-loss restructuring, never deletion. Compaction produces a dedicated commit containing only `vault/` changes, revertible at any time.
+
+Governance files (governance, collaboration) are activated by events: escalation events and compaction reviews produce governance-revision proposals, and collaboration preferences are captured at task close. The default reading path is leveled: `index.md` carries the built-in task-level and authority cheat sheet, and the full `governance.md` is read only for Level B/C work or when classification is unclear.
 
 ### Portable, not copying the sandbox
 
