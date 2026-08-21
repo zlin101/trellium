@@ -8,14 +8,15 @@
 
 1. `00-overview.md`
 2. `10-vault.md`
-3. `20-governance.md`
-4. `30-agent-entry.md`
-5. `40-skills.md`
-6. `50-engineering-constraints.md`
-7. `60-initialization-flow.md`
-8. `70-adoption-flow.md`
-9. `80-execution-patterns.md`
-10. `90-collaboration-profile.md`
+3. `15-vault-compaction.md`
+4. `20-governance.md`
+5. `30-agent-entry.md`
+6. `40-skills.md`
+7. `50-engineering-constraints.md`
+8. `60-initialization-flow.md`
+9. `70-adoption-flow.md`
+10. `80-execution-patterns.md`
+11. `90-collaboration-profile.md`
 
 `profiles/` 下的文件是可选的项目类型 profile：
 
