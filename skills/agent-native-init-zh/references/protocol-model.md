@@ -45,7 +45,7 @@ vault/
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增 |
 
-预算线：runtime ≤ 120 行；handoff ≤ 3 条交接；decisions ≤ 150 行或 8 条记录；tasks（不含 archive）≤ 40 个文件。
+预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；tasks（不含 archive）≤ 40 个文件。
 
 压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
 
