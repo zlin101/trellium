@@ -86,7 +86,7 @@ Run at least two rounds before claiming completion.
 
 Check:
 
-- Agent entry file routes non-trivial tasks to `vault/index.md`, `vault/runtime.md`, and `vault/governance.md`.
+- Agent entry file routes non-trivial tasks to `vault/index.md` and `vault/runtime.md`, with full `vault/governance.md` for Level B/C work, unclear classification, or governance-rule changes.
 - Required vault files exist.
 - Governance covers task levels, authority levels, task contract fields, acceptance gates, escalation, and handoff.
 - `skills/agent-task/SKILL.md` exists and is focused on task execution.

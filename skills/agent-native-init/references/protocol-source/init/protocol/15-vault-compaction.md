@@ -13,7 +13,7 @@
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；有预算线；压缩对象 |
 | 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新；压缩不可直接修改 |
-| 归档区 | `tasks/*`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
+| 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
 
 不变量：压缩不直接修改治理文件与结构文件。
 
@@ -79,7 +79,7 @@
 
 ### tasks/：里程碑归档
 
-- 状态为 Accepted 且早于最近里程碑的任务文件移入 `vault/tasks/archive/`。
+- 状态为 Accepted 或 Superseded 且早于最近里程碑的任务文件移入 `vault/tasks/archive/`。
 - 纯移动，不修改内容。
 
 ## 语义与非语义操作分离
@@ -126,7 +126,7 @@ ls vault/decisions/
 - `runtime.md` 活跃任务指针指向存在的文件。
 
 ```bash
-git diff --stat
+git diff --stat HEAD
 ```
 
 - 本次提交只包含 `vault/` 变更。

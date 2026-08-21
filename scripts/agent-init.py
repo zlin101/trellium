@@ -620,7 +620,6 @@ Required Check: `python3 scripts/agent-init.py adopt {target} --dry-run` from th
 
 ## Constraints
 
-- Keep this file short.
 - Move long execution history to `vault/tasks/*`.
 - Do not save secrets.
 - Keep this file within about 120 lines; move overflow to `vault/tasks/*` or `vault/decisions.md`.

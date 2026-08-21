@@ -43,7 +43,7 @@ vault/
 | Hot files | `runtime.md`, `handoff.md`, `decisions.md` | Frequently updated; budgeted; compaction targets |
 | Governance files | `governance.md`, `collaboration.md` | Event-driven updates; compaction only proposes |
 | Structural files | `index.md`, `project.md`, `tasks/README.md` | Rarely updated |
-| Archive | `tasks/*`, `decisions/`, `details/*` | Append-only |
+| Archive | `tasks/<task-id>.md`, `decisions/`, `details/*` | Append-only |
 
 Budgets: runtime ≤ 120 lines; handoff ≤ 3 entries; decisions ≤ 150 lines or 8 full records; tasks (excluding archive) ≤ 40 files.
 

@@ -61,5 +61,5 @@
 - 长期决策更新 `decisions.md`。
 - 中断或交接时更新 `handoff.md`。
 - 将长细节移出 `runtime.md`。
-- 更新热文件时检查预算线：runtime ≤ 120 行；handoff ≤ 3 条交接；decisions ≤ 150 行或 8 条记录。
+- 更新热文件时检查预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录。
 - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。

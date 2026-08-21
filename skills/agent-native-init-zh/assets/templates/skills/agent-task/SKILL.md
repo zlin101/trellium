@@ -20,7 +20,7 @@ description: 用于执行需要上下文读取、限定范围修改、验证、�
 11. 检查验收门；测试通过不等于完成。
 12. 更新 `vault/runtime.md`。
 13. 长期决策写入 `vault/decisions.md`。
-14. 记忆更新时检查预算线（runtime ≤ 120 行、handoff ≤ 3 条、decisions ≤ 150 行或 8 条）；超出时把溢出内容迁到正确去向。
+14. 记忆更新时检查预算线（runtime ≤ 120 行、handoff ≤ 3 条或 100 行、decisions ≤ 150 行或 8 条）；超出时把溢出内容迁到正确去向。
 15. 任一热文件超出预算线时，执行压缩五阶段：测量→分类→重组→校验→记录。压缩规则：
     - decisions 索引化与任务归档是零信息损失的搬运，可自主执行。
     - Superseded/Merged/Expired 判定只出提案清单，用户确认前一律保持 Active。

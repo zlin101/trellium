@@ -61,5 +61,5 @@ Tracked or governed work:
 - Update `decisions.md` for durable decisions.
 - Update `handoff.md` when interrupted or handing off.
 - Move long details out of `runtime.md`.
-- Check hot-file budgets when updating them: runtime ≤ 120 lines; handoff ≤ 3 entries; decisions ≤ 150 lines or 8 full records.
+- Check hot-file budgets when updating them: runtime ≤ 120 lines; handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records.
 - When a budget is exceeded, compact: measure → classify → restructure → verify → record. Semantic judgments (Superseded / Merged / Expired) are proposals only; keep Active until the user confirms.

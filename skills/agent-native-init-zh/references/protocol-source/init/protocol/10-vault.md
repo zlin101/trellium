@@ -17,7 +17,7 @@
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；有预算线；压缩对象 |
 | 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新；压缩不可直接修改 |
-| 归档区 | `tasks/*`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
+| 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
 
 预算线、压缩流程与安全边界见 `15-vault-compaction.md`。
 

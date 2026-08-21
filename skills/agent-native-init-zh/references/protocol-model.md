@@ -43,7 +43,7 @@ vault/
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；预算线内；压缩对象 |
 | 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
-| 归档区 | `tasks/*`、`decisions/`、`details/*` | 只增 |
+| 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增 |
 
 预算线：runtime ≤ 120 行；handoff ≤ 3 条交接；decisions ≤ 150 行或 8 条记录；tasks（不含 archive）≤ 40 个文件。
 

@@ -86,7 +86,7 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 
 检查：
 
-- Agent 入口文件会将非琐碎任务路由到 `vault/index.md`、`vault/runtime.md` 和 `vault/governance.md`。
+- Agent 入口文件会将非琐碎任务路由到 `vault/index.md` 和 `vault/runtime.md`，并在 Level B 或 Level C、判定模糊或涉及治理规则时路由到 `vault/governance.md`。
 - 必需 vault 文件存在。
 - governance 覆盖任务等级、授权等级、任务契约字段、验收门、升级规则和 handoff。
 - `skills/agent-task/SKILL.md` 存在，并聚焦任务执行。

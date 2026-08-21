@@ -73,7 +73,7 @@
 - **runtime：重写而非删减。** 以"新会话冷启动需要什么"为唯一标准生成全新文件（阶段、活跃任务指针、约束、检查、下一步）。旧内容分流：进行中的保留；已完成的压成一行进 Recent Changes（执行历史已在 tasks/*）；结论进 decisions。
 - **handoff：滚动窗口 + 分流。** 保留最近 1-3 次。更早的：有对应任务文件的，将失败尝试/教训合并进该任务文件 Execution Record；已被 runtime/decisions 吸收的允许删除（handoff 定义为瞬态上下文，删除不视为信息损失）；无在途任务时清回模板态。
 - **decisions：生命周期四态 + 索引化。** 状态：`Active` / `Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`。首次拆分后 decisions.md 为纯索引（每条 1-2 行：ID、标题、状态、一句话实质、日期），正文入 `vault/decisions/D-xxxx-slug.md`。ID 顺序分配（现有最大 +1）。默认只读索引，按需读单条。
-- **tasks：里程碑归档。** Accepted 且早于最近里程碑的任务文件移入 `tasks/archive/`（纯移动，不改内容）。
+- **tasks：里程碑归档。** Accepted 或 Superseded 且早于最近里程碑的任务文件移入 `tasks/archive/`（纯移动，不改内容）。
 
 #### 3.5 语义 / 非语义操作分离（安全阀核心）
 
@@ -93,7 +93,7 @@
 
 - `wc -l` 检查各热文件行数。
 - 索引 ID 列表与 `ls vault/decisions/` 比对（一一对应）。
-- `git diff --stat` 确认提交范围仅 `vault/`。
+- `git diff --stat HEAD` 确认提交范围仅 `vault/`。
 
 #### 3.8 git 安全与回滚
 
