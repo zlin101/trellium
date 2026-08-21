@@ -93,6 +93,7 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 - `vault/runtime.md` 是短当前状态，不是长日志。
 - `vault/decisions.md` 记录长期选择。
 - 需要协作偏好时，`vault/collaboration.md` 存在。
+- Hot-file budgets and the compact procedure are routed from `vault/index.md` (see the compaction module in `references/protocol-source/init/protocol/15-vault-compaction.md`).
 
 先修复缺口，再继续。
 

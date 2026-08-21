@@ -36,7 +36,22 @@ vault/
     .gitkeep
 ```
 
-只有存在重复读取长上下文的真实需求时，才创建 `vault/details/*`。
+## 记忆分层与压缩
+
+| 层 | 文件 | 生命周期 |
+| --- | --- | --- |
+| 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；预算线内；压缩对象 |
+| 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
+| 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
+| 归档区 | `tasks/*`、`decisions/`、`details/*` | 只增 |
+
+预算线：runtime ≤ 120 行；handoff ≤ 3 条交接；decisions ≤ 150 行或 8 条记录；tasks（不含 archive）≤ 40 个文件。
+
+压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
+
+决策索引化：decisions.md 变纯索引，正文入 `vault/decisions/D-xxxx-slug.md`。索引原则：增长进目录，读取走索引。
+
+读路径分级：默认读 `index.md`（含速查表）+ `runtime.md`；Level B/C、判定模糊或涉及治理规则时读完整 `governance.md`。
 
 ## 文件职责
 
@@ -44,7 +59,7 @@ vault/
 - `vault/project.md`：稳定项目目标、范围、边界和当前阶段。
 - `vault/runtime.md`：短当前状态、活跃任务、检查、风险和下一步。
 - `vault/governance.md`：任务等级、授权等级、任务契约、验收门、升级规则和 handoff。
-- `vault/decisions.md`：长期架构、依赖、范围、工作流和治理决策。
+- `vault/decisions.md`：决策索引与生命周期记录（Active / Superseded / Merged / Expired）；正文拆分后在 `vault/decisions/*`。
 - `vault/handoff.md`：中断或恢复工作时的近期交接上下文。
 - `vault/collaboration.md`：不能覆盖硬治理的软协作偏好。
 - `vault/tasks/*`：追踪或治理任务的契约、执行记录、验证和关闭说明。
