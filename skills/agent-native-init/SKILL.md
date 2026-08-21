@@ -93,6 +93,7 @@ Check:
 - `vault/runtime.md` is short current state, not a long log.
 - `vault/decisions.md` captures durable choices.
 - `vault/collaboration.md` exists when collaboration preferences are useful.
+- Hot-file budgets and the compact procedure are routed from vault/index.md (see references/protocol-source/init/protocol/15-vault-compaction.md).
 
 Fix gaps before continuing.
 

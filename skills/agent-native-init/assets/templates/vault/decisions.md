@@ -2,7 +2,17 @@
 
 Record durable decisions here. Keep current task progress in `vault/runtime.md` or `vault/tasks/*`.
 
+Every decision carries a status: `Active`, `Superseded by D-xxxx`, `Merged into D-xxxx`, or `Expired`. Default is `Active`.
+
+When this file exceeds 150 lines or 8 full records, index it: this file becomes a pure index (1-2 lines per decision) and bodies move to `vault/decisions/D-xxxx-slug.md`. IDs are sequential.
+
+## Decision Index (after indexing)
+
+- D-0001 · Decision title · Active · One-line essence · 2026-01-01
+
 ## YYYY-MM-DD - Decision Title
+
+Status: Active
 
 ### Background
 

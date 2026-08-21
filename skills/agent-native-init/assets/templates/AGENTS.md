@@ -8,9 +8,12 @@ You are the AI coding assistant for this project. Help with development, testing
 
 Before non-trivial work, read:
 
-1. `vault/index.md`
+1. `vault/index.md` (includes the task-level and authority cheat sheet)
 2. `vault/runtime.md`
-3. `vault/governance.md`
+
+For Level B or Level C work, unclear classification, or governance-rule changes, also read:
+
+- `vault/governance.md`
 
 On first entry to the project, also read:
 
@@ -33,7 +36,7 @@ For tracked or governed tasks, read the active task file under `vault/tasks/`.
 ## Task Workflow
 
 1. Read required context.
-2. Classify task level and authority using `vault/governance.md`.
+2. Classify task level and authority using the cheat sheet in `vault/index.md`; read `vault/governance.md` in full for Level B/C work or unclear classification.
 3. Define scope, out of scope, acceptance criteria, and checks.
 4. Create or update a task file for Level B or Level C work.
 5. Make the smallest necessary change.
@@ -43,6 +46,8 @@ For tracked or governed tasks, read the active task file under `vault/tasks/`.
 9. Update `vault/runtime.md`.
 10. Record durable decisions in `vault/decisions.md`.
 11. Update `vault/handoff.md` if interrupted or handing off.
+12. Check memory budgets when updating hot files; compact or propose compaction when exceeded (measure → classify → restructure → verify → record).
+13. Record user collaboration preferences or corrections observed in this task in `vault/collaboration.md`.
 
 ## Forbidden
 

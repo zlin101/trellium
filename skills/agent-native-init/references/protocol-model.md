@@ -36,7 +36,22 @@ vault/
     .gitkeep
 ```
 
-Create `vault/details/*` only when repeated long-context reads justify them.
+## Memory Tiers And Compaction
+
+| Tier | Files | Lifecycle |
+| --- | --- | --- |
+| Hot files | `runtime.md`, `handoff.md`, `decisions.md` | Frequently updated; budgeted; compaction targets |
+| Governance files | `governance.md`, `collaboration.md` | Event-driven updates; compaction only proposes |
+| Structural files | `index.md`, `project.md`, `tasks/README.md` | Rarely updated |
+| Archive | `tasks/*`, `decisions/`, `details/*` | Append-only |
+
+Budgets: runtime ≤ 120 lines; handoff ≤ 3 entries; decisions ≤ 150 lines or 8 full records; tasks (excluding archive) ≤ 40 files.
+
+Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
+
+Decision indexing: decisions.md becomes a pure index and bodies move to `vault/decisions/D-xxxx-slug.md`. Index principle: growth goes to directories, reading goes through indexes.
+
+Leveled reading: by default read `index.md` (with the cheat sheet) and `runtime.md`; read full `governance.md` for Level B/C work, unclear classification, or governance-rule changes.
 
 ## File Responsibilities
 
@@ -44,7 +59,7 @@ Create `vault/details/*` only when repeated long-context reads justify them.
 - `vault/project.md`: stable project purpose, scope, boundaries, and current phase.
 - `vault/runtime.md`: short current state, active task pointer, checks, risks, and next steps.
 - `vault/governance.md`: task levels, authority levels, task contracts, acceptance gates, escalation, and handoff.
-- `vault/decisions.md`: durable architecture, dependency, scope, workflow, and governance decisions.
+- `vault/decisions.md`: durable decision index and lifecycle records (Active / Superseded / Merged / Expired); bodies move to `vault/decisions/*` after indexing.
 - `vault/handoff.md`: recent transfer context for interrupted or resumed work.
 - `vault/collaboration.md`: soft collaboration preferences that cannot override hard governance.
 - `vault/tasks/*`: tracked or governed task contracts, execution records, verification, and closure notes.

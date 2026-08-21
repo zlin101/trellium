@@ -7,7 +7,7 @@ description: Use when doing non-trivial project work that requires context readi
 
 ## Steps
 
-1. Read `AGENTS.md`, `vault/index.md`, `vault/runtime.md`, and `vault/governance.md`.
+1. Read `AGENTS.md`, `vault/index.md` (with the cheat sheet), and `vault/runtime.md`; read `vault/governance.md` in full for Level B/C work, unclear classification, or governance-rule changes.
 2. Follow `vault/index.md` to read task-specific context.
 3. Classify the task as Level A, Level B, or Level C.
 4. Determine authority level and whether user confirmation is required.
@@ -20,6 +20,12 @@ description: Use when doing non-trivial project work that requires context readi
 11. Check acceptance gates; tests passing alone is not completion.
 12. Update `vault/runtime.md`.
 13. Record durable decisions in `vault/decisions.md`.
+14. Check hot-file budgets when updating memory (runtime ≤ 120 lines, handoff ≤ 3 entries, decisions ≤ 150 lines or 8 records); move overflow to the right destination.
+15. When any hot file exceeds its budget, compact in five phases: measure → classify → restructure → verify → record. Compaction rules:
+    - Decision indexing and task archiving are zero-loss moves an Agent may run autonomously.
+    - Superseded / Merged / Expired judgments are proposal-only; keep Active until the user confirms.
+    - Start only with a clean `vault/`; produce a dedicated commit containing only `vault/` changes; restore on verification failure.
+16. Record observed user collaboration preferences or corrections in `vault/collaboration.md` as observations; promote to preferences after repetition or confirmation.
 
 ## Constraints
 
