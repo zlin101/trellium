@@ -308,5 +308,13 @@ class AgentInitTest(unittest.TestCase):
         self.assertIn("project project.", project)
 
 
+class RenderedContentTest(unittest.TestCase):
+    def test_agent_entry_section_levels_governance_reading(self) -> None:
+        section = agent_init.agent_entry_section()
+        self.assertIn("cheat sheet", section)
+        self.assertIn("Level B or Level C", section)
+        self.assertNotIn("3. `vault/governance.md`", section)
+
+
 if __name__ == "__main__":
     unittest.main()
