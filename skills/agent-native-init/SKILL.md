@@ -86,13 +86,14 @@ Run at least two rounds before claiming completion.
 
 Check:
 
-- Agent entry file routes non-trivial tasks to `vault/index.md`, `vault/runtime.md`, and `vault/governance.md`.
+- Agent entry file routes non-trivial tasks to `vault/index.md` and `vault/runtime.md`, with full `vault/governance.md` for Level B/C work, unclear classification, or governance-rule changes.
 - Required vault files exist.
 - Governance covers task levels, authority levels, task contract fields, acceptance gates, escalation, and handoff.
 - `skills/agent-task/SKILL.md` exists and is focused on task execution.
 - `vault/runtime.md` is short current state, not a long log.
 - `vault/decisions.md` captures durable choices.
 - `vault/collaboration.md` exists when collaboration preferences are useful.
+- Hot-file budgets and the compact procedure are routed from vault/index.md (see references/protocol-source/init/protocol/15-vault-compaction.md).
 
 Fix gaps before continuing.
 

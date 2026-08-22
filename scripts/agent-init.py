@@ -498,9 +498,10 @@ def agent_entry_section() -> str:
 
 For non-trivial work, read these files before editing:
 
-1. `vault/index.md`
+1. `vault/index.md` (includes the task-level and authority cheat sheet)
 2. `vault/runtime.md`
-3. `vault/governance.md`
+
+Read `vault/governance.md` in full for Level B or Level C work, unclear classification, or governance-rule changes.
 
 Use `vault/project.md` on first entry, `vault/handoff.md` when resuming interrupted work, and `vault/tasks/` for tracked or governed tasks.
 {AGENTS_MARKER_END}
@@ -619,9 +620,9 @@ Required Check: `python3 scripts/agent-init.py adopt {target} --dry-run` from th
 
 ## Constraints
 
-- Keep this file short.
 - Move long execution history to `vault/tasks/*`.
 - Do not save secrets.
+- Keep this file within about 120 lines; move overflow to `vault/tasks/*` or `vault/decisions.md`.
 
 ## Recent Changes
 
@@ -744,7 +745,7 @@ def adopt_project(args: argparse.Namespace) -> int:
         print(f"skipped existing files: {len(skipped)}")
         for item in skipped:
             print(f"  - {item}")
-    print("next: ask your Agent to read AGENTS.md, vault/index.md, vault/runtime.md, and vault/governance.md")
+    print("next: ask your Agent to read AGENTS.md, vault/index.md (cheat sheet), and vault/runtime.md; read vault/governance.md in full for Level B/C work")
     return 0
 
 

@@ -86,13 +86,14 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 
 检查：
 
-- Agent 入口文件会将非琐碎任务路由到 `vault/index.md`、`vault/runtime.md` 和 `vault/governance.md`。
+- Agent 入口文件会将非琐碎任务路由到 `vault/index.md` 和 `vault/runtime.md`，并在 Level B 或 Level C、判定模糊或涉及治理规则时路由到 `vault/governance.md`。
 - 必需 vault 文件存在。
 - governance 覆盖任务等级、授权等级、任务契约字段、验收门、升级规则和 handoff。
 - `skills/agent-task/SKILL.md` 存在，并聚焦任务执行。
 - `vault/runtime.md` 是短当前状态，不是长日志。
 - `vault/decisions.md` 记录长期选择。
 - 需要协作偏好时，`vault/collaboration.md` 存在。
+- Hot-file budgets and the compact procedure are routed from `vault/index.md` (see the compaction module in `references/protocol-source/init/protocol/15-vault-compaction.md`).
 
 先修复缺口，再继续。
 

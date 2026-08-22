@@ -147,6 +147,8 @@ skills/agent-native-init-zh/
 
 该 Skill 适合跨项目复用；完整 `init/protocol/` 更适合继续设计和维护协议本身。每个 Skill 的 `references/protocol-source/` 是由 `init/` 自动生成的权威快照，不要直接修改。
 
+新版 Skill 包含记忆压缩能力。对已接入项目的既有 vault，重装 Skill 后让 Agent 执行一次压缩即可完成 decisions 索引化等结构迁移；旧 `agent-task` 可按协议源 15 号模块手动升级。
+
 ### 使用 Codex 安装 Skill
 
 推荐使用 Codex 内置的 `skill-installer`，从 GitHub 仓库直接安装本 Skill。用户不需要 clone 本仓库，只需要本机已安装 Codex 且能访问 GitHub。
@@ -258,6 +260,12 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 - 协作偏好。
 
 这样新 Agent、不同模型或不同工具进入项目时，可以从文件恢复上下文，而不是依赖聊天记录。
+
+### 记忆压缩（Compact）
+
+热文件（runtime、handoff、decisions）有明确预算线。agent-task 工作流在任务收尾检查预算；超线时执行五阶段压缩（测量→分类→重组→校验→记录）：runtime 重写而非删减，handoff 滚动保留，decisions 超阈值索引化（正文迁入 `vault/decisions/`，默认只读索引）。Superseded/Merged/Expired 等语义判定只出提案，由用户批量确认——压缩永远是零信息损失的重组，不是删除。压缩产出只含 `vault/` 变更的独立提交，可随时回滚。
+
+治理文件（governance、collaboration）由事件驱动激活：升级事件与压缩审查产出治理修订提案，协作偏好在任务收尾被捕获。默认读取路径分级：`index.md` 内置任务与授权速查表，完整 `governance.md` 仅 Level B/C 或判定模糊时读取。
 
 ### 可迁移，而不是复制沙盒
 

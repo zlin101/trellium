@@ -138,7 +138,7 @@ Agent 执行接入前，应只做只读扫描：
 - 未修改业务源码。
 - 未修改依赖和锁文件。
 - 未修改测试、构建、部署或 CI 配置。
-- Agent 入口文件会路由到 `vault/index.md`、`vault/runtime.md` 和 `vault/governance.md`。
+- Agent 入口文件会路由到 `vault/index.md` 和 `vault/runtime.md`，并在 Level B 或 Level C、判定模糊或涉及治理规则时路由到 `vault/governance.md`。
 - `vault/` 必备文件存在。
 - `vault/governance.md` 定义任务等级、授权等级、任务契约、验收门和接力规则。
 - `skills/agent-task/SKILL.md` 存在。

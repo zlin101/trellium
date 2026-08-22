@@ -9,5 +9,7 @@
 !skills/**
 !scripts/
 !scripts/**
+!docs/
+!docs/**
 scripts/**/__pycache__/
 scripts/**/*.pyc

@@ -9,11 +9,11 @@
 ## 模板地图
 
 - `AGENTS.md`：项目级 Agent 入口规则。
-- `vault/index.md`：上下文路由和记忆更新规则。
+- `vault/index.md`：上下文路由和记忆更新规则。含任务与授权速查表及压缩预算线。
 - `vault/project.md`：稳定项目目标和范围。
 - `vault/runtime.md`：当前状态和活跃任务指针。
 - `vault/governance.md`：任务等级、授权等级、任务契约和验收门。
-- `vault/decisions.md`：长期决策。
+- `vault/decisions.md`：长期决策；生命周期四态；超阈值索引化（正文入 `vault/decisions/`）。
 - `vault/handoff.md`：近期交接状态。
 - `vault/collaboration.md`：协作偏好和观察模式。
 - `vault/tasks/README.md`：任务文件状态流转和模板。
@@ -36,6 +36,7 @@
 2. 如果已有 decisions 或 ADR，不迁移历史，只在 `vault/decisions.md` 中添加指针。
 3. 如果已有 docs，避免重写；只有有用且被允许时，添加极短协作说明。
 4. 除非用户明确扩大范围，不触碰业务工程文件。
+5. 接入时不创建 `vault/decisions/` 与 `vault/tasks/archive/`；两者由首次压缩按需创建。
 
 ## 必须定制
 

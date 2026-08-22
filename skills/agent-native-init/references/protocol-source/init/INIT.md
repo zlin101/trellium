@@ -21,14 +21,15 @@
 
 1. `init/protocol/00-overview.md`
 2. `init/protocol/10-vault.md`
-3. `init/protocol/20-governance.md`
-4. `init/protocol/30-agent-entry.md`
-5. `init/protocol/40-skills.md`
-6. `init/protocol/50-engineering-constraints.md`
-7. `init/protocol/60-initialization-flow.md`
-8. `init/protocol/70-adoption-flow.md`
-9. `init/protocol/80-execution-patterns.md`
-10. `init/protocol/90-collaboration-profile.md`
+3. `init/protocol/15-vault-compaction.md`
+4. `init/protocol/20-governance.md`
+5. `init/protocol/30-agent-entry.md`
+6. `init/protocol/40-skills.md`
+7. `init/protocol/50-engineering-constraints.md`
+8. `init/protocol/60-initialization-flow.md`
+9. `init/protocol/70-adoption-flow.md`
+10. `init/protocol/80-execution-patterns.md`
+11. `init/protocol/90-collaboration-profile.md`
 
 如果项目类型已明确，还要读取对应 profile。当前提供：
 
@@ -75,7 +76,7 @@
 
 初始化只有在满足以下条件时才算完成：
 
-- 生成的 Agent 入口文件会路由到 `vault/index.md`、`vault/runtime.md` 和 `vault/governance.md`；
+- 生成的 Agent 入口文件会路由到 `vault/index.md` 和 `vault/runtime.md`，并在 Level B 或 Level C、判定模糊或涉及治理规则时路由到 `vault/governance.md`；
 - 必需的 vault 文件存在；
 - governance 定义任务等级、授权等级、任务契约、验收门、升级规则和多 Agent 接力规则；
 - 执行模式定义计划先行、上下文扎根、检查点化工作、人工判断信号和 skill 复利；
@@ -84,3 +85,4 @@
 - 必要检查已运行并记录结果；
 - `vault/runtime.md` 反映当前状态；
 - 长期有效决策已记录到 `vault/decisions.md`。
+- 记忆系统具备压缩能力：热文件预算线、五阶段压缩流程、语义/非语义操作分离和校验清单已定义于 `init/protocol/15-vault-compaction.md`。
