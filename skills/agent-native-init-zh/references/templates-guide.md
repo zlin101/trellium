@@ -17,7 +17,7 @@
 - `vault/handoff.md`：近期交接状态；每条以任务编号命名，最多 3 条。
 - `vault/parked.md`：用户挂起事项冷索引（P-xxxx 条目）；仅被提及时读取；清理只出提案。
 - `vault/collaboration.md`：协作偏好和观察模式。
-- `vault/tasks/README.md`：任务文件状态流转和模板。
+- `vault/tasks/README.md`：任务文件状态流转、任务模板和 review 台账模板。
 - `skills/agent-task/SKILL.md`：非琐碎项目任务的可复用工作流。
 
 ## 新项目初始化

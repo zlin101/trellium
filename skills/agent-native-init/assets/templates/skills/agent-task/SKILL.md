@@ -18,16 +18,17 @@ description: Use when doing non-trivial project work that requires context readi
 9. Keep long work checkpointable through task files and `vault/handoff.md`.
 10. Run required checks.
 11. Check acceptance gates; tests passing alone is not completion.
-12. Update `vault/runtime.md`: edit only the status and next action of the matching row in Active Tasks, and the Focus line when the main line changes.
-13. Record durable decisions in `vault/decisions.md`.
-14. When the user parks a task or decision, add an entry to `vault/parked.md` (with a resume trigger); when they bring it up again, promote it back to a task file (Draft) or `runtime.md`.
-15. Check hot-file budgets when updating memory (runtime ≤ 120 lines, handoff ≤ 3 entries or 100 lines, decisions ≤ 150 lines or 8 records, parked ≤ 60 lines or 20 entries); move overflow to the right destination.
-16. When any hot file exceeds its budget, compact in five phases: measure → classify → restructure → verify → record. Compaction rules:
+12. For multi-round review, keep a ledger at `vault/tasks/TASK-xxxx-review.md`: findings enter as a numbered list, get processed in batch, and get their statuses written back in batch (open / fixed / wont-fix / needs-discussion); archive it into the task file's Execution Record once converged.
+13. Update `vault/runtime.md`: edit only the status and next action of the matching row in Active Tasks, and the Focus line when the main line changes; one item per line, single-line replacement, never rewrite whole sections.
+14. Record durable decisions in `vault/decisions.md`.
+15. When the user parks a task or decision, add an entry to `vault/parked.md` (with a resume trigger); when they bring it up again, promote it back to a task file (Draft) or `runtime.md`.
+16. Check hot-file budgets when updating memory (runtime ≤ 120 lines and Recent Changes ≤ 10 entries, handoff ≤ 3 entries or 100 lines, decisions ≤ 150 lines or 8 records, parked ≤ 60 lines or 20 entries); move overflow to the right destination.
+17. When any hot file exceeds its budget, compact in five phases: measure → classify → restructure → verify → record. Compaction rules:
     - Decision indexing and task archiving are zero-loss moves an Agent may run autonomously.
     - Demoting paused tasks to `parked.md` entries is a zero-loss move; parked cleanup is proposal-only.
     - Superseded / Merged / Expired judgments are proposal-only; keep Active until the user confirms.
     - Start only with a clean `vault/`; produce a dedicated commit containing only `vault/` changes; restore on verification failure.
-17. Record observed user collaboration preferences or corrections in `vault/collaboration.md` as observations; promote to preferences after repetition or confirmation.
+18. Record observed user collaboration preferences or corrections in `vault/collaboration.md` as observations; promote to preferences after repetition or confirmation.
 
 ## Constraints
 

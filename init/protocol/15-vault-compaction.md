@@ -21,7 +21,7 @@
 
 全部用行数表达，可由 `wc -l` 直接度量：
 
-- `vault/runtime.md` 超过 120 行。
+- `vault/runtime.md` 超过 120 行，或 Recent Changes 超过 10 条。
 - `vault/handoff.md` 超过 3 条交接或超过 100 行。
 - `vault/decisions.md` 超过 150 行或超过 8 条完整决策记录；首次超出时执行索引化拆分。
 - `vault/parked.md` 超过 60 行或超过 20 条条目；执行清理提案。
@@ -53,6 +53,7 @@
 - 进行中的进展保留；
 - 暂停且暂不推进的任务：从 Active Tasks 表移除该行，降级为 `parked.md` 条目（含重启触发器）；
 - 已完成的进展压缩为一行进 Recent Changes，执行历史已在 `tasks/*`；
+- Recent Changes 超过 10 条时，老条目并入对应任务文件的 Execution Record 或压缩为一行；
 - 长期结论迁入 `decisions.md`。
 
 ### handoff.md：滚动窗口加分流

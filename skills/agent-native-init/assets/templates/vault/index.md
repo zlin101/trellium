@@ -61,11 +61,12 @@ When the user mentions a parked, shelved, or suspended item:
 
 ## Update Rules
 
+- Hot-file update discipline: keep section order fixed, one item per line; replace the single matching line on a status or progress change instead of rewriting whole sections.
 - Update `runtime.md` after non-trivial work (the status and next action of the matching row in Active Tasks).
 - Update `tasks/*` for Level B or Level C work.
 - Update `decisions.md` for durable decisions.
 - Update `handoff.md` when interrupted or handing off.
 - Record parked items in `parked.md` when the user suspends them; promote back to a task file or `runtime.md` when mentioned again.
 - Move long details out of `runtime.md`.
-- Check hot-file budgets when updating them: runtime ≤ 120 lines; handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries.
+- Check hot-file budgets when updating them: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries.
 - When a budget is exceeded, compact: measure → classify → restructure → verify → record. Semantic judgments (Superseded / Merged / Expired) are proposals only; keep Active until the user confirms.

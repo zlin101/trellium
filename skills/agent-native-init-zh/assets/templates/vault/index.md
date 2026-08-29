@@ -61,11 +61,12 @@
 
 ## 更新规则
 
+- 热文件更新纪律：固定段落顺序，每条内容占一行；状态或进展变化用单行替换，不重写整段。
 - 非琐碎任务后更新 `runtime.md`（Active Tasks 表中对应任务行的状态与下一步）。
 - Level B 或 Level C 更新 `tasks/*`。
 - 长期决策更新 `decisions.md`。
 - 中断或交接时更新 `handoff.md`。
 - 用户挂起任务时在 `parked.md` 记条目；重新提起时升回任务文件或 `runtime.md`。
 - 将长细节移出 `runtime.md`。
-- 更新热文件时检查预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条。
+- 更新热文件时检查预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条。
 - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。

@@ -17,7 +17,7 @@ Do not copy placeholders as if they were facts.
 - `vault/handoff.md`: recent transfer state; each entry named after its task id, at most 3 entries.
 - `vault/parked.md`: cold index of user-parked items (P-xxxx entries); read only when mentioned; cleanup is proposal-only.
 - `vault/collaboration.md`: collaboration preferences and observed patterns.
-- `vault/tasks/README.md`: task file status flow and template.
+- `vault/tasks/README.md`: task file status flow, task template, and review ledger template.
 - `skills/agent-task/SKILL.md`: reusable workflow for non-trivial project tasks.
 
 ## New Project Initialization

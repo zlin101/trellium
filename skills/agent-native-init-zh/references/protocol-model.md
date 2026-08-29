@@ -46,7 +46,7 @@ vault/
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增 |
 
-预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks（不含 archive）≤ 40 个文件。
+预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks（不含 archive）≤ 40 个文件。
 
 压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active、暂停任务降级为 parked 条目）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired、parked 清理）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
 
@@ -118,6 +118,7 @@ vault/
 - Context grounded：先读本地项目上下文，再应用通用建议。
 - Checkpointable：通过任务文件、runtime 和 handoff 让长任务可恢复。
 - Human signal：架构、成本、安全、隐私、部署和模糊产品取舍交还用户判断。
+- Review ledger：多轮 review 用 `TASK-xxxx-review.md` 台账批量收敛，每轮一次写入替代消息往返；收敛后归档进任务文件。
 - Workflow compounding：重复稳定工作流沉淀为聚焦 skill，而不是扩写入口文件。
 
 ## 既有项目接入边界

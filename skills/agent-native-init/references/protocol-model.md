@@ -46,7 +46,7 @@ vault/
 | Structural files | `index.md`, `project.md`, `tasks/README.md` | Rarely updated |
 | Archive | `tasks/<task-id>.md`, `decisions/`, `details/*` | Append-only |
 
-Budgets: runtime ≤ 120 lines; handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks (excluding archive) ≤ 40 files.
+Budgets: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks (excluding archive) ≤ 40 files.
 
 Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active, demoting paused tasks to parked entries) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`, parked cleanup) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
 
@@ -118,6 +118,7 @@ Passing tests alone is not completion.
 - Context grounded: read local project context before applying generic advice.
 - Checkpointable: keep long tasks recoverable through task files, runtime, and handoff.
 - Human signal: return architecture, cost, safety, privacy, deployment, and ambiguous product decisions to the user.
+- Review ledger: converge multi-round review through a `TASK-xxxx-review.md` ledger — one batched write per round instead of message ping-pong; archive into the task file once converged.
 - Workflow compounding: repeated stable workflows become focused skills, not bloated entry files.
 
 ## Existing Project Adoption Boundary

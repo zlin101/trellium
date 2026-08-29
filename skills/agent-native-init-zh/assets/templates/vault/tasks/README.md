@@ -115,3 +115,24 @@ Next action:
 - `vault/decisions.md` if durable decisions were made
 - `vault/handoff.md` if interrupted or handed off
 ```
+
+## Review Ledger
+
+多轮 review 使用 `TASK-xxxx-review.md` 台账批量收敛，不逐条消息往返。
+状态：`open` | `fixed` | `wont-fix`（附理由）| `needs-discussion`。
+checklist 优先用任务文件的 Acceptance Criteria；`wont-fix` 与 `needs-discussion` 交还用户判断。
+收敛（无 `open` 与 `needs-discussion`）后归档进任务文件 Execution Record。
+
+```md
+# TASK-0001 - Review Ledger
+
+## Findings
+
+- R1 · open · 一句话发现
+- R2 · fixed · 一句话发现
+- R3 · wont-fix · 一句话发现 · 理由
+
+## Round 2026-01-01
+
+- 处理说明与验证结果。
+```

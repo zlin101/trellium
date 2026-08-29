@@ -14,6 +14,8 @@
 - Breaking: `vault/handoff.md` 模板改为条目式，每条交接以任务编号命名（无任务编号时用 SESSION）。
 - Agent migration: 已有定制的 `runtime.md` 是项目数据，永不模板替换——把现有 Active Task 内容改写为指针表一行，`Focus` 指向该任务；`Current Progress` 条目逐条保留或按压缩规则分流；不丢任何事实。向用户提案后执行。
 - Agent migration: 已有定制的 `handoff.md` 同理——把现有快照内容改写为一条以任务编号命名的交接条目；无任务编号的用 SESSION。
+- Added: review 台账——`vault/tasks/TASK-xxxx-review.md`（运行时创建，不由 adopt 下发）；80 号模块新增 Review Ledger 执行模式；`tasks/README.md` 模板含台账格式。
+- Breaking: runtime 的 Recent Changes 上限 10 条，超出走压缩分流；热文件更新纪律成文（每条一行、单行替换、不重写整段）。
 - Auto: `vault/index.md`、`vault/tasks/README.md`（如未变）、`skills/agent-task/SKILL.md`（如未变）按升级分级格自动刷新；定制过的 `index.md` 走提案合并 parked 路由条目。
 
 ## 2026.08.0 — 初始版本化发布

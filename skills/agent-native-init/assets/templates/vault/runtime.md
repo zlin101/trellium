@@ -35,6 +35,9 @@ line; a status change edits only the matching row.
 
 - Replace with recent relevant changes.
 
+Keep at most 10 entries; earlier ones merge into task-file execution history
+during compaction.
+
 ## Known Risks
 
 - Replace with known risks.
