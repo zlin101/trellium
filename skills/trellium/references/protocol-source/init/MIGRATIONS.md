@@ -7,6 +7,11 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.1 — 一行安装器与工具修订
+
+- Added: `scripts/install.sh` 一行安装/升级 Skill 包——`curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/install.sh | sh`。支持 `--lang en|zh`（默认 en）、`--agent codex|claude|all`（默认自动探测 `$CODEX_HOME`/`~/.codex` → codex，`~/.claude` → claude）、`--version`、`--dir`、`--project`（装到当前项目 `.claude/skills`）、`--source`。经 `releases/latest` 重定向解析最新版本（无 API 速率限制）；原地替换，重复执行即升级。
+- Auto: 工具变更，无模板变化。`upgrade --apply` 在无文件变更时会把版本戳的 `protocol_version` 刷新到当前版本，避免纯工具版本的版本指针滞后。
+
 ## 2026.09.0 — 多任务运行态与挂起区
 
 - Added: `vault/parked.md`（data 角色；`adopt` 与 `upgrade --apply` 会在文件缺失时自动创建，已存在则跳过）。

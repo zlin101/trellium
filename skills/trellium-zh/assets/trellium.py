@@ -1582,6 +1582,18 @@ def upgrade_project(args: argparse.Namespace) -> int:
     conflict_items = [item for item in plan["conflict"] if selected(item["path"])]
 
     if not (apply_items or add_items or remove_items or conflict_items):
+        # A tooling-only release changes no files; still move the stamp
+        # forward so the version pointer does not stick behind forever.
+        if args.apply and stamp.get("trust") == "versioned" and stamp.get("protocol_version") != version:
+            stamp["protocol_version"] = version
+            stamp["last_upgrade"] = date.today().isoformat()
+            descriptor = open_upgrade_descriptor(target)
+            try:
+                write_stamp_file(target, stamp, descriptor)
+            finally:
+                if descriptor is not None:
+                    os.close(descriptor)
+            print(f"recorded protocol version {version} (no file changes)")
         print("nothing to apply")
         return plan_exit_code(plan)
 

@@ -152,6 +152,24 @@ This Skill is suited for cross-project reuse; the full `init/protocol/` is bette
 
 Reinstalling the Skill delivers the new templates, protocol snapshot, and bundled upgrade script. For an already-adopted project, have the Agent follow the upgrade flow in SKILL.md: `diff` (read-only report) → `upgrade --apply` (safe subset + conflict proposals) → agent semantic merge + user confirmation → `upgrade --complete`. Project data (runtime, handoff, decisions, tasks) is read-only to the script and is never replaced by templates.
 
+### One-line install (any agent)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/install.sh | sh
+```
+
+Installs the English Skill package into the auto-detected agent directory (`$CODEX_HOME`/`~/.codex` → Codex; `~/.claude` → Claude Code). Common options:
+
+```bash
+... | sh -s -- --lang zh              # Chinese package
+... | sh -s -- --agent all            # install for both Codex and Claude Code
+... | sh -s -- --project              # into ./.claude/skills/ of the current project
+... | sh -s -- --version 2026.09.1    # pin a version
+... | sh -s -- --dir <path>           # any destination directory
+```
+
+Re-running the command upgrades in place (the package directory is replaced). The script does exactly three things: resolve the latest release via the `releases/latest` redirect, download the release tarball from GitHub, and copy one directory — audit it first with `curl -fsSL <url> | less` if you prefer.
+
 ### Installing the Skill via Codex
 
 The recommended approach is to use Codex's built-in `skill-installer` to install this Skill directly from the GitHub repository. You do not need to clone this repo — you only need Codex installed locally and access to GitHub.

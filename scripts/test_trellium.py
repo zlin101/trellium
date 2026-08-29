@@ -774,6 +774,27 @@ class FetchTest(TargetTestCase):
         stamp = self.read_stamp(target)
         self.assertEqual(stamp["protocol_version"], "9999.0.0")
 
+    def test_upgrade_applies_version_pointer_on_tooling_release(self) -> None:
+        # A release with no file changes must still advance the stamp so the
+        # version pointer does not stick behind the latest release.
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        stamp = self.read_stamp(target)
+        stamp["protocol_version"] = "2026.09.0"
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        self.assertNotEqual(agent_init.read_protocol_version(), "2026.09.0")
+
+        code, out, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("recorded protocol version", out)
+        updated = self.read_stamp(target)
+        self.assertEqual(updated["protocol_version"], agent_init.read_protocol_version())
+
     def test_fetch_refuses_downgrade(self) -> None:
         target = self.root / "project"
         target.mkdir()

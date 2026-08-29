@@ -152,6 +152,24 @@ skills/trellium-zh/
 
 重装 Skill 即获得新版模板、协议快照与内置升级脚本。对已接入项目，让 Agent 按 SKILL.md 的升级流程执行：`diff`（只读报告）→ `upgrade --apply`（安全子集 + 冲突提案）→ Agent 语义合并 + 用户确认 → `upgrade --complete`。项目数据（runtime、handoff、decisions、tasks）对脚本只读，永不被模板替换。
 
+### 一行安装（任意 Agent）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/install.sh | sh
+```
+
+安装英文 Skill 包到自动探测的 agent 目录（`$CODEX_HOME`/`~/.codex` → Codex；`~/.claude` → Claude Code）。常用参数：
+
+```bash
+... | sh -s -- --lang zh              # 中文包
+... | sh -s -- --agent all            # 同时装 Codex 与 Claude Code
+... | sh -s -- --project              # 装到当前项目 ./.claude/skills/
+... | sh -s -- --version 2026.09.1    # 固定版本
+... | sh -s -- --dir <路径>           # 任意目标目录
+```
+
+重复执行即原地升级（替换整个包目录）。脚本只做三件事：经 `releases/latest` 重定向解析最新版本、从 GitHub 下载 release tarball、拷贝一个目录——可先 `curl -fsSL <url> | less` 审计再执行。
+
 ### 使用 Codex 安装 Skill
 
 推荐使用 Codex 内置的 `skill-installer`，从 GitHub 仓库直接安装本 Skill。用户不需要 clone 本仓库，只需要本机已安装 Codex 且能访问 GitHub。
