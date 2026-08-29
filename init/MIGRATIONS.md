@@ -16,6 +16,7 @@
 - Agent migration: 已有定制的 `handoff.md` 同理——把现有快照内容改写为一条以任务编号命名的交接条目；无任务编号的用 SESSION。
 - Added: review 台账——`vault/tasks/TASK-xxxx-review.md`（运行时创建，不由 adopt 下发）；80 号模块新增 Review Ledger 执行模式；`tasks/README.md` 模板含台账格式。
 - Breaking: runtime 的 Recent Changes 上限 10 条，超出走压缩分流；热文件更新纪律成文（每条一行、单行替换、不重写整段）。
+- Added: `trellium.py --fetch`——从 GitHub 拉取最新 tag release 并以该版本的脚本与模板执行；协议内容更新无需重装 Skill 包。各命令支持 `--templates <dir>` 覆盖模板目录。
 - Auto: `vault/index.md`、`vault/tasks/README.md`（如未变）、`skills/agent-task/SKILL.md`（如未变）按升级分级格自动刷新；定制过的 `index.md` 走提案合并 parked 路由条目。
 
 ## 2026.08.0 — 初始版本化发布

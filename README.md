@@ -174,7 +174,7 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 
 安装后重启 Codex，让新 Skill 生效。
 
-已安装的 Skill 不会随 GitHub 仓库自动升级。发布新版后，现有用户需要移除旧的本地 Skill 目录再重新安装；Codex installer 默认拒绝覆盖已存在目录。重新安装前应确认本地 Skill 目录没有需要保留的自定义修改。
+已安装的 Skill 不会随 GitHub 仓库自动升级。**协议模板与升级器的更新不需要重装 Skill**：升级命令加 `--fetch` 即从仓库拉取最新 tag release 执行（缓存于 `~/.cache/trellium/`，降级会被拒绝）。仅当 Skill 工作流（`SKILL.md`）或脚本自身变化时才需要移除旧的本地 Skill 目录重装；Codex installer 默认拒绝覆盖已存在目录。重新安装前应确认本地 Skill 目录没有需要保留的自定义修改。
 
 如果仓库尚未推送到 GitHub，先推送包含 `skills/trellium-zh/` 或 `skills/trellium/` 的提交，再让 Codex 安装。
 
@@ -210,7 +210,7 @@ vault/governance.md
 
 ### 升级已接入项目
 
-协议源演进后，已接入的项目可以安全跟进，且不影响项目自身的发展路线（Skill 包用户将 `scripts/trellium.py` 替换为 `<skill 目录>/assets/trellium.py`）：
+协议源演进后，已接入的项目可以安全跟进，且不影响项目自身的发展路线（Skill 包用户将 `scripts/trellium.py` 替换为 `<skill 目录>/assets/trellium.py`；任何命令可加 `--fetch` 直接拉取最新 tag release，无需等待 Skill 重装）：
 
 ```bash
 python3 scripts/trellium.py diff /path/to/project              # 只读报告
@@ -247,7 +247,7 @@ python3 scripts/sync-skills.py --check
 
 该脚本只用于本仓库的发布维护，不是 Skill 用户的安装依赖。CI 会运行相同检查。`references/protocol-source/` 完全由脚本维护；`SKILL.md`、精简的 `references/protocol-model.md` 和 `assets/templates/` 仍需在协议行为变化时人工审查和调整。同步脚本保证协议源进入安装包，但不会假装自动完成中英文语义翻译或模板设计。
 
-修改会影响已接入项目的协议模板时，同步三件事：`scripts/trellium.py` 的 `FILE_ROLES`（新增或删除下发文件时）、`init/MIGRATIONS.md`（追加迁移条目）、`init/VERSION`（按需升版本）。
+修改会影响已接入项目的协议模板时，同步三件事：`scripts/trellium.py` 的 `FILE_ROLES`（新增或删除下发文件时）、`init/MIGRATIONS.md`（追加迁移条目）、`init/VERSION`（按需升版本）。发布供 `--fetch` 使用的版本时打 tag：`git tag <版本号> && git push origin <版本号>`（版本号与 `init/VERSION` 一致）。
 
 ## 协议理念
 

@@ -43,6 +43,7 @@ If uncertain, choose existing project adoption. It is safer because it only adds
 This package bundles a deterministic installer/upgrader at `assets/trellium.py`; prefer it, and layer Agent-driven semantic migration on top.
 
 - New or existing project adoption: `python3 assets/trellium.py adopt <target>`. It only adds missing files by default; an existing `AGENTS.md` gets a marked section appended, never overwritten.
+- Protocol-content updates do not require reinstalling this Skill: add `--fetch` to any command to fetch the latest tagged release from GitHub and run it with that release's script and templates (cached under `~/.cache/trellium/`; downgrades are refused). Reinstall the Skill only when the SKILL workflow or the script itself changes.
 - Upgrading an adopted project:
   1. `python3 assets/trellium.py diff <target>` — read-only report of what would change, what is never touched, and pending migration playbook entries.
   2. `python3 assets/trellium.py upgrade <target> --apply` — executes the safe subset; conflicts produce proposals under the target's `vault/.upgrade/<version>/`.

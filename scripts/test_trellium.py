@@ -731,6 +731,106 @@ class EmbeddedSkillLayoutTest(TargetTestCase):
         )
 
 
+class FetchTest(TargetTestCase):
+    def build_release_tree(self, version: str, index_text: str | None = None) -> Path:
+        release = self.root / "releases" / version
+        (release / "scripts").mkdir(parents=True)
+        shutil.copy(SCRIPT_PATH, release / "scripts" / "trellium.py")
+        (release / "init").mkdir()
+        (release / "init" / "VERSION").write_text(f"{version}\n", encoding="utf-8")
+        (release / "init" / "MIGRATIONS.md").write_text(
+            f"# Migrations\n\n## {version} — test\n\n- test entry\n", encoding="utf-8"
+        )
+        templates = release / "skills" / "trellium-zh" / "assets" / "templates"
+        shutil.copytree(agent_init.TEMPLATES_ROOT, templates)
+        if index_text is not None:
+            (templates / "vault" / "index.md").write_text(index_text, encoding="utf-8")
+        return release
+
+    def test_fetch_runs_fetched_release_end_to_end(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        release = self.build_release_tree("9999.0.0", index_text="fetched index template\n")
+
+        with patch.object(agent_init, "latest_release_tag", return_value="9999.0.0"), patch.object(
+            agent_init, "fetch_release_tree", return_value=release
+        ):
+            code, out, err = self.run_agent_init("diff", str(target), "--fetch")
+
+        self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
+        self.assertIn("fetch: using zlin101/trellium tag 9999.0.0", out)
+        self.assertIn("available: 9999.0.0", out)
+        self.assertIn("~ vault/index.md", out)
+
+        with patch.object(agent_init, "latest_release_tag", return_value="9999.0.0"), patch.object(
+            agent_init, "fetch_release_tree", return_value=release
+        ):
+            code, out, err = self.run_agent_init("upgrade", str(target), "--fetch", "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual((target / "vault/index.md").read_text(encoding="utf-8"), "fetched index template\n")
+        stamp = self.read_stamp(target)
+        self.assertEqual(stamp["protocol_version"], "9999.0.0")
+
+    def test_fetch_refuses_downgrade(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        release = self.build_release_tree("2025.01.0")
+
+        with patch.object(agent_init, "latest_release_tag", return_value="2025.01.0"), patch.object(
+            agent_init, "fetch_release_tree", return_value=release
+        ):
+            code, _, err = self.run_agent_init("diff", str(target), "--fetch")
+
+        self.assertEqual(code, 1)
+        self.assertIn("older than", err)
+
+    def test_templates_flag_overrides_without_fetch(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        release = self.build_release_tree("9999.0.0", index_text="overridden index template\n")
+
+        code, out, err = self.run_agent_init(
+            "diff", str(target), "--templates", str(release / "skills" / "trellium-zh" / "assets" / "templates")
+        )
+
+        self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
+        self.assertIn("~ vault/index.md", out)
+
+    def test_safe_extract_rejects_traversal_and_links(self) -> None:
+        import io
+        import tarfile
+
+        def write_tar(path: Path, member_name: str, symlink: bool = False) -> None:
+            with tarfile.open(path, "w:gz") as archive:
+                if symlink:
+                    info = tarfile.TarInfo(member_name)
+                    info.type = tarfile.SYMTYPE
+                    info.linkname = "/etc/passwd"
+                    archive.addfile(info)
+                else:
+                    payload = b"evil"
+                    info = tarfile.TarInfo(member_name)
+                    info.size = len(payload)
+                    archive.addfile(info, io.BytesIO(payload))
+
+        tarball = self.root / "evil-traversal.tar.gz"
+        write_tar(tarball, "../evil.txt")
+        with self.assertRaises(agent_init.AdoptionError):
+            agent_init.safe_extract_tarball(tarball, self.root / "extract-a")
+
+        tarball = self.root / "evil-symlink.tar.gz"
+        write_tar(tarball, "link", symlink=True)
+        with self.assertRaises(agent_init.AdoptionError):
+            agent_init.safe_extract_tarball(tarball, self.root / "extract-b")
+
+
 class RenderedContentTest(unittest.TestCase):
     def test_agent_entry_section_levels_governance_reading(self) -> None:
         section = agent_init.agent_entry_section()

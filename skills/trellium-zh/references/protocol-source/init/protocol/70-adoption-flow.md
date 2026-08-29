@@ -152,6 +152,8 @@ Agent 执行接入前，应只做只读扫描：
 
 升级器是 `trellium.py`，有两种运行位置：仓库 checkout 的 `scripts/trellium.py`（协议开发维护用），或已安装 Skill 包内的 `assets/trellium.py`（最终用户的常规路径，由 `sync-skills.py` 自动分发并与 `scripts/trellium.py` 保持一致）。下文命令中的 `trellium.py` 指两者任一。
 
+任何命令可加 `--fetch`：从 GitHub 拉取最新 tag release（缓存于 `~/.cache/trellium/`），以该版本的脚本与模板执行——协议内容更新因此不需要重装 Skill 包；目标版本低于项目已装版本时拒绝执行。`--templates <dir>` 可覆盖模板目录（版本信息仍随运行脚本）。
+
 ### 文件两分法
 
 升级器把协作层文件分成两类，写入权限不同：
@@ -184,7 +186,7 @@ Agent 执行接入前，应只做只读扫描：
 
 ### 发布侧约束
 
-每次修改协议模板：若新增或删除下发的模板文件，同步更新 `scripts/trellium.py` 的 `FILE_ROLES`；在 `init/MIGRATIONS.md` 追加条目并按需更新 `init/VERSION`。
+每次修改协议模板：若新增或删除下发的模板文件，同步更新 `scripts/trellium.py` 的 `FILE_ROLES`；在 `init/MIGRATIONS.md` 追加条目并按需更新 `init/VERSION`。发布供 `--fetch` 使用的版本时打 tag（与 `init/VERSION` 一致）：`git tag <版本号> && git push origin <版本号>`。
 
 ## 接入模式的授权
 

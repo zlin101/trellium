@@ -174,7 +174,7 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 
 Restart Codex after installing so the new Skill takes effect.
 
-An installed Skill does not auto-upgrade from the GitHub repository. After a new release, existing users must remove the old local Skill directory and reinstall; the Codex installer refuses to overwrite an existing directory by default. Before reinstalling, confirm the local Skill directory has no custom modifications you want to keep.
+An installed Skill does not auto-upgrade from the GitHub repository. **Protocol-template and updater changes do not require reinstalling the Skill**: add `--fetch` to any command to pull the latest tagged release and run it (cached under `~/.cache/trellium/`; downgrades are refused). Reinstalling is only needed when the Skill workflow (`SKILL.md`) or the script itself changes; the Codex installer refuses to overwrite an existing directory by default. Before reinstalling, confirm the local Skill directory has no custom modifications you want to keep.
 
 If the repository has not been pushed to GitHub yet, first push a commit that includes `skills/trellium-zh/` or `skills/trellium/`, then let Codex install it.
 
@@ -210,7 +210,7 @@ vault/governance.md
 
 ### Upgrading adopted projects
 
-When the protocol source evolves, adopted projects can follow along safely, without disturbing their own trajectory (Skill users: replace `scripts/trellium.py` with `<skill dir>/assets/trellium.py`):
+When the protocol source evolves, adopted projects can follow along safely, without disturbing their own trajectory (Skill users: replace `scripts/trellium.py` with `<skill dir>/assets/trellium.py`; any command accepts `--fetch` to pull the latest tagged release without reinstalling the Skill):
 
 ```bash
 python3 scripts/trellium.py diff /path/to/project              # read-only report
@@ -247,7 +247,7 @@ python3 scripts/sync-skills.py --check
 
 This script is only for this repo's release maintenance; it is not an install-time dependency for Skill users. CI runs the same check. `references/protocol-source/` is maintained entirely by the script; `SKILL.md`, the condensed `references/protocol-model.md`, and `assets/templates/` still require manual review and adjustment when protocol behavior changes. The sync script guarantees the protocol source enters the install package, but it does not pretend to automatically complete Chinese↔English semantic translation or template design.
 
-When a change affects protocol templates shipped to adopted projects, update three things in step: `FILE_ROLES` in `scripts/trellium.py` (when files are added or removed), `init/MIGRATIONS.md` (append a migration entry), and `init/VERSION` (bump as needed).
+When a change affects protocol templates shipped to adopted projects, update three things in step: `FILE_ROLES` in `scripts/trellium.py` (when files are added or removed), `init/MIGRATIONS.md` (append a migration entry), and `init/VERSION` (bump as needed). When publishing a version for `--fetch`, tag it: `git tag <version> && git push origin <version>` (matching `init/VERSION`).
 
 ## Protocol philosophy
 

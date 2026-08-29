@@ -13,6 +13,9 @@ import shutil
 import stat
 import subprocess
 import sys
+import tarfile
+import urllib.error
+import urllib.request
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
@@ -72,6 +75,16 @@ PROPOSAL_DIRECTORY = "vault/.upgrade"
 BACKUP_DIRECTORY = ".agent-init-backup"
 VERSION_FILE = PROTOCOL_INIT_DIRECTORY / "VERSION"
 MIGRATIONS_FILE = PROTOCOL_INIT_DIRECTORY / "MIGRATIONS.md"
+
+# --fetch pulls the latest tagged release from GitHub and re-executes the
+# fetched updater against the fetched tree, so protocol-content updates do
+# not require reinstalling the Skill package.
+FETCH_REPOSITORY = "zlin101/trellium"
+FETCH_TAGS_URL = f"https://api.github.com/repos/{FETCH_REPOSITORY}/tags"
+FETCH_TARBALL_TEMPLATE = f"https://codeload.github.com/{FETCH_REPOSITORY}/tar.gz/refs/tags/{{tag}}"
+FETCH_CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "trellium"
+FETCH_MARKER_NAME = ".trellium-fetched"
+FETCH_TIMEOUT_SECONDS = 30
 
 EXIT_ACTIONABLE = 2
 EXIT_CONFLICT = 3
@@ -1101,6 +1114,126 @@ def print_playbook(sections: list[tuple[str, str]]) -> None:
     print()
 
 
+# --- Release fetching (--fetch) --------------------------------------------
+
+
+def latest_release_tag() -> str:
+    """Return the newest CalVer tag of the upstream repository."""
+    request = urllib.request.Request(
+        FETCH_TAGS_URL,
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "trellium-fetch"},
+    )
+    with urllib.request.urlopen(request, timeout=FETCH_TIMEOUT_SECONDS) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, list):
+        raise AdoptionError(f"unexpected tag listing from {FETCH_TAGS_URL}")
+    candidates = []
+    for entry in payload:
+        if isinstance(entry, dict):
+            name = str(entry.get("name", ""))
+            if parse_version(name) is not None:
+                candidates.append((parse_version(name), name))
+    if not candidates:
+        raise AdoptionError(f"no version tags found for {FETCH_REPOSITORY}; publish a tag first")
+    # GitHub lists recently created tags first, but sort defensively anyway.
+    return max(candidates)[1]
+
+
+def safe_extract_tarball(tarball_path: Path, destination: Path) -> None:
+    """Extract a release tarball while refusing anything but plain files and directories."""
+    destination.mkdir(parents=True, exist_ok=True)
+    root = destination.resolve()
+    with tarfile.open(tarball_path, "r:gz") as archive:
+        for member in archive.getmembers():
+            if member.issym() or member.islnk() or member.isdev():
+                raise AdoptionError(f"refusing non-regular file in release tarball: {member.name}")
+            target = (root / member.name).resolve()
+            if not target.is_relative_to(root):
+                raise AdoptionError(f"refusing path escape in release tarball: {member.name}")
+        archive.extractall(destination)
+
+
+def fetch_release_tree(tag: str) -> Path:
+    """Return the extracted release tree for a tag, downloading it once."""
+    destination = FETCH_CACHE_ROOT / tag
+    if (
+        (destination / FETCH_MARKER_NAME).is_file()
+        and (destination / "scripts" / "trellium.py").is_file()
+        and (destination / "init" / "VERSION").is_file()
+    ):
+        return destination
+
+    FETCH_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+    staging_tarball = FETCH_CACHE_ROOT / f".{tag}.{secrets.token_hex(8)}.tar.gz"
+    staging_extract = FETCH_CACHE_ROOT / f".{tag}.extracting.{secrets.token_hex(8)}"
+    try:
+        request = urllib.request.Request(
+            FETCH_TARBALL_TEMPLATE.format(tag=tag),
+            headers={"User-Agent": "trellium-fetch"},
+        )
+        with urllib.request.urlopen(request, timeout=FETCH_TIMEOUT_SECONDS) as response, staging_tarball.open("wb") as handle:
+            shutil.copyfileobj(response, handle)
+        safe_extract_tarball(staging_tarball, staging_extract)
+        entries = [child for child in staging_extract.iterdir()]
+        if len(entries) != 1 or not entries[0].is_dir():
+            raise AdoptionError(f"release tarball for {tag} has an unexpected layout")
+        if destination.exists():
+            shutil.rmtree(destination)
+        entries[0].rename(destination)
+        (destination / FETCH_MARKER_NAME).write_text(f"{tag}\n", encoding="utf-8")
+    finally:
+        if staging_tarball.exists():
+            staging_tarball.unlink()
+        if staging_extract.exists():
+            shutil.rmtree(staging_extract)
+    return destination
+
+
+def fetch_and_run(args: argparse.Namespace, forwarded: list[str]) -> int:
+    """Resolve the latest release and re-execute the fetched updater."""
+    try:
+        tag = latest_release_tag()
+        release_dir = fetch_release_tree(tag)
+        fetched_version = (release_dir / "init" / "VERSION").read_text(encoding="utf-8").strip()
+    except (AdoptionError, OSError, ValueError, tarfile.TarError) as exc:
+        return fail(
+            f"could not fetch the latest release: {exc}; "
+            "rerun without --fetch to use the bundled content"
+        )
+
+    target_value = getattr(args, "target", None)
+    if target_value:
+        try:
+            target = Path(target_value).expanduser().resolve()
+            stamp = read_stamp(target)
+        except (AdoptionError, OSError, RuntimeError):
+            stamp = None
+        if stamp is not None:
+            installed = parse_version(stamp.get("protocol_version"))
+            fetched = parse_version(fetched_version)
+            if installed is not None and fetched is not None and fetched < installed:
+                return fail(
+                    f"latest release {tag} ({fetched_version}) is older than the target's "
+                    f"installed protocol {stamp.get('protocol_version')}; "
+                    "rerun without --fetch to use the bundled content"
+                )
+
+    package_name = TEMPLATES_ROOT.parent.parent.name
+    fetched_script = release_dir / "scripts" / "trellium.py"
+    fetched_templates = release_dir / "skills" / package_name / "assets" / "templates"
+    if not fetched_script.is_file() or not (fetched_templates / "AGENTS.md").is_file():
+        return fail(f"release {tag} is missing the updater script or the {package_name} templates")
+
+    command = [sys.executable, str(fetched_script), *forwarded, "--templates", str(fetched_templates)]
+    print(f"fetch: using {FETCH_REPOSITORY} tag {tag} (protocol {fetched_version})")
+    result = subprocess.run(command, check=False, text=True, capture_output=True)
+    if result.stdout:
+        print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
+    return result.returncode
+
+
 def git_dirty_paths(target: Path, relatives: list[str]) -> list[str]:
     if not (target / ".git").exists():
         return []
@@ -1653,7 +1786,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Adopt Trellium into a target project.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    adopt = subparsers.add_parser("adopt", help="add Agent collaboration files to a project")
+    content_options = argparse.ArgumentParser(add_help=False)
+    content_options.add_argument(
+        "--templates", metavar="DIR", help="override the template directory (VERSION stays with the running script)"
+    )
+    content_options.add_argument(
+        "--fetch",
+        action="store_true",
+        help="fetch the latest tagged release from GitHub and run it instead of the bundled content",
+    )
+
+    adopt = subparsers.add_parser(
+        "adopt", help="add Agent collaboration files to a project", parents=[content_options]
+    )
     adopt.add_argument("target", nargs="?", default=".", help="target project directory")
     adopt.add_argument("--create", action="store_true", help="create target directory if missing")
     adopt.add_argument("--force", action="store_true", help="replace existing generated files")
@@ -1667,13 +1812,15 @@ def build_parser() -> argparse.ArgumentParser:
     baseline.set_defaults(func=baseline_project)
 
     report = subparsers.add_parser(
-        "diff", help="report drift between an adopted project and the current templates"
+        "diff", help="report drift between an adopted project and the current templates", parents=[content_options]
     )
     report.add_argument("target", nargs="?", default=".", help="target project directory")
     report.set_defaults(func=diff_project)
 
     upgrade = subparsers.add_parser(
-        "upgrade", help="refresh protocol files in an adopted project while preserving project data"
+        "upgrade",
+        help="refresh protocol files in an adopted project while preserving project data",
+        parents=[content_options],
     )
     upgrade.add_argument("target", nargs="?", default=".", help="target project directory")
     upgrade.add_argument(
@@ -1697,9 +1844,21 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    global TEMPLATES_ROOT
+    arguments = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
-    args = parser.parse_args(argv)
-    return args.func(args)
+    args = parser.parse_args(arguments)
+    original_templates_root = TEMPLATES_ROOT
+    if getattr(args, "templates", None):
+        TEMPLATES_ROOT = Path(args.templates).expanduser().resolve()
+    try:
+        if getattr(args, "fetch", False):
+            forwarded = [argument for argument in arguments if argument != "--fetch"]
+            return fetch_and_run(args, forwarded)
+        return args.func(args)
+    finally:
+        # Keep repeated in-process invocations (tests) from inheriting the override.
+        TEMPLATES_ROOT = original_templates_root
 
 
 if __name__ == "__main__":
