@@ -30,6 +30,7 @@ vault/
   governance.md
   decisions.md
   handoff.md
+  parked.md
   collaboration.md
   tasks/
     README.md
@@ -41,13 +42,13 @@ vault/
 | 层 | 文件 | 生命周期 |
 | --- | --- | --- |
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；预算线内；压缩对象 |
-| 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
+| 治理文件 | `governance.md`、`collaboration.md`、`parked.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增 |
 
-预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；tasks（不含 archive）≤ 40 个文件。
+预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks（不含 archive）≤ 40 个文件。
 
-压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
+压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active、暂停任务降级为 parked 条目）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired、parked 清理）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
 
 决策索引化：decisions.md 变纯索引，正文入 `vault/decisions/D-xxxx-slug.md`。索引原则：增长进目录，读取走索引。
 
@@ -57,10 +58,11 @@ vault/
 
 - `vault/index.md`：上下文读取和记忆更新路由表。
 - `vault/project.md`：稳定项目目标、范围、边界和当前阶段。
-- `vault/runtime.md`：短当前状态、活跃任务、检查、风险和下一步。
+- `vault/runtime.md`：短当前状态、活跃任务指针表（Focus 行 + Active Tasks 每行一任务）、检查、风险和下一步。支持多任务并行，状态变化只改对应行。
 - `vault/governance.md`：任务等级、授权等级、任务契约、验收门、升级规则和 handoff。
 - `vault/decisions.md`：决策索引与生命周期记录（Active / Superseded / Merged / Expired）；正文拆分后在 `vault/decisions/*`。
-- `vault/handoff.md`：中断或恢复工作时的近期交接上下文。
+- `vault/handoff.md`：中断或恢复工作时的近期交接上下文；每条交接以任务编号命名，最多 3 条。
+- `vault/parked.md`：用户挂起事项冷索引；仅被提及时读取，不进默认读取路径；与 runtime 双向流动（挂起降级、提及升回）。
 - `vault/collaboration.md`：不能覆盖硬治理的软协作偏好。
 - `vault/tasks/*`：追踪或治理任务的契约、执行记录、验证和关闭说明。
 - `skills/*`：可复用 Agent 工作流。
@@ -116,6 +118,7 @@ vault/
 - Context grounded：先读本地项目上下文，再应用通用建议。
 - Checkpointable：通过任务文件、runtime 和 handoff 让长任务可恢复。
 - Human signal：架构、成本、安全、隐私、部署和模糊产品取舍交还用户判断。
+- Review ledger：多轮 review 用 `TASK-xxxx-review.md` 台账批量收敛，每轮一次写入替代消息往返；收敛后归档进任务文件。
 - Workflow compounding：重复稳定工作流沉淀为聚焦 skill，而不是扩写入口文件。
 
 ## 既有项目接入边界

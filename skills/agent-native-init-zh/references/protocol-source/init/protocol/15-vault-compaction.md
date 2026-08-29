@@ -11,7 +11,7 @@
 | 层 | 文件 | 生命周期 |
 | --- | --- | --- |
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；有预算线；压缩对象 |
-| 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
+| 治理文件 | `governance.md`、`collaboration.md`、`parked.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新；压缩不可直接修改 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
 
@@ -21,9 +21,10 @@
 
 全部用行数表达，可由 `wc -l` 直接度量：
 
-- `vault/runtime.md` 超过 120 行。
+- `vault/runtime.md` 超过 120 行，或 Recent Changes 超过 10 条。
 - `vault/handoff.md` 超过 3 条交接或超过 100 行。
 - `vault/decisions.md` 超过 150 行或超过 8 条完整决策记录；首次超出时执行索引化拆分。
+- `vault/parked.md` 超过 60 行或超过 20 条条目；执行清理提案。
 - `vault/tasks/`（不含 `archive/`）超过 40 个任务文件；执行里程碑归档。
 
 ## 触发时机
@@ -45,19 +46,27 @@
 
 ### runtime.md：重写而非删减
 
-以"新会话冷启动需要什么"为唯一标准生成全新文件：当前阶段、活跃任务指针、当前约束、必要检查、已知风险、下一步。
+以"新会话冷启动需要什么"为唯一标准生成全新文件：当前阶段、活跃任务指针表（Focus + Active Tasks 全表保留）、当前约束、必要检查、已知风险、下一步。
 
 旧内容分流：
 
 - 进行中的进展保留；
+- 暂停且暂不推进的任务：从 Active Tasks 表移除该行，降级为 `parked.md` 条目（含重启触发器）；
 - 已完成的进展压缩为一行进 Recent Changes，执行历史已在 `tasks/*`；
+- Recent Changes 超过 10 条时，老条目并入对应任务文件的 Execution Record 或压缩为一行；
 - 长期结论迁入 `decisions.md`。
 
 ### handoff.md：滚动窗口加分流
 
-- 保留最近 1-3 次交接。
-- 更早的交接：有对应任务文件的，把失败尝试与教训合并进该任务文件的 Execution Record；已被 `runtime.md` 或 `decisions.md` 吸收的允许删除。handoff 是瞬态上下文，删除不视为信息损失。
+- 保留最近 1-3 次交接，每条以任务编号命名。
+- 更早的交接：有对应任务文件的，按任务编号把失败尝试与教训合并进该任务文件的 Execution Record；已被 `runtime.md` 或 `decisions.md` 吸收的允许删除。handoff 是瞬态上下文，删除不视为信息损失。
 - 无在途任务时恢复为模板态。
+
+### parked.md：只出清理提案
+
+- 条目由挂起/重启事件驱动增删，压缩不主动改写。
+- 超出预算线（60 行或 20 条）时，输出候选清单：每条含 P-xxxx、建议去向（`details/parked-archive.md` 归档 / 保持）、一句话理由。
+- 用户确认前条目一律保留；Agent 不得删除条目。确认后的归档是零信息损失搬运。
 
 ### decisions.md：生命周期加索引化
 
@@ -97,7 +106,8 @@
 
 - 判定 `Superseded by D-xxxx`；
 - 判定 `Merged into D-xxxx`；
-- 判定 `Expired`。
+- 判定 `Expired`；
+- 判定 parked 条目归档或清理。
 
 提案格式：候选清单，每条含决策 ID、建议状态、一句话理由。未确认的一律保持 `Active`。
 
@@ -111,7 +121,7 @@
 压缩后必须运行并确认：
 
 ```bash
-wc -l vault/runtime.md vault/handoff.md vault/decisions.md
+wc -l vault/runtime.md vault/handoff.md vault/decisions.md vault/parked.md
 ```
 
 - 各热文件回到预算内。

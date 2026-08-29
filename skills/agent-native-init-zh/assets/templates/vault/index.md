@@ -34,13 +34,18 @@
 
 - `vault/tasks/` 下的活跃任务文件
 
+用户提到挂起、搁置或暂停的事项：
+
+- `vault/parked.md`
+
 ## 文件职责
 
 - `project.md`：稳定项目目标、范围、边界和阶段。
-- `runtime.md`：当前状态、活跃任务、检查、风险和下一步。
+- `runtime.md`：当前状态、活跃任务指针表（Focus + Active Tasks）、检查、风险和下一步。
 - `governance.md`：任务等级、授权、任务契约、验收门、升级和交接。
 - `decisions.md`：长期决策索引与（未拆分前的）决策记录；正文拆分后在 `vault/decisions/D-xxxx-*.md`。
-- `handoff.md`：中断工作近期交接状态。
+- `handoff.md`：中断工作近期交接状态，每条标注任务编号。
+- `parked.md`：用户挂起事项冷索引；仅被提及时读取，不进默认读取路径。
 - `collaboration.md`：不能覆盖硬规则的软协作偏好。
 - `tasks/README.md`：任务文件状态流转和模板。
 - `details/*`：可选长上下文，只有重复读取需要时创建。
@@ -56,10 +61,12 @@
 
 ## 更新规则
 
-- 非琐碎任务后更新 `runtime.md`。
+- 热文件更新纪律：固定段落顺序，每条内容占一行；状态或进展变化用单行替换，不重写整段。
+- 非琐碎任务后更新 `runtime.md`（Active Tasks 表中对应任务行的状态与下一步）。
 - Level B 或 Level C 更新 `tasks/*`。
 - 长期决策更新 `decisions.md`。
 - 中断或交接时更新 `handoff.md`。
+- 用户挂起任务时在 `parked.md` 记条目；重新提起时升回任务文件或 `runtime.md`。
 - 将长细节移出 `runtime.md`。
-- 更新热文件时检查预算线：runtime ≤ 120 行；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录。
+- 更新热文件时检查预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条。
 - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。

@@ -81,5 +81,6 @@
 - 任务契约和执行记录：`vault/tasks/*`。
 - 长期决策：`vault/decisions.md`。
 - 交接信息：`vault/handoff.md`。
+- 挂起事项：`vault/parked.md`。
 - 长上下文：`vault/details/*`。
 - 可复用工作流：`skills/*/SKILL.md`。

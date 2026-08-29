@@ -115,3 +115,27 @@ Next action:
 - `vault/decisions.md` if durable decisions were made
 - `vault/handoff.md` if interrupted or handed off
 ```
+
+## Review Ledger
+
+Multi-round review uses a `TASK-xxxx-review.md` ledger and converges in
+batch, not through message ping-pong.
+Statuses: `open` | `fixed` | `wont-fix` (with reason) | `needs-discussion`.
+The checklist prefers the task file's Acceptance Criteria; `wont-fix` and
+`needs-discussion` go back to the user.
+Archive the ledger into the task file's Execution Record once converged (no
+`open` or `needs-discussion` left).
+
+```md
+# TASK-0001 - Review Ledger
+
+## Findings
+
+- R1 · open · one-line finding
+- R2 · fixed · one-line finding
+- R3 · wont-fix · one-line finding · reason
+
+## Round 2026-01-01
+
+- Handling notes and verification results.
+```

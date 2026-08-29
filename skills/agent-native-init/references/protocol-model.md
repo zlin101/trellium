@@ -30,6 +30,7 @@ vault/
   governance.md
   decisions.md
   handoff.md
+  parked.md
   collaboration.md
   tasks/
     README.md
@@ -41,13 +42,13 @@ vault/
 | Tier | Files | Lifecycle |
 | --- | --- | --- |
 | Hot files | `runtime.md`, `handoff.md`, `decisions.md` | Frequently updated; budgeted; compaction targets |
-| Governance files | `governance.md`, `collaboration.md` | Event-driven updates; compaction only proposes |
+| Governance files | `governance.md`, `collaboration.md`, `parked.md` | Event-driven updates; compaction only proposes |
 | Structural files | `index.md`, `project.md`, `tasks/README.md` | Rarely updated |
 | Archive | `tasks/<task-id>.md`, `decisions/`, `details/*` | Append-only |
 
-Budgets: runtime ≤ 120 lines; handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; tasks (excluding archive) ≤ 40 files.
+Budgets: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks (excluding archive) ≤ 40 files.
 
-Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
+Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active, demoting paused tasks to parked entries) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`, parked cleanup) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
 
 Decision indexing: decisions.md becomes a pure index and bodies move to `vault/decisions/D-xxxx-slug.md`. Index principle: growth goes to directories, reading goes through indexes.
 
@@ -57,10 +58,11 @@ Leveled reading: by default read `index.md` (with the cheat sheet) and `runtime.
 
 - `vault/index.md`: routing table for what context to read and when to update memory.
 - `vault/project.md`: stable project purpose, scope, boundaries, and current phase.
-- `vault/runtime.md`: short current state, active task pointer, checks, risks, and next steps.
+- `vault/runtime.md`: short current state, active task pointer table (Focus line + Active Tasks, one row per parallel task), checks, risks, and next steps. Supports parallel tasks; a status change edits only the matching row.
 - `vault/governance.md`: task levels, authority levels, task contracts, acceptance gates, escalation, and handoff.
 - `vault/decisions.md`: durable decision index and lifecycle records (Active / Superseded / Merged / Expired); bodies move to `vault/decisions/*` after indexing.
-- `vault/handoff.md`: recent transfer context for interrupted or resumed work.
+- `vault/handoff.md`: recent transfer context for interrupted or resumed work; each entry named after its task id, at most 3 entries.
+- `vault/parked.md`: cold index of user-parked items; read only when mentioned, never on the default path; flows both ways with runtime (demote on park, promote on mention).
 - `vault/collaboration.md`: soft collaboration preferences that cannot override hard governance.
 - `vault/tasks/*`: tracked or governed task contracts, execution records, verification, and closure notes.
 - `skills/*`: reusable Agent workflows.
@@ -116,6 +118,7 @@ Passing tests alone is not completion.
 - Context grounded: read local project context before applying generic advice.
 - Checkpointable: keep long tasks recoverable through task files, runtime, and handoff.
 - Human signal: return architecture, cost, safety, privacy, deployment, and ambiguous product decisions to the user.
+- Review ledger: converge multi-round review through a `TASK-xxxx-review.md` ledger — one batched write per round instead of message ping-pong; archive into the task file once converged.
 - Workflow compounding: repeated stable workflows become focused skills, not bloated entry files.
 
 ## Existing Project Adoption Boundary

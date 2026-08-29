@@ -49,6 +49,12 @@ vault/project.md
 vault/handoff.md
 ```
 
+用户提到挂起、搁置或暂停的事项时追加读取：
+
+```text
+vault/parked.md
+```
+
 追踪任务或治理任务追加读取：
 
 ```text
@@ -69,7 +75,8 @@ vault/tasks/<task-id>.md
 8. 检查验收门；
 9. 更新 `vault/runtime.md`；
 10. 长期有效决策更新 `vault/decisions.md`；
-11. 任务中断或转交时更新 `vault/handoff.md`。
+11. 任务中断或转交时更新 `vault/handoff.md`；
+12. 用户挂起任务时记入 `vault/parked.md`，重新提起时升回。
 
 ## 禁止内容
 

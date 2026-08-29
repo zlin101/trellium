@@ -74,6 +74,21 @@ Agent 负责执行量、搜索、整理、实现和验证；人类负责方向�
 
 Agent 不应把“我能做到”误认为“这是应该做的”。
 
+### Review Ledger
+
+多轮 review（用户审阅、另一个 Agent 评审或工具检查）使用任务级台账，而不是消息往返。
+
+台账文件：`vault/tasks/TASK-xxxx-review.md`。findings 以编号清单进入，每条标注状态：`open`、`fixed`、`wont-fix`（附理由）、`needs-discussion`。
+
+规则：
+
+- 每轮一次批量写入，替代逐条消息往返：reviewer 全量写入 findings，执行者批量处理后批量回写状态，reviewer 只看增量；
+- review checklist 优先用任务文件的 Acceptance Criteria——按契约审，不只按 diff 审；
+- `wont-fix` 与 `needs-discussion` 条目交还用户判断；
+- 清单收敛（无 `open` 与 `needs-discussion`）后，台账归档进该任务文件的 Execution Record，不再单独保留。
+
+台账是瞬态工作文件：收敛前的中间状态不属于项目记忆，归档内容以结论为准。
+
 ### Workflow Compounding
 
 重复出现的工作流应沉淀为 skill，而不是长期塞入口文件或临时提示词。

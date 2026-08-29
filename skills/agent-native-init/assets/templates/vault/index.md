@@ -34,13 +34,18 @@ Tracked or governed work:
 
 - active file under `vault/tasks/`
 
+When the user mentions a parked, shelved, or suspended item:
+
+- `vault/parked.md`
+
 ## File Responsibilities
 
 - `project.md`: stable project purpose, scope, boundaries, and phase.
-- `runtime.md`: current state, active task, checks, risks, and next steps.
+- `runtime.md`: current state, active task pointer table (Focus + Active Tasks), checks, risks, and next steps.
 - `governance.md`: task levels, authority, task contracts, acceptance gates, escalation, and handoff.
 - `decisions.md`: durable decision index and, before the split, full records; bodies move to `vault/decisions/D-xxxx-*.md` after indexing.
-- `handoff.md`: recent transfer state for interrupted work.
+- `handoff.md`: recent transfer state for interrupted work, each entry named after its task id.
+- `parked.md`: cold index of user-parked items; read only when mentioned, never on the default path.
 - `collaboration.md`: soft collaboration preferences that cannot override hard rules.
 - `tasks/README.md`: task file status flow and template.
 - `details/*`: optional long context, created only when repeated reads justify it.
@@ -56,10 +61,12 @@ Tracked or governed work:
 
 ## Update Rules
 
-- Update `runtime.md` after non-trivial work.
+- Hot-file update discipline: keep section order fixed, one item per line; replace the single matching line on a status or progress change instead of rewriting whole sections.
+- Update `runtime.md` after non-trivial work (the status and next action of the matching row in Active Tasks).
 - Update `tasks/*` for Level B or Level C work.
 - Update `decisions.md` for durable decisions.
 - Update `handoff.md` when interrupted or handing off.
+- Record parked items in `parked.md` when the user suspends them; promote back to a task file or `runtime.md` when mentioned again.
 - Move long details out of `runtime.md`.
-- Check hot-file budgets when updating them: runtime ≤ 120 lines; handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records.
+- Check hot-file budgets when updating them: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries.
 - When a budget is exceeded, compact: measure → classify → restructure → verify → record. Semantic judgments (Superseded / Merged / Expired) are proposals only; keep Active until the user confirms.
