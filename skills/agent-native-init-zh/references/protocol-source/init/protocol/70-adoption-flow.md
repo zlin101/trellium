@@ -146,6 +146,44 @@ Agent 执行接入前，应只做只读扫描：
 - `vault/decisions.md` 记录接入模式决策。
 - 所有冲突和未完成事项已记录或请求确认。
 
+## 协作层升级
+
+接入之后，协议源仍会演进。升级的目标是：协议文件跟进新版，项目数据零损失，项目发展路线不中断。
+
+### 文件两分法
+
+升级器把协作层文件分成两类，写入权限不同：
+
+| 类 | 文件 | 升级权限 |
+| --- | --- | --- |
+| 项目数据 | `runtime.md`、`handoff.md`、`decisions.md`、`decisions/`、`tasks/*`、`project.md`、`collaboration.md`、`details/*` | 只读。写入范围是硬编码白名单，数据文件不在其中，不依赖 Agent 自觉 |
+| 协议文件 | `governance.md`、`index.md`、`tasks/README.md`、`skills/agent-task/`、`AGENTS.md` | 可写。本地未改的跟进上游；本地改过且上游也改过的出冲突提案 |
+
+`vault/.agent-init.json` 是升级器的版本戳：记录每个文件上次安装时的内容 hash，用于区分"项目自己改的"和"上游旧模板"。`AGENTS.md` 有两种形态：从模板整文件创建的按整文件对比；追加到用户已有文件的，只管理 marker 标记区域。
+
+### 铁律
+
+1. 数据文件永不被模板替换。数据文件需要换格式时，按 `init/MIGRATIONS.md` 的迁移手册做内容搬运：同一批事实、新排版，Agent 提案、用户确认，不允许"判断不重要然后丢弃"。
+2. 协议文件的本地修改永不静默丢弃：本地未改 → 跟进上游；仅本地改 → 保留；双方都改 → 冲突提案，由 Agent 语义合并、用户确认。语义合并后的文件标记为 observed，此后上游再变也只出提案，不自动替换。
+3. 先报告后执行：`diff` 只读；`upgrade` 默认 dry-run，`--apply` 只执行安全子集。
+4. 升级逐文件可选：`--only` / `--skip` 允许部分采纳；跳过的文件下轮再补。
+5. 目标为 git 仓库时，待触碰文件必须无未提交变更（`--allow-dirty` 显式覆盖）；非 git 目标先备份到 `.agent-init-backup/`。升级产出独立提交，可随时 `git revert`。
+
+### 升级轮次
+
+1. `python3 scripts/agent-init.py diff <target>`：只读报告（apply / conflict / add / keep / protected）与待执行迁移手册。
+2. `python3 scripts/agent-init.py upgrade <target> --apply`：执行安全子集（pristine 替换、新增、删除）；冲突生成提案到 `vault/.upgrade/<version>/`，含上游新版本与 upstream→local 差异。
+3. Agent 按提案合并 → 用户逐个确认。
+4. `python3 scripts/agent-init.py upgrade <target> --complete`：登记合并结果，收尾版本。中断安全：pending 状态持久在版本戳中，重跑 `diff` 可见卡点。
+
+### 存量项目接入
+
+版本戳出现之前接入的项目，先运行 `python3 scripts/agent-init.py baseline <target>` 补记版本戳（unversioned 信任级）：以当前本地内容为基线，此后上游变更一律出提案、不自动替换；首轮升级完成后恢复完整分级。
+
+### 发布侧约束
+
+每次修改协议模板：若新增或删除下发的模板文件，同步更新 `scripts/agent-init.py` 的 `FILE_ROLES`；在 `init/MIGRATIONS.md` 追加条目并按需更新 `init/VERSION`。
+
 ## 接入模式的授权
 
 接入模式默认属于 Authority 2。

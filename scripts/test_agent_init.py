@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import importlib.util
 from io import StringIO
+import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
+from typing import Iterator
 from unittest.mock import patch
 
 
@@ -18,7 +22,7 @@ agent_init = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(agent_init)
 
 
-class AgentInitTest(unittest.TestCase):
+class TargetTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary_directory.name)
@@ -40,18 +44,36 @@ class AgentInitTest(unittest.TestCase):
             if path.is_file()
         }
 
+    def adopt(self, target: Path, *extra: str) -> tuple[int, str, str]:
+        return self.run_agent_init("adopt", str(target), *extra)
+
+    def read_stamp(self, target: Path) -> dict:
+        return json.loads(
+            (target / agent_init.STAMP_RELATIVE).read_text(encoding="utf-8")
+        )
+
+    @contextmanager
+    def patched_templates(self) -> Iterator[Path]:
+        templates = self.root / "templates"
+        shutil.copytree(agent_init.TEMPLATES_ROOT, templates, dirs_exist_ok=True)
+        with patch.object(agent_init, "TEMPLATES_ROOT", templates):
+            yield templates
+
+
+class AgentInitTest(TargetTestCase):
     def test_adopt_creates_expected_files_and_is_idempotent(self) -> None:
         target = self.root / "project"
         target.mkdir()
         (target / "README.md").write_text("# Demo\n\nA demo project.\n", encoding="utf-8")
 
-        code, _, err = self.run_agent_init("adopt", str(target))
+        code, _, err = self.adopt(target)
 
         self.assertEqual(code, 0, err)
         expected = {
             "AGENTS.md",
             "README.md",
             "skills/agent-task/SKILL.md",
+            "vault/.agent-init.json",
             "vault/collaboration.md",
             "vault/decisions.md",
             "vault/governance.md",
@@ -306,6 +328,321 @@ class AgentInitTest(unittest.TestCase):
         project = (target / "vault/project.md").read_text(encoding="utf-8")
         self.assertNotIn("outside-secret", project)
         self.assertIn("project project.", project)
+
+
+class UpgradeMechanismTest(TargetTestCase):
+    def make_adopted_target(self) -> Path:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        return target
+
+    def test_file_roles_cover_every_adopted_file(self) -> None:
+        self.assertEqual(
+            set(agent_init.FILE_ROLES),
+            set(agent_init.TEMPLATE_FILES) | set(agent_init.RENDERED_FILES) | {"AGENTS.md"},
+        )
+        self.assertEqual(agent_init.WRITABLE_ROLES, {"marker", "merge", "template"})
+        for relative, role in agent_init.FILE_ROLES.items():
+            self.assertIn(role, agent_init.WRITABLE_ROLES | {"data"}, relative)
+
+    def test_adopt_writes_stamp_with_roles_and_hashes(self) -> None:
+        target = self.make_adopted_target()
+
+        stamp = self.read_stamp(target)
+
+        self.assertEqual(stamp["protocol_version"], agent_init.read_protocol_version())
+        self.assertEqual(stamp["trust"], "versioned")
+        self.assertEqual(stamp["schema_version"], 1)
+        self.assertEqual(set(stamp["files"]), set(agent_init.FILE_ROLES))
+        for relative, entry in stamp["files"].items():
+            expected_role = "merge" if relative == "AGENTS.md" else agent_init.FILE_ROLES[relative]
+            self.assertEqual(entry["role"], expected_role)
+        for relative in agent_init.TEMPLATE_FILES:
+            expected = agent_init.sha256_hex((target / relative).read_bytes())
+            self.assertEqual(stamp["files"][relative]["baseline"], expected)
+
+    def test_diff_reports_in_sync_after_adopt(self) -> None:
+        target = self.make_adopted_target()
+
+        code, out, err = self.run_agent_init("diff", str(target))
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("in_sync", out)
+        self.assertIn("protected", out)
+
+    def test_upgrade_preserves_local_edits_and_data_files(self) -> None:
+        target = self.make_adopted_target()
+        (target / "vault/runtime.md").write_text("# Evolved runtime\n", encoding="utf-8")
+        (target / "vault/decisions.md").write_text("D-0001 keep this decision\n", encoding="utf-8")
+        governance = (target / "vault/governance.md").read_text(encoding="utf-8")
+        (target / "vault/governance.md").write_text(
+            governance + "\n## Project Rules\n\n- Keep this local rule.\n", encoding="utf-8"
+        )
+
+        with self.patched_templates() as templates:
+            (templates / "vault/index.md").write_text("new index template\n", encoding="utf-8")
+            (templates / "vault/governance.md").write_text("new governance template\n", encoding="utf-8")
+            code, out, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertEqual((target / "vault/index.md").read_text(encoding="utf-8"), "new index template\n")
+        self.assertIn("Keep this local rule.", (target / "vault/governance.md").read_text(encoding="utf-8"))
+        self.assertEqual((target / "vault/runtime.md").read_text(encoding="utf-8"), "# Evolved runtime\n")
+        self.assertIn(
+            "D-0001 keep this decision", (target / "vault/decisions.md").read_text(encoding="utf-8")
+        )
+
+        version = agent_init.read_protocol_version()
+        proposals = list((target / "vault/.upgrade" / version).glob("*.proposal.md"))
+        self.assertEqual([path.name for path in proposals], ["vault__governance.md.proposal.md"])
+        proposal_text = proposals[0].read_text(encoding="utf-8")
+        self.assertIn("new governance template", proposal_text)
+        self.assertIn("Keep this local rule.", proposal_text)
+
+        stamp = self.read_stamp(target)
+        self.assertEqual(
+            stamp["files"]["vault/index.md"]["baseline"],
+            agent_init.sha256_hex(b"new index template\n"),
+        )
+        self.assertTrue(stamp["files"]["vault/governance.md"]["pending"])
+
+    def test_upgrade_complete_marks_merged_files_observed(self) -> None:
+        target = self.make_adopted_target()
+        (target / "vault/governance.md").write_text("locally modified governance\n", encoding="utf-8")
+        with self.patched_templates() as templates:
+            (templates / "vault/governance.md").write_text("new governance template\n", encoding="utf-8")
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+
+        merged = "new governance template\nmerged with local edits\n"
+        (target / "vault/governance.md").write_text(merged, encoding="utf-8")
+
+        code, out, err = self.run_agent_init("upgrade", str(target), "--complete")
+
+        self.assertEqual(code, 0, err)
+        version = agent_init.read_protocol_version()
+        stamp = self.read_stamp(target)
+        entry = stamp["files"]["vault/governance.md"]
+        self.assertFalse(entry["pending"])
+        self.assertTrue(entry["observed"])
+        self.assertEqual(entry["baseline"], agent_init.sha256_hex(merged.encode("utf-8")))
+        self.assertEqual(stamp["protocol_version"], version)
+        self.assertEqual(stamp["trust"], "versioned")
+
+        # A merged file is user-owned: the next upstream change must propose,
+        # never auto-replace.
+        with self.patched_templates() as templates:
+            (templates / "vault/governance.md").write_text("newer governance template\n", encoding="utf-8")
+            code, out, err = self.run_agent_init("diff", str(target))
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertIn("conflict", out)
+        self.assertEqual(
+            (target / "vault/governance.md").read_text(encoding="utf-8"), merged
+        )
+
+        # The same upstream revision the merge already absorbed stays quiet.
+        with self.patched_templates() as templates:
+            (templates / "vault/governance.md").write_text("new governance template\n", encoding="utf-8")
+            code, out, err = self.run_agent_init("diff", str(target))
+        self.assertEqual(code, 0, err)
+        self.assertIn("already absorbed", out)
+
+    def test_upgrade_replaces_marker_region_and_keeps_user_content(self) -> None:
+        # The marker flavor appears when adopt appends a section to an
+        # existing user-owned AGENTS.md.
+        target = self.root / "project"
+        target.mkdir()
+        agents_path = target / "AGENTS.md"
+        agents_path.write_text("# Project Rules\n\nOwned by the project.\n", encoding="utf-8")
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(agents_path.read_text(encoding="utf-8").count(agent_init.AGENTS_MARKER_START), 1)
+
+        def refreshed_section() -> str:
+            return (
+                f"{agent_init.AGENTS_MARKER_START}\n## Agent Native Init\n\n"
+                f"Refreshed entry text.\n{agent_init.AGENTS_MARKER_END}\n"
+            )
+
+        with patch.object(agent_init, "agent_entry_section", refreshed_section):
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        text = agents_path.read_text(encoding="utf-8")
+        self.assertIn("Owned by the project.", text)
+        self.assertIn("Refreshed entry text.", text)
+        self.assertEqual(text.count(agent_init.AGENTS_MARKER_START), 1)
+
+        # A locally modified marker region is a conflict, not an auto-replace.
+        text = agents_path.read_text(encoding="utf-8")
+        marker_end = text.find(agent_init.AGENTS_MARKER_END)
+        agents_path.write_text(
+            text[:marker_end] + "- local note inside the region\n" + text[marker_end:], encoding="utf-8"
+        )
+
+        def newer_section() -> str:
+            return (
+                f"{agent_init.AGENTS_MARKER_START}\n## Agent Native Init\n\n"
+                f"Newer entry text.\n{agent_init.AGENTS_MARKER_END}\n"
+            )
+
+        with patch.object(agent_init, "agent_entry_section", newer_section):
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        text = agents_path.read_text(encoding="utf-8")
+        self.assertIn("- local note inside the region", text)
+        self.assertNotIn("Newer entry text.", text)
+
+    def test_upgrade_creates_new_template_files(self) -> None:
+        target = self.make_adopted_target()
+
+        with self.patched_templates() as templates:
+            (templates / "vault/parked.md").write_text("# Parked\n\nstarter template\n", encoding="utf-8")
+            with patch.dict(agent_init.FILE_ROLES, {"vault/parked.md": "data"}):
+                code, _, err = self.run_agent_init("diff", str(target))
+                self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
+                code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+                self.assertEqual(code, 0, err)
+                stamp = self.read_stamp(target)
+                code, out, err = self.run_agent_init("diff", str(target))
+                self.assertEqual(code, 0, err)
+                self.assertIn("vault/parked.md", out)
+
+        self.assertTrue((target / "vault/parked.md").is_file())
+        entry = stamp["files"]["vault/parked.md"]
+        self.assertEqual(entry["role"], "data")
+        self.assertNotIn("observed", entry)
+
+    def test_upgrade_refuses_dirty_git_state(self) -> None:
+        if shutil.which("git") is None:
+            self.skipTest("requires git")
+        target = self.make_adopted_target()
+        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
+
+        with self.patched_templates() as templates:
+            (templates / "vault/index.md").write_text("new index template\n", encoding="utf-8")
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+            self.assertEqual(code, 1)
+            self.assertIn("uncommitted changes", err)
+            self.assertNotEqual(
+                (target / "vault/index.md").read_text(encoding="utf-8"), "new index template\n"
+            )
+
+            subprocess.run(["git", "add", "-A"], cwd=target, check=True)
+            subprocess.run(
+                ["git", "-c", "user.name=test", "-c", "user.email=test@example.com", "commit", "-qm", "adopt"],
+                cwd=target,
+                check=True,
+            )
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual((target / "vault/index.md").read_text(encoding="utf-8"), "new index template\n")
+
+    def test_baseline_unversioned_upgrades_conflict_only(self) -> None:
+        target = self.make_adopted_target()
+        (target / agent_init.STAMP_RELATIVE).unlink()
+        (target / "vault/index.md").write_text("legacy local index\n", encoding="utf-8")
+
+        code, _, err = self.run_agent_init("diff", str(target))
+        self.assertEqual(code, 1)
+        self.assertIn("baseline", err)
+
+        code, _, err = self.run_agent_init("baseline", str(target))
+        self.assertEqual(code, 0, err)
+        stamp = self.read_stamp(target)
+        self.assertEqual(stamp["trust"], "unversioned")
+        self.assertIsNone(stamp["protocol_version"])
+        self.assertTrue(stamp["files"]["vault/index.md"]["observed"])
+
+        code, _, err = self.run_agent_init("baseline", str(target))
+        self.assertEqual(code, 1)
+        self.assertIn("already exists", err)
+
+        with self.patched_templates() as templates:
+            (templates / "vault/index.md").write_text("new upstream index\n", encoding="utf-8")
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertEqual((target / "vault/index.md").read_text(encoding="utf-8"), "legacy local index\n")
+        self.assertTrue(list((target / "vault/.upgrade").rglob("*.proposal.md")))
+
+    def test_write_scope_guard_rejects_project_data(self) -> None:
+        target = self.root / "project"
+        (target / "vault").mkdir(parents=True)
+        (target / "vault/runtime.md").write_text("# Runtime\n", encoding="utf-8")
+
+        for relative in (
+            "vault/runtime.md",  # existing project data
+            "vault/tasks/TASK-0001.md",
+            "vault/decisions/D-0001-x.md",
+            "src/app.py",
+        ):
+            with self.assertRaises(agent_init.AdoptionError):
+                agent_init.assert_upgrade_writable(target, relative)
+
+        for relative in (
+            "AGENTS.md",
+            "vault/index.md",
+            "vault/governance.md",
+            "vault/tasks/README.md",
+            "skills/agent-task/SKILL.md",
+        ):
+            agent_init.assert_upgrade_writable(target, relative)
+
+        # Creating an absent data-role starter is allowed.
+        with patch.dict(agent_init.FILE_ROLES, {"vault/parked.md": "data"}):
+            agent_init.assert_upgrade_writable(target, "vault/parked.md")
+
+        agent_init.assert_upgrade_writable(target, agent_init.STAMP_RELATIVE)
+        agent_init.assert_upgrade_writable(target, "vault/.upgrade/2026.08.0/vault__index.md.proposal.md")
+        agent_init.assert_upgrade_writable(target, ".agent-init-backup/2026.08.0/vault/index.md")
+
+    def test_upgrade_skip_leaves_file_untouched(self) -> None:
+        target = self.make_adopted_target()
+
+        with self.patched_templates() as templates:
+            (templates / "vault/index.md").write_text("new index template\n", encoding="utf-8")
+            code, _, err = self.run_agent_init(
+                "upgrade", str(target), "--apply", "--skip", "vault/index.md"
+            )
+
+        self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
+        self.assertNotEqual(
+            (target / "vault/index.md").read_text(encoding="utf-8"), "new index template\n"
+        )
+        stamp = self.read_stamp(target)
+        self.assertEqual(
+            stamp["files"]["vault/index.md"]["baseline"],
+            agent_init.sha256_hex((agent_init.TEMPLATES_ROOT / "vault/index.md").read_bytes()),
+        )
+
+    def test_diff_lists_pending_migration_playbook(self) -> None:
+        target = self.make_adopted_target()
+        stamp = self.read_stamp(target)
+        stamp["protocol_version"] = "2025.01.0"
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        code, out, err = self.run_agent_init("diff", str(target))
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("migration playbook", out)
+        self.assertIn(agent_init.read_protocol_version(), out)
+
+    def test_adopt_fails_without_version_file(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+
+        with patch.object(agent_init, "VERSION_FILE", self.root / "missing-VERSION"):
+            code, _, err = self.adopt(target)
+
+        self.assertEqual(code, 1)
+        self.assertIn("version file", err)
 
 
 class RenderedContentTest(unittest.TestCase):

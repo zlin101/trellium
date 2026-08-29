@@ -56,6 +56,8 @@ skills/agent-native-init-zh/
 ```text
 init/
   INIT.md                         # 初始化入口清单
+  VERSION                         # 协议版本号（CalVer）
+  MIGRATIONS.md                   # 升级迁移手册（数据保护条目）
   protocol/
     README.md                     # 协议模块说明
     00-overview.md                # 总体定位和分层
@@ -205,6 +207,20 @@ vault/runtime.md
 vault/governance.md
 ```
 
+### 升级已接入项目
+
+协议源演进后，已接入的项目可以安全跟进，且不影响项目自身的发展路线：
+
+```bash
+python3 scripts/agent-init.py diff /path/to/project              # 只读报告
+python3 scripts/agent-init.py upgrade /path/to/project --apply   # 执行安全子集
+python3 scripts/agent-init.py upgrade /path/to/project --complete  # 提案解决后收尾
+```
+
+升级把协作层文件分为两类：**项目数据**（runtime、handoff、decisions、tasks、project、collaboration 等）对升级器只读，永不被模板替换；**协议文件**（governance、index、tasks/README、skills/agent-task、AGENTS.md 管理区域）可刷新，但本地修改永不静默丢弃——双方都改过时生成提案到 `vault/.upgrade/<version>/`，由 Agent 合并、用户确认。升级逐文件可选（`--only` / `--skip`），产出独立提交可随时 `git revert`。
+
+`adopt` 会在 `vault/.agent-init.json` 记录版本戳（各文件安装时的内容 hash）。版本戳出现之前的存量项目先运行 `baseline <target>` 补记。数据文件的格式迁移由 `init/MIGRATIONS.md` 迁移手册逐条定义：只做内容搬运，不丢事实。
+
 ### 修订协议
 
 如果要改 Agent Native Init 本身，只修改：
@@ -229,6 +245,8 @@ python3 scripts/sync-skills.py --check
 ```
 
 该脚本只用于本仓库的发布维护，不是 Skill 用户的安装依赖。CI 会运行相同检查。`references/protocol-source/` 完全由脚本维护；`SKILL.md`、精简的 `references/protocol-model.md` 和 `assets/templates/` 仍需在协议行为变化时人工审查和调整。同步脚本保证协议源进入安装包，但不会假装自动完成中英文语义翻译或模板设计。
+
+修改会影响已接入项目的协议模板时，同步三件事：`scripts/agent-init.py` 的 `FILE_ROLES`（新增或删除下发文件时）、`init/MIGRATIONS.md`（追加迁移条目）、`init/VERSION`（按需升版本）。
 
 ## 协议理念
 

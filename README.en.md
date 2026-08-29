@@ -56,6 +56,8 @@ skills/agent-native-init-zh/
 ```text
 init/
   INIT.md                         # initialization entry checklist
+  VERSION                         # protocol version (CalVer)
+  MIGRATIONS.md                   # upgrade migration playbook (data-protection entries)
   protocol/
     README.md                     # protocol module overview
     00-overview.md                # positioning and layering
@@ -205,6 +207,20 @@ vault/runtime.md
 vault/governance.md
 ```
 
+### Upgrading adopted projects
+
+When the protocol source evolves, adopted projects can follow along safely, without disturbing their own trajectory:
+
+```bash
+python3 scripts/agent-init.py diff /path/to/project              # read-only report
+python3 scripts/agent-init.py upgrade /path/to/project --apply   # execute the safe subset
+python3 scripts/agent-init.py upgrade /path/to/project --complete  # finalize resolved proposals
+```
+
+The upgrade splits collaboration files into two classes: **project data** (runtime, handoff, decisions, tasks, project, collaboration, and friends) is read-only to the upgrader and is never replaced by templates; **protocol files** (governance, index, tasks/README, skills/agent-task, the managed AGENTS.md region) may be refreshed, but local modifications are never silently discarded — when both sides changed, a proposal is written under `vault/.upgrade/<version>/` for the Agent to merge and the user to confirm. Upgrades are per-file opt-in (`--only` / `--skip`) and produce a standalone, revertable commit.
+
+`adopt` records a stamp at `vault/.agent-init.json` (the content hash of each file at install time). Projects adopted before the stamp existed should first run `baseline <target>`. Format migrations for data files are defined entry by entry in `init/MIGRATIONS.md`: content is carried over, never dropped.
+
 ### Revising the protocol
 
 To change Agent Native Init itself, modify only:
@@ -229,6 +245,8 @@ python3 scripts/sync-skills.py --check
 ```
 
 This script is only for this repo's release maintenance; it is not an install-time dependency for Skill users. CI runs the same check. `references/protocol-source/` is maintained entirely by the script; `SKILL.md`, the condensed `references/protocol-model.md`, and `assets/templates/` still require manual review and adjustment when protocol behavior changes. The sync script guarantees the protocol source enters the install package, but it does not pretend to automatically complete Chinese↔English semantic translation or template design.
+
+When a change affects protocol templates shipped to adopted projects, update three things in step: `FILE_ROLES` in `scripts/agent-init.py` (when files are added or removed), `init/MIGRATIONS.md` (append a migration entry), and `init/VERSION` (bump as needed).
 
 ## Protocol philosophy
 
