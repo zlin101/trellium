@@ -1,8 +1,8 @@
-# Agent Native Init
+# Trellium
 
 English | [简体中文](README.md)
 
-Agent Native Init is a portable Agent collaboration initialization protocol.
+Trellium is a portable Agent collaboration protocol: it installs and keeps upgrading the Agent collaboration layer of a project.
 
 Its goal is not to generate a fixed tech-stack application template, but to give any project a stable layer of Agent collaboration capability: entry rules, project memory, task governance, acceptance gates, handoff, reusable workflows, and a collaboration profile.
 
@@ -18,7 +18,7 @@ When developing with AI Agents over the long term, the common problems are rarel
 - Context breaks when switching between multiple Agents or tools;
 - Every project has to re-negotiate a set of collaboration rules from scratch.
 
-Agent Native Init converges these conventions into a single project-level initialization protocol, so that once an Agent enters a project it knows:
+Trellium converges these conventions into a single project-level collaboration protocol, so that once an Agent enters a project it knows:
 
 - What context to read first;
 - How to judge task level and authorization level;
@@ -36,7 +36,7 @@ init/
 skills/
 ```
 
-`init/` is the protocol source directory. It maintains the complete design and initialization flow of Agent Native Init.
+`init/` is the protocol source directory. It maintains the complete design, initialization, and upgrade flow of Trellium.
 
 `skills/` contains self-contained, directly installable Skill packages. Distilled from the `init/` protocol source, each package bundles the main workflow, a condensed protocol reference, the auto-synced authoritative protocol snapshot, and copy-ready templates. It does not depend on this repo's local path.
 
@@ -45,11 +45,11 @@ The `AGENTS.md`, `vault/`, `app/`, `tests/`, etc. in the repo root are validatio
 If you only want to install a self-contained Skill rather than migrate the full protocol source, use:
 
 ```text
-skills/agent-native-init/
-skills/agent-native-init-zh/
+skills/trellium/
+skills/trellium-zh/
 ```
 
-`agent-native-init` is the English version, `agent-native-init-zh` is the Chinese version.
+`trellium` is the English version, `trellium-zh` is the Chinese version.
 
 ## Directory structure
 
@@ -75,10 +75,10 @@ init/
       go-backend.md               # Go backend profile
       python-backend.md           # Python backend minimal profile
 skills/
-  agent-native-init/               # self-contained open-source Skill package
-  agent-native-init-zh/            # self-contained open-source Skill package (Chinese)
+  trellium/               # self-contained open-source Skill package
+  trellium-zh/            # self-contained open-source Skill package (Chinese)
 scripts/
-  agent-init.py                    # helper script for adopting a target project
+  trellium.py                      # install/upgrade script (auto-distributed into the Skill packages)
   sync-skills.py                   # mirrors init/ into the Skill distribution packages
 .github/workflows/
   skill-sync.yml                   # checks that the protocol source and Skill snapshots agree
@@ -136,8 +136,8 @@ Do not modify business source, dependencies, tests, build, deployment, or CI con
 If your Agent environment supports installing Skills, you can install or copy one of these directories as a Skill package:
 
 ```text
-skills/agent-native-init/
-skills/agent-native-init-zh/
+skills/trellium/
+skills/trellium-zh/
 ```
 
 When the Skill is used, the Agent generates or merges the following into the target project according to the package's references and templates:
@@ -150,7 +150,7 @@ When the Skill is used, the Agent generates or merges the following into the tar
 
 This Skill is suited for cross-project reuse; the full `init/protocol/` is better suited for continuing to design and maintain the protocol itself. Each Skill's `references/protocol-source/` is an authoritative snapshot generated from `init/` — do not edit it directly.
 
-The new Skill version includes memory-compaction capability. For an existing vault in an already-adopted project, reinstall the Skill and have the Agent run one compaction to complete structural migrations such as decisions indexing; an older `agent-task` can be upgraded manually against protocol-source module 15.
+Reinstalling the Skill delivers the new templates, protocol snapshot, and bundled upgrade script. For an already-adopted project, have the Agent follow the upgrade flow in SKILL.md: `diff` (read-only report) → `upgrade --apply` (safe subset + conflict proposals) → agent semantic merge + user confirmation → `upgrade --complete`. Project data (runtime, handoff, decisions, tasks) is read-only to the script and is never replaced by templates.
 
 ### Installing the Skill via Codex
 
@@ -161,7 +161,7 @@ Chinese version:
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
   --repo zlin101/agent-init \
-  --path skills/agent-native-init-zh
+  --path skills/trellium-zh
 ```
 
 English version:
@@ -169,23 +169,23 @@ English version:
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
   --repo zlin101/agent-init \
-  --path skills/agent-native-init
+  --path skills/trellium
 ```
 
 Restart Codex after installing so the new Skill takes effect.
 
 An installed Skill does not auto-upgrade from the GitHub repository. After a new release, existing users must remove the old local Skill directory and reinstall; the Codex installer refuses to overwrite an existing directory by default. Before reinstalling, confirm the local Skill directory has no custom modifications you want to keep.
 
-If the repository has not been pushed to GitHub yet, first push a commit that includes `skills/agent-native-init-zh/` or `skills/agent-native-init/`, then let Codex install it.
+If the repository has not been pushed to GitHub yet, first push a commit that includes `skills/trellium-zh/` or `skills/trellium/`, then let Codex install it.
 
 ### Using the script to adopt a project
 
-This repo also provides a lightweight script that adds the Agent collaboration layer to a target project straight from a local checkout. It does not install the Codex Skill.
+`trellium.py` is the deterministic installer/upgrader and runs from two locations: `assets/trellium.py` inside a Skill package (the regular path for end users, distributed with the package), or `scripts/trellium.py` in a checkout of this repo (for protocol development and maintenance). `sync-skills.py` keeps the two identical; the commands below use the repo path.
 
 To add the Agent collaboration layer to an existing project:
 
 ```bash
-python3 scripts/agent-init.py adopt /path/to/project
+python3 scripts/trellium.py adopt /path/to/project
 ```
 
 `adopt` only adds Agent collaboration files that are missing, by default:
@@ -195,7 +195,7 @@ python3 scripts/agent-init.py adopt /path/to/project
 - `vault/tasks/README.md`
 - `skills/agent-task/SKILL.md`
 
-If the target project already has an `AGENTS.md`, the script appends a marked Agent Native Init section instead of overwriting the file. Existing `vault/*` and `skills/*` files are skipped by default; pass `--force` explicitly to replace them.
+If the target project already has an `AGENTS.md`, the script appends a marked Trellium section instead of overwriting the file. Existing `vault/*` and `skills/*` files are skipped by default; pass `--force` explicitly to replace them.
 
 Before writing anything, the script preflights every output path. If preflight finds that an output file or any parent path inside the target is a symbolic link, an output file has multiple hard links, or a resolved path escapes the target, adoption fails before any write. File content is replaced atomically through a temporary file in the same directory. On platforms with `dir_fd` and `O_NOFOLLOW`, actual writes also walk from the filesystem root through anchored directory descriptors, preventing a post-preflight link swap from redirecting output. If a filesystem race is detected or an I/O failure occurs while writing, the script stops and explicitly warns that the target may contain partial changes.
 
@@ -210,12 +210,12 @@ vault/governance.md
 
 ### Upgrading adopted projects
 
-When the protocol source evolves, adopted projects can follow along safely, without disturbing their own trajectory:
+When the protocol source evolves, adopted projects can follow along safely, without disturbing their own trajectory (Skill users: replace `scripts/trellium.py` with `<skill dir>/assets/trellium.py`):
 
 ```bash
-python3 scripts/agent-init.py diff /path/to/project              # read-only report
-python3 scripts/agent-init.py upgrade /path/to/project --apply   # execute the safe subset
-python3 scripts/agent-init.py upgrade /path/to/project --complete  # finalize resolved proposals
+python3 scripts/trellium.py diff /path/to/project              # read-only report
+python3 scripts/trellium.py upgrade /path/to/project --apply   # execute the safe subset
+python3 scripts/trellium.py upgrade /path/to/project --complete  # finalize resolved proposals
 ```
 
 The upgrade splits collaboration files into two classes: **project data** (runtime, handoff, decisions, tasks, project, collaboration, and friends) is read-only to the upgrader and is never replaced by templates; **protocol files** (governance, index, tasks/README, skills/agent-task, the managed AGENTS.md region) may be refreshed, but local modifications are never silently discarded — when both sides changed, a proposal is written under `vault/.upgrade/<version>/` for the Agent to merge and the user to confirm. Upgrades are per-file opt-in (`--only` / `--skip`) and produce a standalone, revertable commit.
@@ -224,7 +224,7 @@ The upgrade splits collaboration files into two classes: **project data** (runti
 
 ### Revising the protocol
 
-To change Agent Native Init itself, modify only:
+To change Trellium itself, modify only:
 
 ```text
 init/INIT.md
@@ -247,7 +247,7 @@ python3 scripts/sync-skills.py --check
 
 This script is only for this repo's release maintenance; it is not an install-time dependency for Skill users. CI runs the same check. `references/protocol-source/` is maintained entirely by the script; `SKILL.md`, the condensed `references/protocol-model.md`, and `assets/templates/` still require manual review and adjustment when protocol behavior changes. The sync script guarantees the protocol source enters the install package, but it does not pretend to automatically complete Chinese↔English semantic translation or template design.
 
-When a change affects protocol templates shipped to adopted projects, update three things in step: `FILE_ROLES` in `scripts/agent-init.py` (when files are added or removed), `init/MIGRATIONS.md` (append a migration entry), and `init/VERSION` (bump as needed).
+When a change affects protocol templates shipped to adopted projects, update three things in step: `FILE_ROLES` in `scripts/trellium.py` (when files are added or removed), `init/MIGRATIONS.md` (append a migration entry), and `init/VERSION` (bump as needed).
 
 ## Protocol philosophy
 
@@ -299,7 +299,7 @@ When using the full protocol source, the correct flow is:
 
 When using a Skill package, the correct flow is:
 
-1. Install or copy `skills/agent-native-init-zh/` or `skills/agent-native-init/`;
+1. Install or copy `skills/trellium-zh/` or `skills/trellium/`;
 2. Invoke the Skill in the target project;
 3. Let the Skill generate the target project's own `AGENTS.md`, `vault/`, and `skills/agent-task/` from its built-in templates.
 
@@ -317,11 +317,11 @@ The current sandbox carries a minimal Python scaffold to validate the initializa
 uv run pytest
 ```
 
-This does not mean Agent Native Init is tied to Python. The Python and Go profiles are just examples of currently available project types.
+This does not mean Trellium is tied to Python. The Python and Go profiles are just examples of currently available project types.
 
 ## Commit boundary
 
-If the goal is to release or migrate the Agent Native Init protocol, commits should preferably be limited to:
+If the goal is to release or migrate the Trellium protocol, commits should preferably be limited to:
 
 ```text
 init/
@@ -330,4 +330,4 @@ README.md
 scripts/
 ```
 
-Unless there is an explicit need to update the current sandbox state, do not commit artifacts such as `vault/`, `app/`, `tests/`, or a target project's generated `skills/agent-task/` as protocol source. The root `skills/agent-native-init*` packages are distribution artifacts and may be committed alongside protocol changes.
+Unless there is an explicit need to update the current sandbox state, do not commit artifacts such as `vault/`, `app/`, `tests/`, or a target project's generated `skills/agent-task/` as protocol source. The root `skills/trellium*` packages are distribution artifacts and may be committed alongside protocol changes.

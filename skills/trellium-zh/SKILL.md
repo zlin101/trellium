@@ -1,13 +1,13 @@
 ---
-name: agent-native-init-zh
-description: 用于为新项目或既有软件项目添加持久的 Agent 协作规则、项目记忆、任务治理、交接机制或验收审查门。
+name: trellium-zh
+description: 用于为新项目或既有软件项目添加或升级持久的 Agent 协作规则、项目记忆、任务治理、交接机制或验收审查门。
 ---
 
-# Agent Native Init 中文版
+# Trellium 中文版
 
 ## 概览
 
-为项目安装 Agent-native 协作层：简洁的 Agent 入口规则、vault 项目记忆系统、任务契约治理、handoff、可复用工作流和审查验收门。
+为项目安装和升级 Agent-native 协作层：简洁的 Agent 入口规则、vault 项目记忆系统、任务契约治理、handoff、可复用工作流和审查验收门。
 
 本 Skill 是自包含包。目标项目不需要存在 `init/` 目录。
 
@@ -37,6 +37,21 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 - **既有项目接入**：目标项目已有源码、依赖、测试、构建文件、部署文件、CI 或项目文档。
 
 不确定时，选择既有项目接入。它更安全，因为默认只新增或合并 Agent 协作层。
+
+## 安装与升级（内置脚本优先）
+
+本包自带确定性安装/升级脚本 `assets/trellium.py`，优先使用；Agent 语义迁移在脚本之上叠加。
+
+- 新项目或既有项目接入：`python3 assets/trellium.py adopt <target>`。默认只补缺失文件；已有 `AGENTS.md` 时追加标记区块，不覆盖。
+- 已接入项目的升级：
+  1. `python3 assets/trellium.py diff <target>`——只读报告：会动什么、绝不动什么、待执行迁移手册。
+  2. `python3 assets/trellium.py upgrade <target> --apply`——执行安全子集；冲突生成提案到目标项目 `vault/.upgrade/<version>/`。
+  3. Agent 按提案做语义合并（逐条保留项目定制），用户逐条确认。
+  4. `python3 assets/trellium.py upgrade <target> --complete`——收尾登记。
+- 无版本戳的存量项目（`vault/.agent-init.json` 不存在）先运行 `python3 assets/trellium.py baseline <target>`。
+- 数据保护：runtime、handoff、decisions、tasks 等项目数据对脚本只读，永不被模板替换；数据文件的格式迁移按 `references/protocol-source/init/MIGRATIONS.md` 语义执行，只做内容搬运，不丢事实。
+- 版本判断：目标项目 `vault/.agent-init.json` 的 `protocol_version` 低于 `references/protocol-source/init/VERSION` 时提议升级。
+- 脚本无法运行时（缺少 python3 等），回退为本 SKILL 的 Agent 驱动流程：按 `references/protocol-source/` 的协议规则手工合并模板与执行迁移，遵守相同的数据保护边界。
 
 ## 任务契约
 
@@ -93,7 +108,7 @@ description: 用于为新项目或既有软件项目添加持久的 Agent 协作
 - `vault/runtime.md` 是短当前状态，不是长日志。
 - `vault/decisions.md` 记录长期选择。
 - 需要协作偏好时，`vault/collaboration.md` 存在。
-- Hot-file budgets and the compact procedure are routed from `vault/index.md` (see the compaction module in `references/protocol-source/init/protocol/15-vault-compaction.md`).
+- 热文件预算线与压缩流程由 `vault/index.md` 路由（见 `references/protocol-source/init/protocol/15-vault-compaction.md`）。
 
 先修复缺口，再继续。
 

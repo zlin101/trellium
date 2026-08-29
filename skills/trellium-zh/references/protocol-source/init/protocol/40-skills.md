@@ -35,7 +35,7 @@ skills/
 
 ```text
 skills/
-  agent-native-init/
+  trellium/
     SKILL.md
 ```
 
@@ -48,7 +48,7 @@ skills/
 - 完成前的多轮 review 和反思；
 - 验证、vault 更新和剩余风险汇报。
 
-如果 `agent-native-init` 与 `init/` 协议源发生冲突，以 `init/` 为准，并更新 skill 使其重新对齐。
+如果 `trellium` 与 `init/` 协议源发生冲突，以 `init/` 为准，并更新 skill 使其重新对齐。
 
 ## 开源 Skill 包
 
@@ -57,13 +57,14 @@ skills/
 该包应包含：
 
 - 简短的 `SKILL.md` 主流程；
-- `references/` 中的协议模型和模板使用说明；
+- `references/` 中的协议模型、模板使用说明和自动同步的协议快照；
 - `assets/templates/` 中的 Agent 入口、vault、任务规则和 starter skill 模板；
+- `assets/trellium.py` 确定性安装/升级脚本（由 `scripts/sync-skills.py` 从仓库源自动分发）；
 - `agents/openai.yaml` UI 元数据。
 
 开源 Skill 包应提炼协议精华，不逐字复制当前沙盒状态；不得包含本地绝对路径、密钥、个人工具配置或目标项目特定事实。
 
-`agent-native-init` 是英文版，`agent-native-init-zh` 是中文版。两者语义应保持一致，除语言本地化外不应分叉。
+`trellium` 是英文版，`trellium-zh` 是中文版。两者语义应保持一致，除语言本地化外不应分叉；各包使用各自语言的模板。
 
 ## 后续 Skill
 

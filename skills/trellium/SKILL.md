@@ -1,13 +1,13 @@
 ---
-name: agent-native-init
-description: Use when adding durable Agent collaboration rules, project memory, task governance, handoff, or review gates to a new or existing software project.
+name: trellium
+description: Use when adding or upgrading durable Agent collaboration rules, project memory, task governance, handoff, or review gates in a new or existing software project.
 ---
 
-# Agent Native Init
+# Trellium
 
 ## Overview
 
-Install an Agent-native collaboration layer into a project: concise Agent entry rules, a vault memory system, task-contract governance, handoff, reusable workflows, and review gates.
+Install and upgrade an Agent-native collaboration layer in a project: concise Agent entry rules, a vault memory system, task-contract governance, handoff, reusable workflows, and review gates.
 
 This skill is self-contained. It does not require an `init/` directory in the target project.
 
@@ -37,6 +37,21 @@ Choose one mode before editing:
 - **Existing project adoption**: use when the target already has source code, dependencies, tests, build files, deployment files, CI, or project docs.
 
 If uncertain, choose existing project adoption. It is safer because it only adds or merges the Agent collaboration layer by default.
+
+## Install And Upgrade (Bundled Script First)
+
+This package bundles a deterministic installer/upgrader at `assets/trellium.py`; prefer it, and layer Agent-driven semantic migration on top.
+
+- New or existing project adoption: `python3 assets/trellium.py adopt <target>`. It only adds missing files by default; an existing `AGENTS.md` gets a marked section appended, never overwritten.
+- Upgrading an adopted project:
+  1. `python3 assets/trellium.py diff <target>` — read-only report of what would change, what is never touched, and pending migration playbook entries.
+  2. `python3 assets/trellium.py upgrade <target> --apply` — executes the safe subset; conflicts produce proposals under the target's `vault/.upgrade/<version>/`.
+  3. The agent merges each proposal semantically (preserving every local customization); the user confirms item by item.
+  4. `python3 assets/trellium.py upgrade <target> --complete` — finalizes the round.
+- Projects without a stamp (missing `vault/.agent-init.json`): run `python3 assets/trellium.py baseline <target>` first.
+- Data protection: project data (runtime, handoff, decisions, tasks, and friends) is read-only to the script and is never replaced by templates; format migrations run semantically per `references/protocol-source/init/MIGRATIONS.md`, carrying content over without dropping facts.
+- Version check: propose an upgrade when the target's `vault/.agent-init.json` `protocol_version` is older than `references/protocol-source/init/VERSION`.
+- When the script cannot run (no python3, restricted sandbox), fall back to the agent-driven flow of this skill: merge templates and run migrations by hand per `references/protocol-source/`, honoring the same data-protection boundary.
 
 ## Task Contract
 

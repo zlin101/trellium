@@ -1,8 +1,8 @@
-# Agent Native Init 协议模型
+# Trellium 协议模型
 
 ## 目的
 
-Agent Native Init 为软件项目添加持久的协作层。它不是业务框架、角色层级、CI 系统或 LLM 运行时。
+Trellium 为软件项目添加持久的协作层。它不是业务框架、角色层级、CI 系统或 LLM 运行时。
 
 核心原则：
 

@@ -14,7 +14,7 @@ from typing import Iterator
 from unittest.mock import patch
 
 
-SCRIPT_PATH = Path(__file__).with_name("agent-init.py")
+SCRIPT_PATH = Path(__file__).with_name("trellium.py")
 SPEC = importlib.util.spec_from_file_location("agent_init", SCRIPT_PATH)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT_PATH}")
@@ -463,7 +463,7 @@ class UpgradeMechanismTest(TargetTestCase):
 
         def refreshed_section() -> str:
             return (
-                f"{agent_init.AGENTS_MARKER_START}\n## Agent Native Init\n\n"
+                f"{agent_init.AGENTS_MARKER_START}\n## Trellium\n\n"
                 f"Refreshed entry text.\n{agent_init.AGENTS_MARKER_END}\n"
             )
 
@@ -485,7 +485,7 @@ class UpgradeMechanismTest(TargetTestCase):
 
         def newer_section() -> str:
             return (
-                f"{agent_init.AGENTS_MARKER_START}\n## Agent Native Init\n\n"
+                f"{agent_init.AGENTS_MARKER_START}\n## Trellium\n\n"
                 f"Newer entry text.\n{agent_init.AGENTS_MARKER_END}\n"
             )
 
@@ -649,6 +649,86 @@ class UpgradeMechanismTest(TargetTestCase):
         code, out, err = self.run_agent_init("diff", str(target))
         self.assertEqual(code, 0, err)
         self.assertIn("x vault/parked.md", out)
+
+
+class EmbeddedSkillLayoutTest(TargetTestCase):
+    @staticmethod
+    def load_module(script_path: Path, name: str):
+        spec = importlib.util.spec_from_file_location(name, script_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load {script_path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_repo_layout_detection(self) -> None:
+        self.assertFalse(agent_init.SKILL_LAYOUT)
+        self.assertEqual(
+            agent_init.TEMPLATES_ROOT,
+            agent_init.SCRIPT_DIRECTORY.parent / "skills" / "trellium-zh" / "assets" / "templates",
+        )
+
+    def test_embedded_packages_install_their_own_locale(self) -> None:
+        repo_zh_package = agent_init.TEMPLATES_ROOT.parents[1]
+        repo_en_package = repo_zh_package.parent / "trellium"
+        for package, locale_marker in ((repo_zh_package, "替换为"), (repo_en_package, "replace with")):
+            with self.subTest(package=package.name):
+                copied = self.root / package.name
+                shutil.copytree(package, copied)
+                embedded = self.load_module(copied / "assets" / "trellium.py", f"embedded_{package.name}")
+
+                self.assertTrue(embedded.SKILL_LAYOUT)
+                self.assertEqual(embedded.TEMPLATES_ROOT, (copied / "assets" / "templates").resolve())
+                self.assertTrue(embedded.VERSION_FILE.is_file())
+                self.assertTrue(embedded.MIGRATIONS_FILE.is_file())
+
+                target = self.root / f"target-{package.name}"
+                target.mkdir()
+                code, _, err = self.run_agent_init_module(embedded, "adopt", str(target))
+                self.assertEqual(code, 0, err)
+                handoff = (target / "vault/handoff.md").read_text(encoding="utf-8")
+                self.assertIn(locale_marker, handoff)
+                runtime = (target / "vault/runtime.md").read_text(encoding="utf-8")
+                self.assertIn("## Active Tasks", runtime)
+                self.assertIn("Trellium adoption recorded", runtime)
+
+                stamp = json.loads(
+                    (target / embedded.STAMP_RELATIVE).read_text(encoding="utf-8")
+                )
+                self.assertEqual(stamp["protocol_version"], embedded.read_protocol_version())
+
+    @staticmethod
+    def run_agent_init_module(module, *arguments: str) -> tuple[int, str, str]:
+        out, err = StringIO(), StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = module.main(list(arguments))
+        return code, out.getvalue(), err.getvalue()
+
+    def test_embedded_upgrade_uses_package_version(self) -> None:
+        repo_zh_package = agent_init.TEMPLATES_ROOT.parents[1]
+        copied = self.root / "trellium-zh"
+        shutil.copytree(repo_zh_package, copied)
+        embedded = self.load_module(copied / "assets" / "trellium.py", "embedded_upgrade")
+
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.run_agent_init_module(embedded, "adopt", str(target))
+        self.assertEqual(code, 0, err)
+
+        # Upstream drift inside the package's own templates must be detected
+        # by the embedded script without any repo paths.
+        with patch.object(embedded, "TEMPLATES_ROOT", copied / "assets" / "templates") as patcher:
+            (copied / "assets" / "templates" / "vault" / "index.md").write_text(
+                "package-updated index\n", encoding="utf-8"
+            )
+            code, out, err = self.run_agent_init_module(embedded, "diff", str(target))
+            self.assertEqual(code, embedded.EXIT_ACTIONABLE, err)
+            self.assertIn("~ vault/index.md", out)
+            code, _, err = self.run_agent_init_module(embedded, "upgrade", str(target), "--apply")
+            self.assertEqual(code, 0, err)
+        self.assertEqual(
+            (target / "vault/index.md").read_text(encoding="utf-8"), "package-updated index\n"
+        )
 
 
 class RenderedContentTest(unittest.TestCase):

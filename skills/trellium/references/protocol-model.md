@@ -1,8 +1,8 @@
-# Agent Native Init Protocol Model
+# Trellium Protocol Model
 
 ## Purpose
 
-Agent Native Init adds a durable collaboration layer to a software project. It is not a business framework, role hierarchy, CI system, or LLM runtime.
+Trellium adds a durable collaboration layer to a software project. It is not a business framework, role hierarchy, CI system, or LLM runtime.
 
 The core principle:
 

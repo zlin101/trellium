@@ -150,6 +150,8 @@ Agent 执行接入前，应只做只读扫描：
 
 接入之后，协议源仍会演进。升级的目标是：协议文件跟进新版，项目数据零损失，项目发展路线不中断。
 
+升级器是 `trellium.py`，有两种运行位置：仓库 checkout 的 `scripts/trellium.py`（协议开发维护用），或已安装 Skill 包内的 `assets/trellium.py`（最终用户的常规路径，由 `sync-skills.py` 自动分发并与 `scripts/trellium.py` 保持一致）。下文命令中的 `trellium.py` 指两者任一。
+
 ### 文件两分法
 
 升级器把协作层文件分成两类，写入权限不同：
@@ -171,18 +173,18 @@ Agent 执行接入前，应只做只读扫描：
 
 ### 升级轮次
 
-1. `python3 scripts/agent-init.py diff <target>`：只读报告（apply / conflict / add / keep / protected）与待执行迁移手册。
-2. `python3 scripts/agent-init.py upgrade <target> --apply`：执行安全子集（pristine 替换、新增、删除）；冲突生成提案到 `vault/.upgrade/<version>/`，含上游新版本与 upstream→local 差异。
+1. `python3 trellium.py diff <target>`：只读报告（apply / conflict / add / keep / protected）与待执行迁移手册。
+2. `python3 trellium.py upgrade <target> --apply`：执行安全子集（pristine 替换、新增、删除）；冲突生成提案到 `vault/.upgrade/<version>/`，含上游新版本与 upstream→local 差异。
 3. Agent 按提案合并 → 用户逐个确认。
-4. `python3 scripts/agent-init.py upgrade <target> --complete`：登记合并结果，收尾版本。中断安全：pending 状态持久在版本戳中，重跑 `diff` 可见卡点。
+4. `python3 trellium.py upgrade <target> --complete`：登记合并结果，收尾版本。中断安全：pending 状态持久在版本戳中，重跑 `diff` 可见卡点。
 
 ### 存量项目接入
 
-版本戳出现之前接入的项目，先运行 `python3 scripts/agent-init.py baseline <target>` 补记版本戳（unversioned 信任级）：以当前本地内容为基线，此后上游变更一律出提案、不自动替换；首轮升级完成后恢复完整分级。
+版本戳出现之前接入的项目，先运行 `python3 trellium.py baseline <target>` 补记版本戳（unversioned 信任级）：以当前本地内容为基线，此后上游变更一律出提案、不自动替换；首轮升级完成后恢复完整分级。
 
 ### 发布侧约束
 
-每次修改协议模板：若新增或删除下发的模板文件，同步更新 `scripts/agent-init.py` 的 `FILE_ROLES`；在 `init/MIGRATIONS.md` 追加条目并按需更新 `init/VERSION`。
+每次修改协议模板：若新增或删除下发的模板文件，同步更新 `scripts/trellium.py` 的 `FILE_ROLES`；在 `init/MIGRATIONS.md` 追加条目并按需更新 `init/VERSION`。
 
 ## 接入模式的授权
 

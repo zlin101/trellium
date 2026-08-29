@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror the canonical init protocol into distributable Skill packages."""
+"""Mirror the canonical init protocol and updater script into distributable Skill packages."""
 
 from __future__ import annotations
 
@@ -14,9 +14,11 @@ import sys
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = REPO_ROOT / "init"
 DEFAULT_TARGETS = (
-    REPO_ROOT / "skills/agent-native-init-zh/references/protocol-source",
-    REPO_ROOT / "skills/agent-native-init/references/protocol-source",
+    REPO_ROOT / "skills/trellium-zh/references/protocol-source",
+    REPO_ROOT / "skills/trellium/references/protocol-source",
 )
+EMBEDDED_SCRIPT_SOURCE = REPO_ROOT / "scripts" / "trellium.py"
+EMBEDDED_SCRIPT_RELATIVE = "assets/trellium.py"
 MANIFEST_NAME = "manifest.json"
 
 
@@ -133,6 +135,25 @@ def write_snapshot(target: Path, files: dict[str, bytes]) -> None:
         raise
 
 
+def embedded_script_drift(package_root: Path) -> list[str]:
+    """Report drift between scripts/trellium.py and its embedded copy."""
+    destination = package_root / EMBEDDED_SCRIPT_RELATIVE
+    try:
+        actual = destination.read_bytes()
+    except OSError:
+        return [f"missing {EMBEDDED_SCRIPT_RELATIVE}"]
+    expected = EMBEDDED_SCRIPT_SOURCE.read_bytes()
+    if actual != expected:
+        return [f"changed {EMBEDDED_SCRIPT_RELATIVE}"]
+    return []
+
+
+def write_embedded_script(package_root: Path) -> None:
+    destination = package_root / EMBEDDED_SCRIPT_RELATIVE
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(EMBEDDED_SCRIPT_SOURCE.read_bytes())
+
+
 def sync(source: Path, targets: list[Path], check: bool) -> int:
     expected = expected_files(source)
     drift_found = False
@@ -140,6 +161,8 @@ def sync(source: Path, targets: list[Path], check: bool) -> int:
     for target in targets:
         validate_target(source, target)
         drift = describe_drift(expected, collect_target_files(target))
+        package_root = target.parents[1]
+        drift.extend(embedded_script_drift(package_root))
         if check:
             if drift:
                 drift_found = True
@@ -151,7 +174,8 @@ def sync(source: Path, targets: list[Path], check: bool) -> int:
             continue
 
         write_snapshot(target, expected)
-        print(f"synced {len(expected) - 1} source files to {target}")
+        write_embedded_script(package_root)
+        print(f"synced {len(expected) - 1} source files and the updater script to {target}")
 
     if check and drift_found:
         print(

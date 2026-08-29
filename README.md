@@ -1,8 +1,8 @@
-# Agent Native Init
+# Trellium
 
 [English](README.en.md) | 简体中文
 
-Agent Native Init 是一套可迁移的 Agent 协作初始化协议。
+Trellium 是一套可迁移的 Agent 协作协议：为项目安装并持续升级 Agent 协作层。
 
 它的目标不是生成某个固定技术栈的应用模板，而是给任何项目接入一层稳定的 Agent 协作能力：入口规则、项目记忆、任务治理、验收门、交接机制、可复用工作流和协作画像。
 
@@ -18,7 +18,7 @@ Agent Native Init 是一套可迁移的 Agent 协作初始化协议。
 - 多 Agent 或多工具切换时上下文断裂；
 - 每个项目都要重新口头约定一套协作规则。
 
-Agent Native Init 把这些约定收敛为一套项目级初始化协议，让 Agent 进入项目后知道：
+Trellium 把这些约定收敛为一套项目级协作协议，让 Agent 进入项目后知道：
 
 - 先读什么上下文；
 - 如何判断任务等级和授权等级；
@@ -36,7 +36,7 @@ init/
 skills/
 ```
 
-`init/` 是协议源目录。它用于维护 Agent Native Init 的完整设计和初始化流程。
+`init/` 是协议源目录。它用于维护 Trellium 的完整设计、初始化与升级流程。
 
 `skills/` 是可直接安装的自包含 Skill 包。它从 `init/` 协议源收敛而来，内含主工作流、协议精华 reference、自动同步的权威协议快照和可复制模板，不依赖本仓库本地路径。
 
@@ -45,11 +45,11 @@ skills/
 如果只想安装一个自包含 Skill，而不是迁移完整协议源，可以使用：
 
 ```text
-skills/agent-native-init/
-skills/agent-native-init-zh/
+skills/trellium/
+skills/trellium-zh/
 ```
 
-`agent-native-init` 是英文版，`agent-native-init-zh` 是中文版。
+`trellium` 是英文版，`trellium-zh` 是中文版。
 
 ## 目录结构
 
@@ -75,10 +75,10 @@ init/
       go-backend.md               # Go 后端 profile
       python-backend.md           # Python 后端最小 profile
 skills/
-  agent-native-init/               # 自包含开源 Skill 包
-  agent-native-init-zh/            # 自包含开源 Skill 包中文版
+  trellium/               # 自包含开源 Skill 包
+  trellium-zh/            # 自包含开源 Skill 包中文版
 scripts/
-  agent-init.py                    # 接入目标项目的辅助脚本
+  trellium.py                      # 安装/升级协作层脚本（sync 自动分发进 Skill 包）
   sync-skills.py                   # 将 init/ 同步到 Skill 分发包
 .github/workflows/
   skill-sync.yml                   # 检查协议源和 Skill 快照是否一致
@@ -136,8 +136,8 @@ init/protocol/70-adoption-flow.md
 如果你的 Agent 环境支持安装 Skills，可以将以下目录作为 Skill 包安装或复制：
 
 ```text
-skills/agent-native-init/
-skills/agent-native-init-zh/
+skills/trellium/
+skills/trellium-zh/
 ```
 
 使用该 Skill 时，Agent 会按包内 reference 和 templates 在目标项目中生成或合并：
@@ -150,7 +150,7 @@ skills/agent-native-init-zh/
 
 该 Skill 适合跨项目复用；完整 `init/protocol/` 更适合继续设计和维护协议本身。每个 Skill 的 `references/protocol-source/` 是由 `init/` 自动生成的权威快照，不要直接修改。
 
-新版 Skill 包含记忆压缩能力。对已接入项目的既有 vault，重装 Skill 后让 Agent 执行一次压缩即可完成 decisions 索引化等结构迁移；旧 `agent-task` 可按协议源 15 号模块手动升级。
+重装 Skill 即获得新版模板、协议快照与内置升级脚本。对已接入项目，让 Agent 按 SKILL.md 的升级流程执行：`diff`（只读报告）→ `upgrade --apply`（安全子集 + 冲突提案）→ Agent 语义合并 + 用户确认 → `upgrade --complete`。项目数据（runtime、handoff、decisions、tasks）对脚本只读，永不被模板替换。
 
 ### 使用 Codex 安装 Skill
 
@@ -161,7 +161,7 @@ skills/agent-native-init-zh/
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
   --repo zlin101/agent-init \
-  --path skills/agent-native-init-zh
+  --path skills/trellium-zh
 ```
 
 英文版：
@@ -169,23 +169,23 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
   --repo zlin101/agent-init \
-  --path skills/agent-native-init
+  --path skills/trellium
 ```
 
 安装后重启 Codex，让新 Skill 生效。
 
 已安装的 Skill 不会随 GitHub 仓库自动升级。发布新版后，现有用户需要移除旧的本地 Skill 目录再重新安装；Codex installer 默认拒绝覆盖已存在目录。重新安装前应确认本地 Skill 目录没有需要保留的自定义修改。
 
-如果仓库尚未推送到 GitHub，先推送包含 `skills/agent-native-init-zh/` 或 `skills/agent-native-init/` 的提交，再让 Codex 安装。
+如果仓库尚未推送到 GitHub，先推送包含 `skills/trellium-zh/` 或 `skills/trellium/` 的提交，再让 Codex 安装。
 
 ### 使用脚本接入项目
 
-本仓库还提供一个轻量脚本，用于在本地 checkout 中直接把 Agent 协作层接入目标项目。它不负责安装 Codex Skill。
+`trellium.py` 是安装/升级的确定性执行器，有两种运行位置：Skill 包内的 `assets/trellium.py`（最终用户常规路径，随包分发），或本仓库 checkout 的 `scripts/trellium.py`（协议开发维护用）。两者由 `sync-skills.py` 保持一致，下文命令以仓库路径示例。
 
 对既有项目接入 Agent 协作层：
 
 ```bash
-python3 scripts/agent-init.py adopt /path/to/project
+python3 scripts/trellium.py adopt /path/to/project
 ```
 
 `adopt` 默认只新增缺失的 Agent 协作文件：
@@ -195,7 +195,7 @@ python3 scripts/agent-init.py adopt /path/to/project
 - `vault/tasks/README.md`
 - `skills/agent-task/SKILL.md`
 
-如果目标项目已经有 `AGENTS.md`，脚本会追加一个带标记的 Agent Native Init 小节，而不是覆盖原文件。已有的 `vault/*` 和 `skills/*` 文件默认跳过；需要替换时显式传入 `--force`。
+如果目标项目已经有 `AGENTS.md`，脚本会追加一个带标记的 Trellium 小节，而不是覆盖原文件。已有的 `vault/*` 和 `skills/*` 文件默认跳过；需要替换时显式传入 `--force`。
 
 任何写入发生前，脚本会预检全部输出路径。如果预检发现输出文件或目标目录内的任一父路径是符号链接、输出文件具有多个硬链接，或者解析后的路径越出目标目录，整次接入会在零写入状态下失败。文件内容通过同目录临时文件原子替换；在支持 `dir_fd` 和 `O_NOFOLLOW` 的平台上，实际写入还会从文件系统根开始逐级锚定目录句柄，阻止预检后的换链绕过。如果运行期间检测到文件系统竞态或发生 I/O 故障，脚本会停止并明确提示目标可能已有部分变更。
 
@@ -210,12 +210,12 @@ vault/governance.md
 
 ### 升级已接入项目
 
-协议源演进后，已接入的项目可以安全跟进，且不影响项目自身的发展路线：
+协议源演进后，已接入的项目可以安全跟进，且不影响项目自身的发展路线（Skill 包用户将 `scripts/trellium.py` 替换为 `<skill 目录>/assets/trellium.py`）：
 
 ```bash
-python3 scripts/agent-init.py diff /path/to/project              # 只读报告
-python3 scripts/agent-init.py upgrade /path/to/project --apply   # 执行安全子集
-python3 scripts/agent-init.py upgrade /path/to/project --complete  # 提案解决后收尾
+python3 scripts/trellium.py diff /path/to/project              # 只读报告
+python3 scripts/trellium.py upgrade /path/to/project --apply   # 执行安全子集
+python3 scripts/trellium.py upgrade /path/to/project --complete  # 提案解决后收尾
 ```
 
 升级把协作层文件分为两类：**项目数据**（runtime、handoff、decisions、tasks、project、collaboration 等）对升级器只读，永不被模板替换；**协议文件**（governance、index、tasks/README、skills/agent-task、AGENTS.md 管理区域）可刷新，但本地修改永不静默丢弃——双方都改过时生成提案到 `vault/.upgrade/<version>/`，由 Agent 合并、用户确认。升级逐文件可选（`--only` / `--skip`），产出独立提交可随时 `git revert`。
@@ -224,7 +224,7 @@ python3 scripts/agent-init.py upgrade /path/to/project --complete  # 提案解�
 
 ### 修订协议
 
-如果要改 Agent Native Init 本身，只修改：
+如果要改 Trellium 本身，只修改：
 
 ```text
 init/INIT.md
@@ -247,7 +247,7 @@ python3 scripts/sync-skills.py --check
 
 该脚本只用于本仓库的发布维护，不是 Skill 用户的安装依赖。CI 会运行相同检查。`references/protocol-source/` 完全由脚本维护；`SKILL.md`、精简的 `references/protocol-model.md` 和 `assets/templates/` 仍需在协议行为变化时人工审查和调整。同步脚本保证协议源进入安装包，但不会假装自动完成中英文语义翻译或模板设计。
 
-修改会影响已接入项目的协议模板时，同步三件事：`scripts/agent-init.py` 的 `FILE_ROLES`（新增或删除下发文件时）、`init/MIGRATIONS.md`（追加迁移条目）、`init/VERSION`（按需升版本）。
+修改会影响已接入项目的协议模板时，同步三件事：`scripts/trellium.py` 的 `FILE_ROLES`（新增或删除下发文件时）、`init/MIGRATIONS.md`（追加迁移条目）、`init/VERSION`（按需升版本）。
 
 ## 协议理念
 
@@ -299,7 +299,7 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 
 使用 Skill 包时，正确方式是：
 
-1. 安装或复制 `skills/agent-native-init-zh/` 或 `skills/agent-native-init/`；
+1. 安装或复制 `skills/trellium-zh/` 或 `skills/trellium/`；
 2. 在目标项目调用该 Skill；
 3. 让 Skill 根据内置模板生成目标项目自己的 `AGENTS.md`、`vault/` 和 `skills/agent-task/`。
 
@@ -317,11 +317,11 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 uv run pytest
 ```
 
-这不代表 Agent Native Init 绑定 Python。Python 和 Go profile 只是当前已有的项目类型示例。
+这不代表 Trellium 绑定 Python。Python 和 Go profile 只是当前已有的项目类型示例。
 
 ## 提交边界
 
-如果目标是发布或迁移 Agent Native Init 协议，提交内容应优先限制在：
+如果目标是发布或迁移 Trellium 协议，提交内容应优先限制在：
 
 ```text
 init/
@@ -330,4 +330,4 @@ README.md
 scripts/
 ```
 
-除非明确需要更新当前沙盒状态，否则不要把 `vault/`、`app/`、`tests/` 或目标项目生成的 `skills/agent-task/` 等产物作为协议源提交。根目录 `skills/agent-native-init*` 是分发包，可以随协议变化同步提交。
+除非明确需要更新当前沙盒状态，否则不要把 `vault/`、`app/`、`tests/` 或目标项目生成的 `skills/agent-task/` 等产物作为协议源提交。根目录 `skills/trellium*` 是分发包，可以随协议变化同步提交。

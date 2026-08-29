@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adopt Agent Native Init assets into a target project and upgrade them in place."""
+"""Adopt Trellium assets into a target project and upgrade them in place."""
 
 from __future__ import annotations
 
@@ -19,9 +19,21 @@ from pathlib import Path
 from typing import Iterator
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILLS_ROOT = REPO_ROOT / "skills"
-TEMPLATES_ROOT = SKILLS_ROOT / "agent-native-init-zh" / "assets" / "templates"
+# The script runs from two layouts:
+# - repository checkout: scripts/trellium.py, templates under
+#   skills/trellium-zh/assets/templates, protocol under init/
+# - installed Skill package: assets/trellium.py, templates under
+#   assets/templates, protocol under references/protocol-source/init
+# Each Skill package uses its own locale templates.
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+SKILL_LAYOUT = (SCRIPT_DIRECTORY / "templates" / "vault" / "index.md").is_file()
+if SKILL_LAYOUT:
+    TEMPLATES_ROOT = SCRIPT_DIRECTORY / "templates"
+    PROTOCOL_INIT_DIRECTORY = SCRIPT_DIRECTORY.parent / "references" / "protocol-source" / "init"
+else:
+    REPO_ROOT = SCRIPT_DIRECTORY.parent
+    TEMPLATES_ROOT = REPO_ROOT / "skills" / "trellium-zh" / "assets" / "templates"
+    PROTOCOL_INIT_DIRECTORY = REPO_ROOT / "init"
 
 TEMPLATE_FILES = (
     "vault/index.md",
@@ -58,8 +70,8 @@ WRITABLE_ROLES = frozenset({"marker", "merge", "template"})
 STAMP_RELATIVE = "vault/.agent-init.json"
 PROPOSAL_DIRECTORY = "vault/.upgrade"
 BACKUP_DIRECTORY = ".agent-init-backup"
-VERSION_FILE = REPO_ROOT / "init" / "VERSION"
-MIGRATIONS_FILE = REPO_ROOT / "init" / "MIGRATIONS.md"
+VERSION_FILE = PROTOCOL_INIT_DIRECTORY / "VERSION"
+MIGRATIONS_FILE = PROTOCOL_INIT_DIRECTORY / "MIGRATIONS.md"
 
 EXIT_ACTIONABLE = 2
 EXIT_CONFLICT = 3
@@ -486,11 +498,11 @@ def append_agent_entry(
             validate_output_metadata(metadata, agents_path)
             current = read_text_at(parent_descriptor, destination_name, agents_path)
             if AGENTS_MARKER_START in current or "vault/index.md" in current:
-                print_action(False, f"keep existing Agent Native Init entry in {agents_path}")
+                print_action(False, f"keep existing Trellium entry in {agents_path}")
                 return "skipped"
 
             section = agent_entry_section()
-            print_action(False, f"append Agent Native Init entry to {agents_path}")
+            print_action(False, f"append Trellium entry to {agents_path}")
             atomic_write_text_at(
                 parent_descriptor,
                 destination_name,
@@ -513,12 +525,12 @@ def append_agent_entry(
 
     current = agents_path.read_text(encoding="utf-8")
     if AGENTS_MARKER_START in current or "vault/index.md" in current:
-        print_action(dry_run, f"keep existing Agent Native Init entry in {agents_path}")
+        print_action(dry_run, f"keep existing Trellium entry in {agents_path}")
         return "skipped"
 
     section = agent_entry_section()
 
-    print_action(dry_run, f"append Agent Native Init entry to {agents_path}")
+    print_action(dry_run, f"append Trellium entry to {agents_path}")
     if not dry_run:
         atomic_write_text(agents_path, current.rstrip() + section + "\n")
     return "updated"
@@ -528,7 +540,7 @@ def agent_entry_section() -> str:
     return f"""
 
 {AGENTS_MARKER_START}
-## Agent Native Init
+## Trellium
 
 For non-trivial work, read these files before editing:
 
@@ -611,7 +623,7 @@ def render_project(target: Path, target_descriptor: int | None) -> str:
 
 ## Current Phase
 
-Existing project adoption via Agent Native Init.
+Existing project adoption via Trellium.
 
 ## In Scope
 
@@ -638,7 +650,7 @@ def render_runtime(target: Path) -> str:
 
 ## Current Phase
 
-Agent Native Init adoption recorded on {today}.
+Trellium adoption recorded on {today}.
 
 ## Focus
 
@@ -658,7 +670,7 @@ line; a status change edits only the matching row.
 
 Acceptance: `AGENTS.md`, `vault/`, and `skills/agent-task/SKILL.md` exist and route future Agents to project memory.
 
-Required Check: `python3 scripts/agent-init.py adopt {target} --dry-run` from the Agent Native Init repository, when available.
+Required Check: `python3 trellium.py adopt {target} --dry-run` from a Trellium checkout or Skill package, when available.
 
 ## Current Progress
 
@@ -673,7 +685,7 @@ Required Check: `python3 scripts/agent-init.py adopt {target} --dry-run` from th
 
 ## Recent Changes
 
-- Added Agent Native Init project memory files.
+- Added Trellium project memory files.
 
 ## Known Risks
 
@@ -746,7 +758,7 @@ def replace_marker_region(text: str, new_region: str) -> str:
     start = text.find(AGENTS_MARKER_START)
     end = text.find(AGENTS_MARKER_END, start)
     if start < 0 or end < 0:
-        raise AdoptionError("Agent Native Init marker region not found")
+        raise AdoptionError("Trellium marker region not found")
     end += len(AGENTS_MARKER_END)
     return text[:start] + new_region + text[end:]
 
@@ -1003,7 +1015,7 @@ def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
             plan["missing"].append({"path": relative, "role": role, "reason": "upstream template is missing from this repository"})
         elif local is None:
             if role == "marker":
-                plan["add"].append({"path": relative, "role": role, "reason": "marker region absent; append the Agent Native Init entry"})
+                plan["add"].append({"path": relative, "role": role, "reason": "marker region absent; append the Trellium entry"})
             else:
                 plan["missing"].append({"path": relative, "role": role, "reason": "file is missing locally; re-run adopt or restore it"})
         elif local == upstream:
@@ -1038,7 +1050,7 @@ def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
             elif "vault/index.md" in text:
                 plan["add_skip"].append({"path": relative, "role": role, "reason": "agent entry already routes to the vault; kept"})
             else:
-                plan["add"].append({"path": relative, "role": role, "reason": "append the Agent Native Init entry"})
+                plan["add"].append({"path": relative, "role": role, "reason": "append the Trellium entry"})
             continue
         if (target / relative).exists():
             plan["add_skip"].append(
@@ -1160,7 +1172,7 @@ def update_agent_entry_region(target: Path, target_descriptor: int | None) -> st
             validate_output_metadata(metadata, agents_path)
             current = read_text_at(parent_descriptor, name, agents_path)
             if marker_region(current) is None:
-                raise AdoptionError(f"Agent Native Init marker region missing in {agents_path}")
+                raise AdoptionError(f"Trellium marker region missing in {agents_path}")
             atomic_write_text_at(
                 parent_descriptor,
                 name,
@@ -1172,7 +1184,7 @@ def update_agent_entry_region(target: Path, target_descriptor: int | None) -> st
     validate_output_paths(target, [agents_path])
     current = agents_path.read_text(encoding="utf-8")
     if marker_region(current) is None:
-        raise AdoptionError(f"Agent Native Init marker region missing in {agents_path}")
+        raise AdoptionError(f"Trellium marker region missing in {agents_path}")
     atomic_write_text(agents_path, replace_marker_region(current, new_region))
     return "updated"
 
@@ -1633,12 +1645,12 @@ def adopt_project(args: argparse.Namespace) -> int:
         for item in skipped:
             print(f"  - {item}")
     print("next: ask your Agent to read AGENTS.md, vault/index.md (cheat sheet), and vault/runtime.md; read vault/governance.md in full for Level B/C work")
-    print("later upgrades: python3 scripts/agent-init.py diff <target>")
+    print("later upgrades: python3 trellium.py diff <target>")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Adopt Agent Native Init into a target project.")
+    parser = argparse.ArgumentParser(description="Adopt Trellium into a target project.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     adopt = subparsers.add_parser("adopt", help="add Agent collaboration files to a project")
