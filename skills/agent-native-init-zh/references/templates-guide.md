@@ -11,10 +11,11 @@
 - `AGENTS.md`：项目级 Agent 入口规则。
 - `vault/index.md`：上下文路由和记忆更新规则。含任务与授权速查表及压缩预算线。
 - `vault/project.md`：稳定项目目标和范围。
-- `vault/runtime.md`：当前状态和活跃任务指针。
+- `vault/runtime.md`：当前状态和活跃任务指针表（Focus 行 + Active Tasks 表，每行一个并行任务）。
 - `vault/governance.md`：任务等级、授权等级、任务契约和验收门。
 - `vault/decisions.md`：长期决策；生命周期四态；超阈值索引化（正文入 `vault/decisions/`）。
-- `vault/handoff.md`：近期交接状态。
+- `vault/handoff.md`：近期交接状态；每条以任务编号命名，最多 3 条。
+- `vault/parked.md`：用户挂起事项冷索引（P-xxxx 条目）；仅被提及时读取；清理只出提案。
 - `vault/collaboration.md`：协作偏好和观察模式。
 - `vault/tasks/README.md`：任务文件状态流转和模板。
 - `skills/agent-task/SKILL.md`：非琐碎项目任务的可复用工作流。
@@ -24,9 +25,10 @@
 大多数模板可以直接使用，然后补充项目事实：
 
 1. 在 `vault/project.md` 替换项目名称和目标。
-2. 在 `vault/runtime.md` 设置当前阶段和检查命令。
-3. 保持 `vault/governance.md` 保守。
-4. 只有具体 profile 或用户需求需要时，才添加项目代码和测试。
+2. 在 `vault/runtime.md` 设置当前阶段、Focus 任务和检查命令；Active Tasks 表保留实际存在的任务行，没有并行任务就只留一行。
+3. `vault/parked.md` 没有挂起事项时保持模板态，不要预填。
+4. 保持 `vault/governance.md` 保守。
+5. 只有具体 profile 或用户需求需要时，才添加项目代码和测试。
 
 ## 既有项目接入
 

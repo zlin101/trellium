@@ -28,6 +28,7 @@ TEMPLATE_FILES = (
     "vault/governance.md",
     "vault/decisions.md",
     "vault/handoff.md",
+    "vault/parked.md",
     "vault/collaboration.md",
     "vault/tasks/README.md",
     "skills/agent-task/SKILL.md",
@@ -46,6 +47,7 @@ FILE_ROLES = {
     "vault/collaboration.md": "data",
     "vault/decisions.md": "data",
     "vault/handoff.md": "data",
+    "vault/parked.md": "data",
     "vault/project.md": "data",
     "vault/runtime.md": "data",
     "vault/tasks/README.md": "template",
@@ -638,9 +640,21 @@ def render_runtime(target: Path) -> str:
 
 Agent Native Init adoption recorded on {today}.
 
-## Active Task
+## Focus
 
-Objective: Maintain the project-specific Agent collaboration layer.
+- ADOPTION
+
+## Active Tasks
+
+One line per parallel task; keep bodies in `vault/tasks/<task-id>.md`, this
+table holds pointers only.
+
+| Task | Objective | Status | Next Action |
+| --- | --- | --- | --- |
+| ADOPTION | Maintain the Agent collaboration layer. | active | Update `vault/project.md` with durable facts. |
+
+Status values: active | paused | waiting-review. Focus names the current main
+line; a status change edits only the matching row.
 
 Acceptance: `AGENTS.md`, `vault/`, and `skills/agent-task/SKILL.md` exist and route future Agents to project memory.
 
@@ -653,8 +667,9 @@ Required Check: `python3 scripts/agent-init.py adopt {target} --dry-run` from th
 ## Constraints
 
 - Move long execution history to `vault/tasks/*`.
+- Demote paused tasks to `vault/parked.md` entries.
 - Do not save secrets.
-- Keep this file within about 120 lines; move overflow to `vault/tasks/*` or `vault/decisions.md`.
+- Keep this file within about 120 lines; move overflow to `vault/tasks/*`, `vault/parked.md`, or `vault/decisions.md`.
 
 ## Recent Changes
 

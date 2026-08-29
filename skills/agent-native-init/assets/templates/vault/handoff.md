@@ -1,34 +1,18 @@
 # Handoff
 
-Use this only for recent interrupted or transferred work. Do not use it as a permanent log.
+Use this only for recent interrupted or transferred work, at most 3 entries.
+Do not use it as a permanent log. Name each entry after its task id, or
+SESSION when there is none. Earlier entries merge into their task files by
+task id during compaction.
 
-## Current Objective
+## TASK-0001 - 2026-01-01
 
-Replace with current objective.
-
-## Completed
-
-- Replace with completed work.
-
-## In Progress
-
-- Replace with in-progress work.
-
-## Failed Attempts
-
-- Replace with failed attempts and why they failed.
-
-## Workspace State
-
-- Replace with relevant dirty files, branches, or generated artifacts.
-
-## Known Risks
-
-- Replace with known risks.
-
-## Next Best Action
-
-- Replace with next best action.
+- Objective: replace with the objective.
+- Completed: replace with completed work.
+- In progress: replace with in-progress work.
+- Failed attempts: replace with failed attempts and why.
+- Workspace state: replace with relevant dirty files, branches, or artifacts.
+- Next best action: replace with the next best action.
 
 ## Files To Read First
 

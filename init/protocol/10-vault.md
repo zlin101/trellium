@@ -15,7 +15,7 @@
 | 层 | 文件 | 生命周期 |
 | --- | --- | --- |
 | 热文件 | `runtime.md`、`handoff.md`、`decisions.md` | 高频更新；有预算线；压缩对象 |
-| 治理文件 | `governance.md`、`collaboration.md` | 事件驱动更新；压缩只出提案 |
+| 治理文件 | `governance.md`、`collaboration.md`、`parked.md` | 事件驱动更新；压缩只出提案 |
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新；压缩不可直接修改 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增；压缩内容的去向 |
 
@@ -32,6 +32,7 @@ vault/
 ├── decisions.md
 ├── decisions/            # 首次压缩时创建：决策正文
 ├── handoff.md
+├── parked.md
 ├── tasks/
 │   ├── README.md
 │   ├── .gitkeep
@@ -52,6 +53,7 @@ vault/
 - `vault/governance.md`
 - `vault/decisions.md`
 - `vault/handoff.md`
+- `vault/parked.md`
 - `vault/tasks/README.md`
 
 同一主题的长内容被重复读取或迁移 2 次以上时创建 `vault/details/<topic>.md`。
@@ -89,8 +91,8 @@ vault 上下文路由表。
 它应包含：
 
 - 当前阶段；
-- 活跃任务或任务指针；
-- 当前进展；
+- 活跃任务指针表：`Focus` 行指向当前主线任务，`Active Tasks` 表每行一个并行任务（任务编号、一句话目标、状态、下一步），支持多任务并行；
+- 当前进展（对应 Focus 任务）；
 - 没有任务文件时的验收标准；
 - 当前约束；
 - 最近变化；
@@ -98,7 +100,9 @@ vault 上下文路由表。
 - 必须运行的检查；
 - 下一步建议。
 
-长内容迁移到 `tasks/*`、`decisions.md` 或 `details/*`。
+任务状态取值：`active`、`paused`、`waiting-review`。状态变化只改对应行，不重写全表。暂停且暂不推进的任务降级为 `parked.md` 条目。
+
+长内容迁移到 `tasks/*`、`decisions.md`、`parked.md` 或 `details/*`。
 
 ### governance.md
 
@@ -118,7 +122,15 @@ vault 上下文路由表。
 
 任务中断、模型切换、工具切换或多 Agent 接力时的最近交接上下文。
 
-只保留最近 1-3 次关键交接。稳定结论迁移到 `decisions.md`；当前状态迁移到 `runtime.md`；执行历史迁移到任务文件。
+只保留最近 1-3 次关键交接，每条以任务编号命名（无任务编号时用 SESSION）。稳定结论迁移到 `decisions.md`；当前状态迁移到 `runtime.md`；执行历史按任务编号归并进对应任务文件。
+
+### parked.md
+
+用户挂起事项的冷索引：挂起不遗忘，提及才读取，不进入默认读取路径。
+
+条目格式：`P-xxxx · 类型(task/decision/question) · 标题 · 一句话上下文 · 重启触发器 · 日期`。有任务文件的记 `TASK-xxxx` 指针，没有的记 2-4 行上下文。
+
+生命周期与 `runtime.md` 双向流动：任务被用户挂起时记入；用户重新提起时升回任务文件（Draft）或 `runtime.md`。Agent 不得删除条目；压缩清理只出提案，由用户确认。
 
 ### tasks/
 
@@ -170,12 +182,19 @@ vault/handoff.md
 vault/tasks/<task-id>.md
 ```
 
+用户提到挂起、搁置或暂停的事项时追加读取：
+
+```text
+vault/parked.md
+```
+
 ## 更新规则
 
-- 非琐碎任务完成后更新 `runtime.md`。
+- 非琐碎任务完成后更新 `runtime.md`（Active Tasks 表中对应任务行）。
 - 追踪任务或治理任务更新 `tasks/*`。
 - 产生长期结论时更新 `decisions.md`。
 - 任务中断或转交时更新 `handoff.md`。
+- 用户挂起任务或决定时记入 `parked.md`；重新提起时升回。
 - `runtime.md` 膨胀时，将细节迁移到对应目标文件。
 - 更新热文件时检查预算线；超出时按 `15-vault-compaction.md` 执行压缩。
 - 压缩语义判定只提案，由用户确认；未确认的决策保持 `Active`。

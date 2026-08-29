@@ -79,6 +79,7 @@ class AgentInitTest(TargetTestCase):
             "vault/governance.md",
             "vault/handoff.md",
             "vault/index.md",
+            "vault/parked.md",
             "vault/project.md",
             "vault/runtime.md",
             "vault/tasks/README.md",
@@ -496,26 +497,6 @@ class UpgradeMechanismTest(TargetTestCase):
         self.assertIn("- local note inside the region", text)
         self.assertNotIn("Newer entry text.", text)
 
-    def test_upgrade_creates_new_template_files(self) -> None:
-        target = self.make_adopted_target()
-
-        with self.patched_templates() as templates:
-            (templates / "vault/parked.md").write_text("# Parked\n\nstarter template\n", encoding="utf-8")
-            with patch.dict(agent_init.FILE_ROLES, {"vault/parked.md": "data"}):
-                code, _, err = self.run_agent_init("diff", str(target))
-                self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
-                code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
-                self.assertEqual(code, 0, err)
-                stamp = self.read_stamp(target)
-                code, out, err = self.run_agent_init("diff", str(target))
-                self.assertEqual(code, 0, err)
-                self.assertIn("vault/parked.md", out)
-
-        self.assertTrue((target / "vault/parked.md").is_file())
-        entry = stamp["files"]["vault/parked.md"]
-        self.assertEqual(entry["role"], "data")
-        self.assertNotIn("observed", entry)
-
     def test_upgrade_refuses_dirty_git_state(self) -> None:
         if shutil.which("git") is None:
             self.skipTest("requires git")
@@ -643,6 +624,31 @@ class UpgradeMechanismTest(TargetTestCase):
 
         self.assertEqual(code, 1)
         self.assertIn("version file", err)
+
+    def test_upgrade_backfills_new_data_file_for_older_adoption(self) -> None:
+        # A project adopted at 2026.08.0 has no parked.md and no stamp entry
+        # for it; the 2026.09.0 template set backfills it as a data-role add.
+        target = self.make_adopted_target()
+        (target / "vault/parked.md").unlink()
+        stamp = self.read_stamp(target)
+        stamp["files"].pop("vault/parked.md", None)
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        code, out, err = self.run_agent_init("diff", str(target))
+        self.assertEqual(code, agent_init.EXIT_ACTIONABLE, err)
+        self.assertIn("+ vault/parked.md", out)
+
+        code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+        self.assertEqual(code, 0, err)
+
+        self.assertTrue((target / "vault/parked.md").is_file())
+        entry = self.read_stamp(target)["files"]["vault/parked.md"]
+        self.assertEqual(entry["role"], "data")
+        code, out, err = self.run_agent_init("diff", str(target))
+        self.assertEqual(code, 0, err)
+        self.assertIn("x vault/parked.md", out)
 
 
 class RenderedContentTest(unittest.TestCase):
