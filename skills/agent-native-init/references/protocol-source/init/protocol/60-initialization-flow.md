@@ -23,15 +23,16 @@
 11. 创建 `vault/governance.md`。
 12. 创建 `vault/decisions.md`。
 13. 创建 `vault/handoff.md`。
-14. 创建 `vault/tasks/README.md` 和 `vault/tasks/.gitkeep`。
-15. 只在需要时创建 `vault/details/*` 文件。
-16. 创建 `skills/`。
-17. 创建必要初始 skill。
-18. 仅按选定 profile 的需要初始化源码、测试和依赖文件。
-19. 更新 `README.md`。
-20. 运行最小检查。
-21. 更新 `vault/runtime.md`，记录最终初始化状态。
-22. 将长期有效的协议或 profile 决策记录到 `vault/decisions.md`。
+14. 创建 `vault/parked.md`。
+15. 创建 `vault/tasks/README.md` 和 `vault/tasks/.gitkeep`。
+16. 只在需要时创建 `vault/details/*` 文件。
+17. 创建 `skills/`。
+18. 创建必要初始 skill。
+19. 仅按选定 profile 的需要初始化源码、测试和依赖文件。
+20. 更新 `README.md`。
+21. 运行最小检查。
+22. 更新 `vault/runtime.md`，记录最终初始化状态。
+23. 将长期有效的协议或 profile 决策记录到 `vault/decisions.md`。
 
 ## 验收
 

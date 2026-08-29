@@ -62,6 +62,7 @@ init/
     README.md                     # 协议模块说明
     00-overview.md                # 总体定位和分层
     10-vault.md                   # 项目记忆系统
+    15-vault-compaction.md        # 记忆压缩与预算线
     20-governance.md              # 任务治理、授权和验收
     30-agent-entry.md             # Agent 入口文件规则
     40-skills.md                  # 可复用工作流

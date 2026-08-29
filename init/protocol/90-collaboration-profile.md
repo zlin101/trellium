@@ -103,6 +103,7 @@ Collaboration profile 可以在以下时机生成或更新：
 - `vault/governance.md`：授权、任务等级、验收门和升级规则，不能被 profile 覆盖。
 - `vault/runtime.md`：当前状态和活跃任务，不保存长期协作画像。
 - `vault/handoff.md`：最近交接上下文，不保存永久偏好。
+- `vault/parked.md`：挂起事项冷索引，不保存协作偏好。
 - `vault/decisions.md`：长期治理、架构、依赖或工作流决策；profile 中影响治理的内容应升级为 decision。
 - `skills/*`：重复稳定的协作流程可以进一步沉淀为 skill。
 

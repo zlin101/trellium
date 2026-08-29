@@ -62,6 +62,7 @@ init/
     README.md                     # protocol module overview
     00-overview.md                # positioning and layering
     10-vault.md                   # project memory system
+    15-vault-compaction.md        # memory compaction and budget lines
     20-governance.md              # task governance, authorization, acceptance
     30-agent-entry.md             # Agent entry file rules
     40-skills.md                  # reusable workflows

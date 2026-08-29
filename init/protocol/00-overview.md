@@ -24,6 +24,7 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 - 治理层：`vault/governance.md` 和 `vault/tasks/*`。
 - 决策层：`vault/decisions.md`。
 - 接力层：`vault/handoff.md`。
+- 挂起层：`vault/parked.md`（提及才读取）。
 - 工作流层：`skills/*/SKILL.md`。
 - Profile 层：语言或框架相关的项目默认值。
 
