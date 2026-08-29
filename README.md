@@ -161,10 +161,11 @@ curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/in
 安装英文 Skill 包到自动探测的 agent 目录（`$CODEX_HOME`/`~/.codex` → Codex；`~/.claude` → Claude Code）。常用参数：
 
 ```bash
-... | sh -s -- --lang zh              # 中文包
+... | sh -s -- --lang zh              # 中文包（默认 en）
 ... | sh -s -- --agent all            # 同时装 Codex 与 Claude Code
+                                     # 不指定时自动探测：$CODEX_HOME/~/.codex → codex，~/.claude → claude
 ... | sh -s -- --project              # 装到当前项目 ./.claude/skills/
-... | sh -s -- --version 2026.09.1    # 固定版本
+... | sh -s -- --version 2026.09.1    # 固定版本（默认自动解析 GitHub 最新 release）
 ... | sh -s -- --dir <路径>           # 任意目标目录
 ```
 

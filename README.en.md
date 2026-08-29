@@ -161,10 +161,11 @@ curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/in
 Installs the English Skill package into the auto-detected agent directory (`$CODEX_HOME`/`~/.codex` → Codex; `~/.claude` → Claude Code). Common options:
 
 ```bash
-... | sh -s -- --lang zh              # Chinese package
+... | sh -s -- --lang zh              # Chinese package (default: en)
 ... | sh -s -- --agent all            # install for both Codex and Claude Code
+                                     # when omitted: auto-detects $CODEX_HOME/~/.codex → codex, ~/.claude → claude
 ... | sh -s -- --project              # into ./.claude/skills/ of the current project
-... | sh -s -- --version 2026.09.1    # pin a version
+... | sh -s -- --version 2026.09.1    # pin a version (default: resolves latest GitHub release)
 ... | sh -s -- --dir <path>           # any destination directory
 ```
 

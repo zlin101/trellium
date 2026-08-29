@@ -32,8 +32,9 @@ usage: install.sh [--lang en|zh] [--agent codex|claude|all] [--version TAG]
                   [--dir PATH] [--project] [--source DIR]
 
   --lang      package language: en (default) or zh
-  --agent     skills directory owner: codex, claude, or all; auto-detected by default
-  --version   release tag to install (default: latest release)
+  --agent     skills directory owner: codex, claude, or all
+              when omitted: auto-detects $CODEX_HOME/~/.codex -> codex, ~/.claude -> claude
+  --version   release tag to install (default: resolves latest GitHub release)
   --dir       explicit destination skills directory
   --project   install into ./.claude/skills of the current directory
   --source    install from a local checkout/release tree instead of downloading
