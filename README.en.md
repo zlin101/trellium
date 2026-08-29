@@ -160,7 +160,7 @@ Chinese version:
 
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
-  --repo zlin101/agent-init \
+  --repo zlin101/trellium \
   --path skills/trellium-zh
 ```
 
@@ -168,7 +168,7 @@ English version:
 
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
-  --repo zlin101/agent-init \
+  --repo zlin101/trellium \
   --path skills/trellium
 ```
 
