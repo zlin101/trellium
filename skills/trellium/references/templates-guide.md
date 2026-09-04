@@ -9,15 +9,15 @@ Do not copy placeholders as if they were facts.
 ## Template Map
 
 - `AGENTS.md`: project-level Agent entry rules.
-- `vault/index.md`: context routing and memory update rules; includes the task/authority cheat sheet and memory budgets.
+- `vault/index.md`: context routing and memory update rules; carries the `trellium-policy` project policy block (budgets and TASK storage), includes the task/authority cheat sheet.
 - `vault/project.md`: stable project purpose and scope.
-- `vault/runtime.md`: current state and active task pointer table (Focus line + Active Tasks table, one row per parallel task).
-- `vault/governance.md`: task levels, authority levels, contracts, and acceptance gates.
+- `vault/runtime.md`: current state and active task pointer table (Focus line + Active Tasks table, one row per parallel task); TASK rows are projections of task state blocks.
+- `vault/governance.md`: task levels, authority levels, task lifecycle, contracts, and acceptance gates.
 - `vault/decisions.md`: durable decisions; four lifecycle statuses; index when over budget (bodies move to `vault/decisions/`).
-- `vault/handoff.md`: recent transfer state; each entry named after its task id, at most 3 entries.
+- `vault/handoff.md`: recent transfer state; each entry named after its task id, at most 3 entries; live Git facts stay out of it.
 - `vault/parked.md`: cold index of user-parked items (P-xxxx entries); read only when mentioned; cleanup is proposal-only.
 - `vault/collaboration.md`: collaboration preferences and observed patterns.
-- `vault/tasks/README.md`: task file status flow, task template, and review ledger template.
+- `vault/tasks/README.md`: task lifecycle flow, `trellium-task-state` block rules, task template, and review ledger template.
 - `skills/agent-task/SKILL.md`: reusable workflow for non-trivial project tasks.
 
 ## New Project Initialization

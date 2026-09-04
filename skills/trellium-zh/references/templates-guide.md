@@ -9,15 +9,15 @@
 ## 模板地图
 
 - `AGENTS.md`：项目级 Agent 入口规则。
-- `vault/index.md`：上下文路由和记忆更新规则。含任务与授权速查表及压缩预算线。
+- `vault/index.md`：上下文路由和记忆更新规则。承载 `trellium-policy` 项目策略块（预算与 TASK storage），含任务与授权速查表。
 - `vault/project.md`：稳定项目目标和范围。
-- `vault/runtime.md`：当前状态和活跃任务指针表（Focus 行 + Active Tasks 表，每行一个并行任务）。
-- `vault/governance.md`：任务等级、授权等级、任务契约和验收门。
+- `vault/runtime.md`：当前状态和活跃任务指针表（Focus 行 + Active Tasks 表，每行一个并行任务）；TASK 行是任务状态块的投影。
+- `vault/governance.md`：任务等级、授权等级、任务生命周期、任务契约和验收门。
 - `vault/decisions.md`：长期决策；生命周期四态；超阈值索引化（正文入 `vault/decisions/`）。
-- `vault/handoff.md`：近期交接状态；每条以任务编号命名，最多 3 条。
+- `vault/handoff.md`：近期交接状态；每条以任务编号命名，最多 3 条；实时 Git 事实不写入。
 - `vault/parked.md`：用户挂起事项冷索引（P-xxxx 条目）；仅被提及时读取；清理只出提案。
 - `vault/collaboration.md`：协作偏好和观察模式。
-- `vault/tasks/README.md`：任务文件状态流转、任务模板和 review 台账模板。
+- `vault/tasks/README.md`：任务生命周期流转、`trellium-task-state` 状态块规则、任务模板和 review 台账模板。
 - `skills/agent-task/SKILL.md`：非琐碎项目任务的可复用工作流。
 
 ## 新项目初始化

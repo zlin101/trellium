@@ -16,7 +16,7 @@
 | --- | --- | --- | --- |
 | TASK-0001 | 替换为一句话目标。 | active | 替换为下一步动作。 |
 
-状态取值：active | paused | waiting-review。Focus 指向当前主线任务；更新状态时只改对应行。
+状态取值：draft | active | blocked | ready_for_review | accepted | superseded。有任务文件的 TASK，此行状态是 `trellium-task-state` 状态块的派生投影：先改状态块，再改此行。Focus 只表示当前注意力，不等于 lifecycle；更新状态时只改对应行。暂停且暂不推进的任务降级为 `vault/parked.md` 条目。
 
 ## Current Progress
 

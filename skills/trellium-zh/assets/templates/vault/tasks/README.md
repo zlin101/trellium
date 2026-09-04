@@ -2,19 +2,22 @@
 
 追踪任务和治理任务使用任务文件。
 
-## Status Flow
+## Lifecycle
 
 ```text
-Draft -> Active -> Ready for Review -> Accepted
+draft -> active -> ready_for_review -> accepted
           |
           v
-        Blocked
-          |
-          v
-        Active
+        blocked -> active
 ```
 
-任务被替代时使用 `Superseded`。
+任务被替代时使用 `superseded`。暂停且暂不推进的工作进入 `vault/parked.md`，不是 lifecycle 值。
+
+## 任务状态块
+
+Level B/C 任务文件在标题之后携带 `trellium-task-state` 状态块。它是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner（可选字段：`current_slice`、`gates`）。每次状态变化先更新状态块；`runtime.md` 行只是投影。未定义字段非法；改变字段含义必须提升 `schema_version`。状态块不授予批准：Allowed、Requires Approval、Forbidden 与验收仍由任务正文与用户指令决定。
+
+没有状态块的任务文件是 legacy：下次接触该任务时补上，不批量迁移历史。`TASK-xxxx-review.md` 台账与 `tasks/archive/` 是冷历史，不带状态块。
 
 ## Naming
 
@@ -27,9 +30,15 @@ TASK-0001-short-title.md
 ```md
 # TASK-0001 - Short Title
 
-## Status
-
-Draft | Active | Blocked | Ready for Review | Accepted | Superseded
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0001",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "draft"
+}
+-->
 
 ## Objective
 
@@ -52,8 +61,6 @@ Draft | Active | Blocked | Ready for Review | Accepted | Superseded
 - testing
 
 ## Authority
-
-Level:
 
 Allowed:
 

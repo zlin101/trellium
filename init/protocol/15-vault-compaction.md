@@ -19,13 +19,15 @@
 
 ## 预算线
 
-全部用行数表达，可由 `wc -l` 直接度量：
+项目当前预算的唯一来源是 `vault/index.md` 的 `trellium-policy` 策略块（见 `10-vault.md`）。以下数字是初始化默认值：策略块缺失时供人工压缩判断使用；`trellium.py check` 不用它们冒充项目策略——只做测量，只对策略块中显式配置的阈值报超限。
+
+初始化默认值：
 
 - `vault/runtime.md` 超过 120 行，或 Recent Changes 超过 10 条。
 - `vault/handoff.md` 超过 3 条交接或超过 100 行。
 - `vault/decisions.md` 超过 150 行或超过 8 条完整决策记录；首次超出时执行索引化拆分。
 - `vault/parked.md` 超过 60 行或超过 20 条条目；执行清理提案。
-- `vault/tasks/`（不含 `archive/`）超过 40 个任务文件；执行里程碑归档。
+- `vault/tasks/` 当前任务文件（不含 `archive/`、review 台账与已关闭任务）超过 40 个；执行里程碑归档。
 
 ## 触发时机
 

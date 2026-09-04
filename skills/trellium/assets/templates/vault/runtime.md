@@ -17,8 +17,11 @@ table holds pointers only.
 | --- | --- | --- | --- |
 | TASK-0001 | Replace with a one-line objective. | active | Replace with the next action. |
 
-Status values: active | paused | waiting-review. Focus names the current main
-line; a status change edits only the matching row.
+Status values: draft | active | blocked | ready_for_review | accepted |
+superseded. For a task with a task file, the status here is a projection of
+its `trellium-task-state` block: update the block first, then this row.
+Focus names the current attention, not lifecycle; a status change edits only
+the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 

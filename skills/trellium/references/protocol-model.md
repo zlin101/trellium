@@ -46,7 +46,7 @@ vault/
 | Structural files | `index.md`, `project.md`, `tasks/README.md` | Rarely updated |
 | Archive | `tasks/<task-id>.md`, `decisions/`, `details/*` | Append-only |
 
-Budgets: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks (excluding archive) ≤ 40 files.
+Budgets: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks ≤ 40 current task files (excluding archive and review ledgers). These are initialization defaults; the project's current budgets and TASK storage live once in the `trellium-policy` block in `vault/index.md`. `trellium.py check <target>` measures hot files and only enforces explicitly configured thresholds; a missing policy block is reported as legacy, never substituted with hidden defaults.
 
 Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active, demoting paused tasks to parked entries) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`, parked cleanup) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
 
@@ -54,14 +54,28 @@ Decision indexing: decisions.md becomes a pure index and bodies move to `vault/d
 
 Leveled reading: by default read `index.md` (with the cheat sheet) and `runtime.md`; read full `governance.md` for Level B/C work, unclear classification, or governance-rule changes.
 
+## State And Policy Blocks
+
+Two small versioned JSON blocks carry current-state facts; everything else stays Markdown.
+
+`trellium-task-state` sits right after a Level B/C task title. Required fields: `schema_version` (integer `1`), `task_id` (`TASK-NNNN`, matching the file name), `level` (`B | C`), `authority_level` (integer 0..4), `lifecycle`. Optional: `current_slice` (non-empty string) and `gates` (open gate ids mapped to `pending | in_progress | passed | partial | blocked | not_authorized | not_applicable`). Unknown fields are invalid. It is the single owner of lifecycle, authority level, current slice, and gate results; it never grants approvals. Task files without a block are legacy (reported, not guessed); review ledgers and `tasks/archive/` carry no block.
+
+`trellium-policy` sits at the top of `vault/index.md`. Required: `schema_version` and `task_storage` (`tracked | local`); optional `budgets` per hot file. It is the single source for project budgets and TASK storage. `local` keeps task files, review ledgers, and archive out of Git; Accepted conclusions must then be distilled into published truth. Storage is a project-owner decision; tools never auto-untrack or edit `.gitignore`.
+
+## Task Lifecycle
+
+`draft | active | blocked | ready_for_review | accepted | superseded`
+
+The `trellium-task-state` block owns it; the `runtime.md` TASK row is a projection. Paused-and-shelved work lives in `parked.md`, not in a lifecycle value. Level A has no task file; the `runtime.md` inline record is authoritative.
+
 ## File Responsibilities
 
-- `vault/index.md`: routing table for what context to read and when to update memory.
+- `vault/index.md`: routing table plus the `trellium-policy` project policy block; no runtime state.
 - `vault/project.md`: stable project purpose, scope, boundaries, and current phase.
-- `vault/runtime.md`: short current state, active task pointer table (Focus line + Active Tasks, one row per parallel task), checks, risks, and next steps. Supports parallel tasks; a status change edits only the matching row.
-- `vault/governance.md`: task levels, authority levels, task contracts, acceptance gates, escalation, and handoff.
+- `vault/runtime.md`: short current state, active task pointer table (Focus line + Active Tasks, one row per parallel task), checks, risks, and next steps. Supports parallel tasks; a status change edits only the matching row, and TASK rows are projections of each task's state block.
+- `vault/governance.md`: task levels, authority levels, task lifecycle, task contracts, acceptance gates, escalation, and handoff.
 - `vault/decisions.md`: durable decision index and lifecycle records (Active / Superseded / Merged / Expired); bodies move to `vault/decisions/*` after indexing.
-- `vault/handoff.md`: recent transfer context for interrupted or resumed work; each entry named after its task id, at most 3 entries.
+- `vault/handoff.md`: recent transfer context for interrupted or resumed work; each entry named after its task id, at most 3 entries; live Git facts are read at resume time, not stored as authoritative.
 - `vault/parked.md`: cold index of user-parked items; read only when mentioned, never on the default path; flows both ways with runtime (demote on park, promote on mention).
 - `vault/collaboration.md`: soft collaboration preferences that cannot override hard governance.
 - `vault/tasks/*`: tracked or governed task contracts, execution records, verification, and closure notes.
@@ -89,7 +103,7 @@ Tracked and governed tasks should include:
 - Scope and out of scope
 - Context required
 - Capability tags
-- Authority level
+- Authority level (the number lives in the task state block; keep no second editable copy)
 - Allowed changes
 - Requires approval
 - Forbidden changes

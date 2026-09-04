@@ -79,6 +79,23 @@ Required Check:
 
 治理任务通常需要用户确认。
 
+## 任务生命周期
+
+追踪与治理任务使用统一 lifecycle 枚举，`trellium-task-state` 状态块与 `runtime.md` TASK 行共用：
+
+```text
+draft | active | blocked | ready_for_review | accepted | superseded
+```
+
+- `draft`：任务已建立，尚未开始执行。
+- `active`：执行中。
+- `blocked`：被阻塞；阻塞原因记录在任务文件或 `handoff.md`。
+- `ready_for_review`：等待用户验收。
+- `accepted`：验收通过，任务关闭。
+- `superseded`：被其他任务替代。
+
+lifecycle 的唯一 owner 是任务文件顶部的 `trellium-task-state` 状态块（schema 见 `10-vault.md`）；`runtime.md` 的 TASK 行是派生投影。暂停且暂不推进的工作进入 `parked.md`，不是独立 lifecycle 值。Level A 没有任务文件，`runtime.md` inline 记录即权威。
+
 ## 授权等级
 
 ### Authority 0: Read Only
@@ -149,13 +166,15 @@ Agent 禁止：
 - Out of Scope
 - Context Required
 - Capability Tags
-- Authority Level
+- Authority Level（数值由状态块承载，正文不设第二份可编辑副本）
 - Allowed Changes
 - Forbidden Changes
 - Acceptance Criteria
 - Required Verification
 - Required Memory Updates
 - Handoff Requirement
+
+任务文件顶部的 `trellium-task-state` 状态块是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner；任务正文的 Authority 段只保留 Allowed、Requires Approval、Forbidden（行为边界）。状态块不授予批准。
 
 Capability Tags 只描述工作需要的能力，不授予权限。
 
@@ -206,13 +225,14 @@ Capability Tags 只描述工作需要的能力，不授予权限。
 
 handoff 至少包含：
 
-- Current Objective
+- Objective
 - Completed
 - In Progress
 - Failed Attempts
-- Workspace State
-- Known Risks
+- Blockers
 - Next Best Action
 - Files To Read First
+
+branch、HEAD、脏文件等实时 Git 事实在恢复时现场读取，handoff 不把它们当权威记录；只可保存一条带观察时间、明确标注非权威的环境快照。
 
 如果任务文件已存在，`handoff.md` 应指向任务文件，不重复完整任务记录。

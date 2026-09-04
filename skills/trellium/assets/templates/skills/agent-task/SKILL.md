@@ -12,7 +12,7 @@ description: Use when doing non-trivial project work that requires context readi
 3. Classify the task as Level A, Level B, or Level C.
 4. Determine authority level and whether user confirmation is required.
 5. Define objective, scope, out of scope, acceptance criteria, and checks.
-6. Create or update a task file for Level B or Level C work.
+6. Create or update a task file for Level B or Level C work. Keep its `trellium-task-state` block authoritative for lifecycle, authority level, current slice, and gate results; update it on every status change, then sync the matching `runtime.md` row (a projection). Task files without a state block are legacy: add the block when you next touch the task.
 7. Make the smallest necessary change.
 8. Add or update focused tests for behavior changes.
 9. Keep long work checkpointable through task files and `vault/handoff.md`.
@@ -21,8 +21,8 @@ description: Use when doing non-trivial project work that requires context readi
 12. For multi-round review, keep a ledger at `vault/tasks/TASK-xxxx-review.md`: findings enter as a numbered list, get processed in batch, and get their statuses written back in batch (open / fixed / wont-fix / needs-discussion); archive it into the task file's Execution Record once converged.
 13. Update `vault/runtime.md`: edit only the status and next action of the matching row in Active Tasks, and the Focus line when the main line changes; one item per line, single-line replacement, never rewrite whole sections.
 14. Record durable decisions in `vault/decisions.md`.
-15. When the user parks a task or decision, add an entry to `vault/parked.md` (with a resume trigger); when they bring it up again, promote it back to a task file (Draft) or `runtime.md`.
-16. Check hot-file budgets when updating memory (runtime ≤ 120 lines and Recent Changes ≤ 10 entries, handoff ≤ 3 entries or 100 lines, decisions ≤ 150 lines or 8 records, parked ≤ 60 lines or 20 entries); move overflow to the right destination.
+15. When the user parks a task or decision, add an entry to `vault/parked.md` (with a resume trigger); when they bring it up again, promote it back to a task file (draft) or `runtime.md`.
+16. Read project budgets and TASK storage from the `trellium-policy` block in `vault/index.md` before compaction or storage decisions; the block is the only source of current numbers. When it is missing, treat the project as legacy, follow the protocol's initialization defaults for manual judgment, and report the gap.
 17. When any hot file exceeds its budget, compact in five phases: measure → classify → restructure → verify → record. Compaction rules:
     - Decision indexing and task archiving are zero-loss moves an Agent may run autonomously.
     - Demoting paused tasks to `parked.md` entries is a zero-loss move; parked cleanup is proposal-only.

@@ -678,8 +678,11 @@ table holds pointers only.
 | --- | --- | --- | --- |
 | ADOPTION | Maintain the Agent collaboration layer. | active | Update `vault/project.md` with durable facts. |
 
-Status values: active | paused | waiting-review. Focus names the current main
-line; a status change edits only the matching row.
+Status values: draft | active | blocked | ready_for_review | accepted |
+superseded. For a task with a task file, the status here is a projection of
+its `trellium-task-state` block: update the block first, then this row.
+Focus names the current attention, not lifecycle; a status change edits only
+the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 Acceptance: `AGENTS.md`, `vault/`, and `skills/agent-task/SKILL.md` exist and route future Agents to project memory.
 
@@ -694,7 +697,7 @@ Required Check: `python3 trellium.py adopt {target} --dry-run` from a Trellium c
 - Move long execution history to `vault/tasks/*`.
 - Demote paused tasks to `vault/parked.md` entries.
 - Do not save secrets.
-- Keep this file within about 120 lines; move overflow to `vault/tasks/*`, `vault/parked.md`, or `vault/decisions.md`.
+- Keep this file short; current line and entry budgets live in the `trellium-policy` block in `vault/index.md`.
 
 ## Recent Changes
 

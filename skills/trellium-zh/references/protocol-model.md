@@ -46,7 +46,7 @@ vault/
 | 结构文件 | `index.md`、`project.md`、`tasks/README.md` | 极少更新 |
 | 归档区 | `tasks/<task-id>.md`、`decisions/`、`details/*` | 只增 |
 
-预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks（不含 archive）≤ 40 个文件。
+预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks ≤ 40 个当前任务文件（不含 archive 与 review 台账）。以上是初始化默认值；项目当前预算与 TASK storage 只配置在 `vault/index.md` 的 `trellium-policy` 策略块中。`trellium.py check <target>` 始终测量热文件，只对显式配置的阈值报超限；策略块缺失按 legacy 报告，不用隐藏默认值替代。
 
 压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active、暂停任务降级为 parked 条目）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired、parked 清理）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
 
@@ -54,14 +54,28 @@ vault/
 
 读路径分级：默认读 `index.md`（含速查表）+ `runtime.md`；Level B/C、判定模糊或涉及治理规则时读完整 `governance.md`。
 
+## 状态块与策略块
+
+两个带版本的小 JSON 块承载"当前状态事实"，其余内容保持 Markdown。
+
+`trellium-task-state` 位于 Level B/C 任务标题之后。必填字段：`schema_version`（整数 `1`）、`task_id`（`TASK-NNNN`，与文件名一致）、`level`（`B | C`）、`authority_level`（整数 0..4）、`lifecycle`。可选：`current_slice`（非空字符串）与 `gates`（开放 Gate ID → `pending | in_progress | passed | partial | blocked | not_authorized | not_applicable`）。未定义字段非法。它是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner，不授予批准。没有状态块的任务文件是 legacy（报告、不猜测）；review 台账与 `tasks/archive/` 不带状态块。
+
+`trellium-policy` 位于 `vault/index.md` 开头。必填：`schema_version` 与 `task_storage`（`tracked | local`）；可选 `budgets`（各热文件一项）。它是项目预算与 TASK storage 的唯一来源。`local` 表示任务文件、review 台账与 archive 不进 Git，Accepted 结论必须蒸馏进公开位置。storage 由项目 owner 决定，工具不自动 untrack、不修改 `.gitignore`。
+
+## 任务生命周期
+
+`draft | active | blocked | ready_for_review | accepted | superseded`
+
+由 `trellium-task-state` 状态块持有；`runtime.md` TASK 行是投影。暂停且暂不推进的工作放 `parked.md`，不是 lifecycle 值。Level A 没有任务文件，`runtime.md` inline 记录即权威。
+
 ## 文件职责
 
-- `vault/index.md`：上下文读取和记忆更新路由表。
+- `vault/index.md`：路由表 + `trellium-policy` 项目策略块；不保存运行态。
 - `vault/project.md`：稳定项目目标、范围、边界和当前阶段。
-- `vault/runtime.md`：短当前状态、活跃任务指针表（Focus 行 + Active Tasks 每行一任务）、检查、风险和下一步。支持多任务并行，状态变化只改对应行。
-- `vault/governance.md`：任务等级、授权等级、任务契约、验收门、升级规则和 handoff。
+- `vault/runtime.md`：短当前状态、活跃任务指针表（Focus 行 + Active Tasks 每行一任务）、检查、风险和下一步。支持多任务并行，状态变化只改对应行；TASK 行是各任务状态块的派生投影。
+- `vault/governance.md`：任务等级、授权等级、任务生命周期、任务契约、验收门、升级规则和 handoff。
 - `vault/decisions.md`：决策索引与生命周期记录（Active / Superseded / Merged / Expired）；正文拆分后在 `vault/decisions/*`。
-- `vault/handoff.md`：中断或恢复工作时的近期交接上下文；每条交接以任务编号命名，最多 3 条。
+- `vault/handoff.md`：中断或恢复工作时的近期交接上下文；每条交接以任务编号命名，最多 3 条；实时 Git 事实恢复时现场读取，不作为权威记录。
 - `vault/parked.md`：用户挂起事项冷索引；仅被提及时读取，不进默认读取路径；与 runtime 双向流动（挂起降级、提及升回）。
 - `vault/collaboration.md`：不能覆盖硬治理的软协作偏好。
 - `vault/tasks/*`：追踪或治理任务的契约、执行记录、验证和关闭说明。
@@ -89,7 +103,7 @@ vault/
 - Scope and out of scope
 - Context required
 - Capability tags
-- Authority level
+- Authority level（数值由任务状态块承载，不设第二份可编辑副本）
 - Allowed changes
 - Requires approval
 - Forbidden changes

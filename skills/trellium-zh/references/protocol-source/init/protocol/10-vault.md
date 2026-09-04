@@ -8,7 +8,22 @@
 
 增长进目录，读取走索引。任何会增长的内容（决策、任务、细节），正文进目录按需读取；索引层保证默认读取路径永远短。
 
-`index.md` 是路由中枢，保持纯路由、不存状态；活跃任务指针唯一存在于 `runtime.md`。新增记忆类型一律按此模式扩展。
+`index.md` 的职责是"路由 + 项目策略"：路由表决定读什么，`trellium-policy` 策略块是项目预算与 TASK storage 的唯一配置来源。它不保存运行态，也不是第二个状态面。新增记忆类型一律按此模式扩展。
+
+## 当前事实 Owner
+
+同一事实只有一个权威位置；其他位置只能是派生投影或带时间戳的历史快照。
+
+| 事实 | 唯一 Owner | 其他位置 |
+| --- | --- | --- |
+| Level A 当前状态 | `runtime.md` inline 记录 | 无任务文件 |
+| Level B/C lifecycle、当前 slice、Gate 结果 | 任务文件顶部 `trellium-task-state` 状态块 | `runtime.md` 行是派生投影 |
+| Level B/C 当前契约 | 任务文件 current-contract 段（Objective/Scope/Authority/Acceptance 等） | Execution Record 只存执行历史 |
+| 当前 Focus | `runtime.md` | 只表示注意力，不等于 lifecycle |
+| 长期事实 | `project.md`、Active 决策或明确权威文档 | 任务文件可记录实施来源 |
+| 中断原因与下一动作 | `handoff.md` | 不保存实时 Git 状态为权威 |
+| branch、HEAD、脏文件 | 实时 Git | handoff 只可保存带观察时间、明确非权威的历史快照 |
+| 项目预算与 TASK storage | `index.md` 的 `trellium-policy` 策略块 | 其他文件只路由，不复制当前值 |
 
 ## 记忆分层
 
@@ -62,13 +77,14 @@ vault/
 
 ### index.md
 
-vault 上下文路由表。
+vault 上下文路由表 + 项目策略载体。
 
 它定义：
 
 - 默认读取路径；
 - 何时读取 project、runtime、governance、decisions、handoff、任务文件或 details；
-- 各类记忆的更新规则。
+- 各类记忆的更新规则；
+- `trellium-policy` 策略块：项目预算与 TASK storage 的唯一配置来源（见"项目策略块"）。
 
 ### project.md
 
@@ -100,7 +116,7 @@ vault 上下文路由表。
 - 必须运行的检查；
 - 下一步建议。
 
-任务状态取值：`active`、`paused`、`waiting-review`。状态变化只改对应行，不重写全表。暂停且暂不推进的任务降级为 `parked.md` 条目。
+TASK 行的状态使用统一 lifecycle 枚举（定义见 `20-governance.md`）：`draft | active | blocked | ready_for_review | accepted | superseded`。对有任务文件的 TASK，行内状态是 `trellium-task-state` 状态块的派生投影：lifecycle 变化先改状态块，再同步对应行。`Focus` 只表示当前注意力，不等于 lifecycle。暂停且暂不推进的任务降级为 `parked.md` 条目，不是独立状态。没有任务文件的 Level A 行仍以 `runtime.md` 为权威。
 
 长内容迁移到 `tasks/*`、`decisions.md`、`parked.md` 或 `details/*`。
 
@@ -124,6 +140,8 @@ vault 上下文路由表。
 
 只保留最近 1-3 次关键交接，每条以任务编号命名（无任务编号时用 SESSION）。稳定结论迁移到 `decisions.md`；当前状态迁移到 `runtime.md`；执行历史按任务编号归并进对应任务文件。
 
+handoff 只保存持久叙事：目标、进展、失败尝试、阻塞、下一步、行动前先读取的文件。branch、HEAD、脏文件等实时 Git 事实在恢复时现场读取，不作为 handoff 权威记录；只可保存一条带观察时间、明确标注非权威的环境快照。
+
 ### parked.md
 
 用户挂起事项的冷索引：挂起不遗忘，提及才读取，不进入默认读取路径。
@@ -138,6 +156,10 @@ vault 上下文路由表。
 
 简单的一次性任务可以留在 `runtime.md`。
 
+Level B/C 任务文件在标题之后、叙事正文之前放置 `trellium-task-state` 状态块，是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner（schema 见下方"状态块与策略块"）。`TASK-*-review.md` 台账与 `tasks/archive/` 是冷历史，不需要状态块。
+
+TASK storage 由 policy 块的 `task_storage` 决定：`tracked`（默认）时任务文件纳入版本控制；`local` 时任务文件、review 台账与 archive 不 tracked、不 staged，Accepted 后的结论必须先蒸馏进 `decisions.md` 等公开位置。storage 迁移由 owner 决定，工具不自动 untrack、不修改 `.gitignore`。
+
 ### details/
 
 按路由读取的长上下文：
@@ -147,6 +169,59 @@ vault 上下文路由表。
 - `details/api.md`：API 设计和契约。
 - `details/agent.md`：Agent、LLM、Prompt 和工具行为。
 - `details/domain.md`：领域术语和规则。
+
+## 状态块与策略块
+
+两个结构化块承载"当前状态事实"，其余内容保持 Markdown：
+
+### trellium-task-state v1（任务状态块）
+
+固定标记 `trellium-task-state`，HTML 注释包裹的严格 JSON（不支持 YAML、注释或尾逗号），放在 Level B/C 任务文件标题之后、正文之前：
+
+```html
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0060",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "ready_for_review"
+}
+-->
+```
+
+- 必填：`schema_version`（整数 `1`）、`task_id`（`TASK-[0-9]{4,}`，与文件名开头一致）、`level`（`B | C`）、`authority_level`（整数 `0..4`）、`lifecycle`（统一枚举，见 `20-governance.md`）。
+- 可选：`current_slice`（非空字符串，存在时 lifecycle 与 Gates 描述当前 slice）；`gates`（Gate ID 为非空字符串，不固定语义，值限 `pending | in_progress | passed | partial | blocked | not_authorized | not_applicable`）。
+- 未定义字段非法；改变字段含义必须提升 `schema_version`。
+- 每个任务实体恰好零或一个状态块：零个是 legacy（报 warning，不猜状态），多个非法。
+- 状态块不授予批准：Allowed、Requires Approval、Forbidden 和验收条件仍由任务正文与用户指令决定。
+
+### trellium-policy v1（项目策略块）
+
+固定标记 `trellium-policy`，放在 `vault/index.md` 开头说明之后：
+
+```html
+<!-- trellium-policy
+{
+  "schema_version": 1,
+  "task_storage": "tracked",
+  "budgets": {
+    "runtime": {"max_lines": 120, "max_recent_entries": 10},
+    "handoff": {"max_lines": 100, "max_entries": 3},
+    "decisions": {"max_lines": 150, "max_records": 8},
+    "parked": {"max_lines": 60, "max_entries": 20},
+    "tasks": {"max_active_tasks": 40}
+  }
+}
+-->
+```
+
+- 必填：`schema_version`（整数 `1`）、`task_storage`（`tracked | local`）。`budgets` 可选。
+- 预算是可选正整数；键或对象缺失表示"不设该上限"。模板中的数字是初始化默认值，不是猜测出的普适阈值。
+- 本协议与模板其他位置出现的预算数字都是初始化默认值；项目当前预算以该块为唯一来源。缺失策略块的项目是 legacy：人工判断按初始化默认值，机械校验只测量、不套用默认值。
+- 新接入项目默认 `tracked`；既有项目迁移到 `local` 由 owner 决定，工具不自动选择。
+
+`python3 trellium.py check <target>` 对以上结构与投影做只读确定性校验。
 
 ## 默认读取路径
 
@@ -191,6 +266,7 @@ vault/parked.md
 ## 更新规则
 
 - 热文件更新纪律：固定段落顺序，每条内容占一行；状态或进展变化用单行替换，不重写整段——保证每次更新是小 diff。
+- Level B/C 任务状态变化先更新任务文件的状态块，再同步 `runtime.md` 对应行（投影）。
 - 非琐碎任务完成后更新 `runtime.md`（Active Tasks 表中对应任务行）。
 - 追踪任务或治理任务更新 `tasks/*`。
 - 产生长期结论时更新 `decisions.md`。

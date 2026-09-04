@@ -18,6 +18,12 @@ Agent 不按身份获得信任，而是按任务契约获得授权。工作只�
 
 当工作改变架构、公开 API、数据模型、框架、外部服务、安全、隐私、成本、部署或 Agent 治理时使用。记录在任务文件和 `vault/decisions.md`；通常请求用户批准。
 
+## Task Lifecycle
+
+`draft | active | blocked | ready_for_review | accepted | superseded`
+
+由任务文件的 `trellium-task-state` 状态块持有；`runtime.md` 行是投影（先改状态块，再改行）。暂停且暂不推进的工作放 `parked.md`，不是 lifecycle 值。Level A 没有任务文件，`runtime.md` inline 记录即权威。
+
 ## Authority Levels
 
 - Authority 0：只读分析。
@@ -42,7 +48,7 @@ Agent 不按身份获得信任，而是按任务契约获得授权。工作只�
 - Scope and out of scope
 - Context required
 - Capability tags
-- Authority level
+- Authority level（数值由 `trellium-task-state` 状态块承载，不设第二份可编辑副本）
 - Allowed changes
 - Requires approval
 - Forbidden changes
@@ -50,6 +56,8 @@ Agent 不按身份获得信任，而是按任务契约获得授权。工作只�
 - Required verification
 - Required memory updates
 - Handoff requirement
+
+状态块不授予批准；行为边界仍由任务正文与用户指令决定。
 
 ## Acceptance Gates
 
@@ -73,11 +81,12 @@ Agent 不按身份获得信任，而是按任务契约获得授权。工作只�
 
 中断或交接时，更新 `vault/handoff.md`，包含：
 
-- Current objective
+- Objective
 - Completed
 - In progress
 - Failed attempts
-- Workspace state
-- Known risks
+- Blockers
 - Next best action
 - Files to read first
+
+分支、HEAD、脏文件在恢复时通过 Git 现场读取；handoff 不把它们当权威记录（可选保留一条带观察时间、明确为历史快照的环境快照）。

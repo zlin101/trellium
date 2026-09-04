@@ -18,6 +18,12 @@ Use when work needs tracking, affects more than two files, has more than three a
 
 Use when work changes architecture, public APIs, data models, frameworks, external services, security, privacy, cost, deployment, or Agent governance. Record in a task file and `vault/decisions.md`; usually request user approval.
 
+## Task Lifecycle
+
+`draft | active | blocked | ready_for_review | accepted | superseded`
+
+Owned by the task file's `trellium-task-state` block; the `runtime.md` row is a projection (update the block first, then the row). Paused-and-shelved work lives in `parked.md`, not in a lifecycle value. Level A has no task file; the `runtime.md` inline record is authoritative.
+
 ## Authority Levels
 
 - Authority 0: read-only analysis.
@@ -42,7 +48,7 @@ Tracked and governed tasks must include:
 - Scope and out of scope
 - Context required
 - Capability tags
-- Authority level
+- Authority level (the number lives in the `trellium-task-state` block; keep no second editable copy)
 - Allowed changes
 - Requires approval
 - Forbidden changes
@@ -50,6 +56,8 @@ Tracked and governed tasks must include:
 - Required verification
 - Required memory updates
 - Handoff requirement
+
+The task state block never grants approvals; behavior boundaries stay in the task body and user instructions.
 
 ## Acceptance Gates
 
@@ -73,11 +81,12 @@ Escalate or ask the user when requirements are ambiguous, scope expands, high-im
 
 When interrupted or transferring work, update `vault/handoff.md` with:
 
-- Current objective
+- Objective
 - Completed
 - In progress
 - Failed attempts
-- Workspace state
-- Known risks
+- Blockers
 - Next best action
 - Files to read first
+
+Branch, HEAD, and dirty files are read live from Git at resume time; handoff does not store them as authoritative facts (an optional timestamped, clearly historical environment snapshot is allowed).

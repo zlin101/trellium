@@ -2,19 +2,31 @@
 
 Use task files for tracked or governed work.
 
-## Status Flow
+## Lifecycle
 
 ```text
-Draft -> Active -> Ready for Review -> Accepted
+draft -> active -> ready_for_review -> accepted
           |
           v
-        Blocked
-          |
-          v
-        Active
+        blocked -> active
 ```
 
-Use `Superseded` when replaced by another task.
+Use `superseded` when replaced by another task. Paused-and-shelved work moves
+to `vault/parked.md`, it is not a lifecycle value.
+
+## Task State Block
+
+Level B/C task files carry a `trellium-task-state` block right after the
+title. It is the single owner of lifecycle, authority level, the current
+slice, and gate results (optional: `current_slice`, `gates`). Update it on
+every status change; the `runtime.md` row is only a projection. Unknown
+fields are invalid; changing a field's meaning requires a new
+`schema_version`. The block never grants approvals: Allowed, Requires
+Approval, Forbidden, and acceptance stay owned by the task body and the user.
+
+Task files without the block are legacy: add the block the next time you
+touch the task; do not batch-migrate history. `TASK-xxxx-review.md` ledgers
+and `tasks/archive/` are cold history and do not carry a block.
 
 ## Naming
 
@@ -27,9 +39,15 @@ TASK-0001-short-title.md
 ```md
 # TASK-0001 - Short Title
 
-## Status
-
-Draft | Active | Blocked | Ready for Review | Accepted | Superseded
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0001",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "draft"
+}
+-->
 
 ## Objective
 
@@ -52,8 +70,6 @@ Draft | Active | Blocked | Ready for Review | Accepted | Superseded
 - testing
 
 ## Authority
-
-Level:
 
 Allowed:
 

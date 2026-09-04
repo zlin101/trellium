@@ -7,6 +7,16 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.2 — 任务状态块、项目策略块与只读 check
+
+- Added: Level B/C 任务文件标题之后新增 `trellium-task-state` 状态块（schema v1：`schema_version`、`task_id`、`level`、`authority_level`、`lifecycle` 必填；`current_slice`、`gates` 可选），是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner。新建或重新激活任务时添加；历史 TASK 不批量迁移，`check` 对缺失块报 legacy warning、不推断状态。`TASK-*-review.md` 台账与 `tasks/archive/` 不需要状态块。
+- Breaking: 任务 lifecycle 统一为 `draft | active | blocked | ready_for_review | accepted | superseded`。`runtime.md` TASK 行改用同一枚举并成为状态块的派生投影；`paused`、`waiting-review` 不再是 TASK 状态，暂停且暂不推进的工作降级为 `parked.md` 条目。
+- Breaking: 任务模板删除独立可编辑的 `## Status` 段与 Authority `Level:` 副本；Authority 正文只保留 Allowed、Requires Approval、Forbidden。
+- Added: `vault/index.md` 新增 `trellium-policy` 策略块（schema v1）：`task_storage`（`tracked | local`）与可选 `budgets`，是项目预算与 TASK storage 的唯一配置来源；本协议其他位置的预算数字降级为初始化默认值。策略块缺失时 `check` 报 `POLICY_MISSING` warning，不套用隐藏默认值。
+- Breaking: `handoff.md` 不再把 Workspace State（分支、HEAD、脏文件）当权威记录；每条交接改为 Objective、Completed、In Progress、Failed Attempts、Blockers、Next Best Action、Files To Read First，实时 Git 事实恢复时现场读取，只可另存一条带观察时间、明确非权威的环境快照。
+- Agent migration: `runtime.md`、`handoff.md` 是 protected data，升级不替换；由 Agent 按上述规则以小 diff 方式人工同步，不丢事实。既有项目的 `task_storage` 由 owner 决定（新接入项目默认 `tracked`），工具不自动选择、不修改 `.gitignore`、不自动 untrack。
+- Added: `trellium.py check <target>`（`--format json` 可选）：只读确定性校验——状态块/策略块结构与枚举、task_id 与文件名一致、runtime 投影漂移、预算测量与显式阈值、TASK storage 与 Git 实际状态。发现 error 退出 `2`，warning 不改变退出码；全程不写文件、不自动修复。
+
 ## 2026.09.1 — 一行安装器与工具修订
 
 - Added: `scripts/install.sh` 一行安装/升级 Skill 包——`curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/install.sh | sh`。支持 `--lang en|zh`（默认 en）、`--agent codex|claude|all`（默认自动探测 `$CODEX_HOME`/`~/.codex` → codex，`~/.claude` → claude）、`--version`、`--dir`、`--project`（装到当前项目 `.claude/skills`）、`--source`。经 `releases/latest` 重定向解析最新版本（无 API 速率限制）；原地替换，重复执行即升级。

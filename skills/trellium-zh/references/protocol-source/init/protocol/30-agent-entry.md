@@ -68,7 +68,7 @@ vault/tasks/<task-id>.md
 1. 读取必要上下文；
 2. 判断任务等级和授权等级；
 3. 明确任务边界和验收标准；
-4. Level B 或 Level C 任务创建或更新任务文件；
+4. Level B 或 Level C 任务创建或更新任务文件；状态变化先更新任务文件的 `trellium-task-state` 状态块，再同步 `vault/runtime.md` 对应行（投影）；
 5. 做最小必要修改；
 6. 行为变化时补充或更新聚焦测试；
 7. 运行必要检查；
