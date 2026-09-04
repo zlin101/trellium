@@ -39,6 +39,8 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 
 第一阶段只测量、不设阈值（policy 不配 budgets 数字）。记录热文件增长与实际阅读障碍。
 
+设置校正：adopt 生成的默认 policy 曾短暂包含 budgets；在第二个真实任务开始、尚未产生任何阈值 finding 前删除，使实验与预注册的 measurement-only 条件一致。
+
 | 日期 | 文件 | lines / bytes / max_line_bytes | 实际阅读障碍事件 | 备注 |
 | --- | --- | --- | --- | --- |
 | 2026-09-04 | runtime | 58 / 1751 / 136 | 无 | 基线 |

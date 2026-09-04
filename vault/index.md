@@ -5,18 +5,11 @@
 <!-- trellium-policy
 {
   "schema_version": 1,
-  "task_storage": "tracked",
-  "budgets": {
-    "runtime": {"max_lines": 120, "max_recent_entries": 10},
-    "handoff": {"max_lines": 100, "max_entries": 3},
-    "decisions": {"max_lines": 150, "max_records": 8},
-    "parked": {"max_lines": 60, "max_entries": 20},
-    "tasks": {"max_active_tasks": 40}
-  }
+  "task_storage": "tracked"
 }
 -->
 
-上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
+上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。本试点暂不配置预算阈值，只保留测量；协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
 
 ## 任务与授权速查表
 
