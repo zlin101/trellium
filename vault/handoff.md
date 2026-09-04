@@ -8,11 +8,11 @@
 ## TASK-0002 - 2026-09-04
 
 - Objective: 为既有 `2026.09.3` tag 创建 GitHub Release，使 latest release 解析拿到新版。
-- Completed: K4 policy 已校正为 measurement-only；87/87 tests、Skill 快照同步和提交后的 check 0/0 均通过；commit `1d9d19b` 已推送到 `origin/develop`。
+- Completed: K4 policy 已校正为 measurement-only；87/87 tests、Skill 快照同步和提交后的 check 0/0 均通过；commit `1d9d19b` 已推送。用户已创建 **2026.09.2** 的 Release（latest 从 2026.09.0 改善到 2026.09.2），但 2026.09.3 的 Release 仍缺。
 - In progress: Release 创建与 latest 验证。
 - Failed attempts: `gh release create` 未触发远端写入，因为执行环境没有 `gh`；未读取或转存本地凭据。
-- Blockers: 需要用户在 GitHub Releases 网页为既有 tag `2026.09.3` 创建 Release。
-- Next best action: 打开 `https://github.com/zlin101/trellium/releases/new?tag=2026.09.3`，粘贴已准备的 release notes 并发布；随后验证 `releases/latest`，将 TASK-0002 blocked → active → accepted。
+- Blockers: 需要为既有 tag `2026.09.3` 创建 Release（notes 已备好在 `/tmp/trellium-2026-09-3-release-notes.md`；注意上次建到了 2026.09.2 tag 上）。
+- Next best action: 打开 `https://github.com/zlin101/trellium/releases/new?tag=2026.09.3`（务必选 2026.09.3 tag），标题 `Trellium 2026.09.3 — Agent-native Vault checks`，粘贴已备好的 notes 并发布；或提供带 repo 权限的 token 由 Agent 经 API 创建。随后验证 `releases/latest` 解析到 2026.09.3，执行 blocked → active → accepted。
 - Files to read first: `vault/tasks/TASK-0002-release-2026-09-3.md`、`vault/runtime.md`、`vault/details/shadow-run-2026-09.md`。
 
 ## TASK-0001 - 2026-09-04
