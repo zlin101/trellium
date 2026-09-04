@@ -1161,10 +1161,13 @@ BUDGET_MEASUREMENT_KEYS = {
 
 REQUIRED_VAULT_FILES = (
     "vault/index.md",
+    "vault/project.md",
+    "vault/governance.md",
     "vault/runtime.md",
     "vault/handoff.md",
     "vault/decisions.md",
     "vault/parked.md",
+    "vault/tasks/README.md",
 )
 
 FINDING_PHASES = (
@@ -1610,6 +1613,21 @@ def discover_task_files(run: VaultCheckRun) -> tuple[list[dict], list[str], list
             if entry.is_symlink():
                 run.add("task-state", "SYMLINK_INPUT", "error", relative, f"{relative} is a symbolic link; refusing to follow it")
             archive.append(relative)
+
+    id_counts: dict[str, int] = {}
+    for task in current:
+        id_counts[task["task_id"]] = id_counts.get(task["task_id"], 0) + 1
+    for task in current:
+        if id_counts[task["task_id"]] > 1:
+            run.add(
+                "task-state",
+                "TASK_ID_DUPLICATE",
+                "error",
+                task["path"],
+                f"task_id {task['task_id']} is declared by {id_counts[task['task_id']]} task files; keep exactly one current task per id",
+                task_id=task["task_id"],
+            )
+            task["valid"] = False
     return current, ledgers, archive
 
 
@@ -1657,6 +1675,36 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
     rows, focus, problems = parse_runtime_task_pointers(runtime_text)
     for _kind, detail in problems:
         run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", detail)
+
+    row_counts: dict[str, int] = {}
+    for task_id, _status in rows:
+        row_counts[task_id] = row_counts.get(task_id, 0) + 1
+    for task_id, count in row_counts.items():
+        if count > 1:
+            run.add(
+                "runtime-projection",
+                "TASK_RUNTIME_DUPLICATE",
+                "error",
+                "vault/runtime.md",
+                f"Active Tasks table has {count} rows for {task_id}; keep one row per task",
+                task_id=task_id,
+            )
+
+    projected = set(row_counts)
+    closed = {"accepted", "superseded"}
+    for task in tasks:
+        if not task["valid"] or task["lifecycle"] in closed:
+            continue
+        if task["task_id"] not in projected:
+            run.add(
+                "runtime-projection",
+                "TASK_PROJECTION_MISSING",
+                "error",
+                "vault/runtime.md",
+                f"open task {task['task_id']} ({task['lifecycle']}) has no Active Tasks row in runtime.md; the runtime projection is missing",
+                task_id=task["task_id"],
+            )
+
     for task_id, status in rows:
         resolve(task_id)
         matches = by_id.get(task_id) or []

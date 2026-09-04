@@ -193,8 +193,7 @@
 - 新接入项目默认 `tracked`，保持现有行为。
 - 既有项目不得自动选择 storage；迁移时由 owner 根据已有治理确认。
 - 所有预算是可选正整数；对象或键缺失表示“不设该上限”，不是使用脚本默认。
-- 各预算对象未来可选 `max_bytes`；默认模板不填猜测值。
-- checker 总是报告 lines、UTF-8 bytes、最大单行 UTF-8 bytes；最大单行只测量，不设 v1 配置键。
+- checker 总是报告 lines、UTF-8 bytes、最大单行 UTF-8 bytes；最大单行只测量，不设 v1 配置键。不承诺未来 `max_bytes` 配置键；只有真实观察到“大文件导致 Agent 定位失败”才考虑引入。
 - 缺少 policy 的旧项目产生 `POLICY_MISSING` warning；checker 不用硬编码默认冒充项目策略。
 - agent-task 只要求读取 policy，不复制预算数字。
 

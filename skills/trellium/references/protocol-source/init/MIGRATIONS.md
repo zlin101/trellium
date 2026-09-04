@@ -7,6 +7,13 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.3 — check 状态唯一性与必需文件修复
+
+- Added: `trellium.py check` 新增三类 error 发现：跨任务文件重复 `task_id`（`TASK_ID_DUPLICATE`）、runtime Active Tasks 表重复行（`TASK_RUNTIME_DUPLICATE`）、未关闭任务（draft/active/blocked/ready_for_review）在 runtime 中没有任何 Active Tasks 投影行（`TASK_PROJECTION_MISSING`）。
+- Added: 必需文件检查扩展到 `vault/project.md`、`vault/governance.md`、`vault/tasks/README.md`（缺失报 `REQUIRED_FILE_MISSING` warning），与 `10-vault.md` 必备文件清单一致。
+- Removed: 计划文档中未实现的 `max_bytes` 未来配置承诺。check 行为不变：预算只有显式配置的阈值会被执行。
+- Auto: 无模板变更；`upgrade --apply` 仅刷新版本指针。
+
 ## 2026.09.2 — 任务状态块、项目策略块与只读 check
 
 - Added: Level B/C 任务文件标题之后新增 `trellium-task-state` 状态块（schema v1：`schema_version`、`task_id`、`level`、`authority_level`、`lifecycle` 必填；`current_slice`、`gates` 可选），是 lifecycle、authority_level、当前 slice 与 Gate 结果的唯一 owner。新建或重新激活任务时添加；历史 TASK 不批量迁移，`check` 对缺失块报 legacy warning、不推断状态。`TASK-*-review.md` 台账与 `tasks/archive/` 不需要状态块。

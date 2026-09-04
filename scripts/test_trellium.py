@@ -973,11 +973,26 @@ class VaultCheckTest(TargetTestCase):
         (target / "vault/parked.md").write_text(
             parked if parked is not None else "# Parked\n\n## Entries\n\n- P-0001 · task · title · context · trigger · 2026-01-01\n", encoding="utf-8"
         )
+        (target / "vault/project.md").write_text(
+            f"# Project\n\n{target.name} project facts.\n", encoding="utf-8"
+        )
+        (target / "vault/governance.md").write_text("# Governance\n\nDefault governance.\n", encoding="utf-8")
+        (target / "vault/tasks/README.md").write_text("# Task Files\n\nLifecycle and templates.\n", encoding="utf-8")
         for relative, content in (files or {}).items():
             destination = target / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(content, encoding="utf-8")
         return target
+
+    def add_runtime_row(self, target: Path, task_id: str, status: str) -> None:
+        runtime_path = target / "vault/runtime.md"
+        lines = runtime_path.read_text(encoding="utf-8").splitlines()
+        out: list[str] = []
+        for line in lines:
+            out.append(line)
+            if line.startswith("| --- |") and len(out) >= 2 and out[-2].startswith("| Task |"):
+                out.append(f"| {task_id} | one-line objective | {status} | next action |")
+        runtime_path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
     def check(self, target: Path, *extra: str) -> tuple[int, str, str]:
         return self.run_agent_init("check", str(target), *extra)
@@ -1015,6 +1030,7 @@ class VaultCheckTest(TargetTestCase):
         block = state_block(text='{ "lifecycle":"draft" ,\n"authority_level":2,\n "schema_version":1, "task_id":"TASK-0001", "level":"B" }')
         target = self.make_project(
             files={"vault/tasks/TASK-0001-a.md": f"# TASK-0001 - A\n\n{block}\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
         )
 
         payload = self.check_json(target)
@@ -1168,7 +1184,8 @@ class VaultCheckTest(TargetTestCase):
     def test_optional_state_fields_are_validated(self) -> None:
         good = valid_state(current_slice="A4", gates={"design": "passed", "live": "not_authorized"})
         target = self.make_project(
-            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(good) + "\n"}
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(good) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
         )
         payload = self.check_json(target)
         self.assertEqual(payload["summary"], {"errors": 0, "warnings": 1})
@@ -1241,6 +1258,7 @@ class VaultCheckTest(TargetTestCase):
                 "vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="active")) + "\n",
                 "vault/tasks/TASK-0002-legacy.md": "# TASK-0002 - Legacy\n",
             },
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)),
         )
 
         code, out, err = self.check(target)
@@ -1261,6 +1279,7 @@ class VaultCheckTest(TargetTestCase):
                 "vault/tasks/TASK-0002-b.md": "# TASK-0002 - B\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="accepted")) + "\n",
                 "vault/tasks/TASK-0003-c.md": "# TASK-0003 - C\n\n" + state_block(valid_state(task_id="TASK-0003", lifecycle="active")) + "\n",
             },
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"), ("TASK-0003", "active", "obj"))),
         )
 
         code, out, err = self.check(target)
@@ -1299,7 +1318,7 @@ class VaultCheckTest(TargetTestCase):
             "vault/tasks/TASK-0002-done.md": "# TASK-0002 - Done\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="accepted")) + "\n",
             "vault/tasks/archive/TASK-0003-old.md": "# TASK-0003 - Old\n",
         }
-        target = self.make_project(files=files)
+        target = self.make_project(files=files, runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)))
         self.init_git_repo(target)
         self.git(target, "add", "-A")
         self.git(target, "commit", "-qm", "base")
@@ -1311,6 +1330,7 @@ class VaultCheckTest(TargetTestCase):
         # An uncommitted new active task is a normal window: warning only.
         new_task = target / "vault/tasks/TASK-0004-new.md"
         new_task.write_text("# TASK-0004 - New\n\n" + state_block(valid_state(task_id="TASK-0004")) + "\n", encoding="utf-8")
+        self.add_runtime_row(target, "TASK-0004", "draft")
         code, out, err = self.check(target)
         self.assertEqual(code, 0, err)
         self.assertNotIn("TASK_STORAGE_MISMATCH", out)
@@ -1328,6 +1348,7 @@ class VaultCheckTest(TargetTestCase):
         # files are never reported by check-ignore; the index wins.)
         ignored_task = target / "vault/tasks/TASK-0006-ignored.md"
         ignored_task.write_text("# TASK-0006 - Ignored\n\n" + state_block(valid_state(task_id="TASK-0006")) + "\n", encoding="utf-8")
+        self.add_runtime_row(target, "TASK-0006", "draft")
         (target / ".gitignore").write_text("vault/tasks/TASK-0006-ignored.md\n", encoding="utf-8")
         code, out, err = self.check(target)
         self.assertEqual(code, 2)
@@ -1338,6 +1359,7 @@ class VaultCheckTest(TargetTestCase):
         target = self.make_project(
             policy=local_policy(),
             files={"vault/tasks/TASK-0001-quiet.md": "# TASK-0001 - Quiet\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
         )
         self.init_git_repo(target)
 
@@ -1350,12 +1372,64 @@ class VaultCheckTest(TargetTestCase):
         self.assertEqual(code, 2)
         self.assertIn("TASK_STORAGE_MISMATCH", out)
 
+    def test_duplicate_task_ids_across_files_exit_2(self) -> None:
+        block = state_block(valid_state(task_id="TASK-0001"))
+        target = self.make_project(
+            files={
+                "vault/tasks/TASK-0001-a.md": f"# TASK-0001 - A\n\n{block}\n",
+                "vault/tasks/TASK-0001-b.md": f"# TASK-0001 - B\n\n{block}\n",
+                "vault/tasks/TASK-0002-c.md": f"# TASK-0002 - C\n\n{state_block(valid_state(task_id='TASK-0002'))}\n",
+            },
+            runtime=build_runtime(rows=(("TASK-0002", "draft", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_ID_DUPLICATE", out)
+        payload = self.check_json(target)
+        self.assertEqual(len([f for f in payload["findings"] if f["code"] == "TASK_ID_DUPLICATE"]), 2)
+
+    def test_duplicate_runtime_rows_exit_2(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(
+                rows=(
+                    ("TASK-0001", "draft", "first row"),
+                    ("TASK-0001", "draft", "second row"),
+                ),
+            ),
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_RUNTIME_DUPLICATE", out)
+
+    def test_open_task_missing_runtime_projection(self) -> None:
+        target = self.make_project(
+            files={
+                "vault/tasks/TASK-0001-open.md": "# TASK-0001 - Open\n\n" + state_block(valid_state(lifecycle="active")) + "\n",
+                "vault/tasks/TASK-0002-done.md": "# TASK-0002 - Done\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="accepted")) + "\n",
+                "vault/tasks/TASK-0003-legacy.md": "# TASK-0003 - Legacy\n",
+            },
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_PROJECTION_MISSING", out)
+        payload = self.check_json(target)
+        projection_findings = [f for f in payload["findings"] if f["code"] == "TASK_PROJECTION_MISSING"]
+        self.assertEqual([f["task_id"] for f in projection_findings], ["TASK-0001"])
+
     def test_bare_task_file_name_is_discovered(self) -> None:
         # TASK-0001.md (no slug suffix) is a current task entity per the
         # TASK-*.md glob; discovery must not silently skip it.
         target = self.make_project(
             policy=local_policy(),
             files={"vault/tasks/TASK-0009.md": "# TASK-0009 - Bare\n\n" + state_block(valid_state(task_id="TASK-0009")) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0009", "draft", "obj"),)),
         )
         self.init_git_repo(target)
         self.git(target, "add", "-A")
@@ -1373,6 +1447,7 @@ class VaultCheckTest(TargetTestCase):
         target = self.make_project(
             policy=local_policy(),
             files={f"vault/tasks/{name}": f"# TASK-0007 - Unicode\n\n{state_block(valid_state(task_id='TASK-0007'))}\n"},
+            runtime=build_runtime(rows=(("TASK-0007", "draft", "obj"),)),
         )
         self.init_git_repo(target)
         self.git(target, "add", "-A")
@@ -1386,6 +1461,7 @@ class VaultCheckTest(TargetTestCase):
         # A task file exists, so storage could not be verified: skipped warning.
         target = self.make_project(
             files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
         )
 
         code, out, err = self.check(target)
@@ -1428,7 +1504,7 @@ class VaultCheckTest(TargetTestCase):
         block = state_block(text='{ "schema_version": 1, "task_id": "TASK-0500", "level": "B", "authority_level": 2, "lifecycle": "draft", "zzz_external_marker_field": 1 }')
         (outside / "TASK-0500-secret.md").write_text(f"# TASK-0500 - Secret\n\n{block}\nOUTSIDE-SECRET-CONTENT\n", encoding="utf-8")
         target = self.make_project()
-        (target / "vault/tasks").rmdir()
+        shutil.rmtree(target / "vault/tasks")
         (target / "vault/tasks").symlink_to(outside, target_is_directory=True)
 
         code, out, err = self.check(target)
@@ -1554,6 +1630,25 @@ class VaultCheckTest(TargetTestCase):
 
         self.assertEqual(code, 0, err)
         self.assertIn("REQUIRED_FILE_MISSING", out)
+
+    def test_missing_structural_files_are_reported(self) -> None:
+        target = self.make_project()
+        (target / "vault/project.md").unlink()
+        (target / "vault/governance.md").unlink()
+        (target / "vault/tasks/README.md").unlink()
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("vault/project.md", out)
+        self.assertIn("vault/governance.md", out)
+        self.assertIn("vault/tasks/README.md", out)
+        payload = self.check_json(target)
+        missing = [f["path"] for f in payload["findings"] if f["code"] == "REQUIRED_FILE_MISSING"]
+        self.assertEqual(
+            sorted(missing),
+            ["vault/governance.md", "vault/project.md", "vault/tasks/README.md"],
+        )
 
 
 if __name__ == "__main__":
