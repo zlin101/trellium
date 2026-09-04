@@ -1134,7 +1134,7 @@ COMMENT_BLOCK_END = "-->"
 
 TASK_ID_PATTERN = r"TASK-[0-9]{4,}"
 TASK_ID_RE = re.compile(rf"^{TASK_ID_PATTERN}$")
-TASK_FILE_ID_RE = re.compile(rf"^({TASK_ID_PATTERN})(?:-|$)")
+TASK_FILE_ID_RE = re.compile(rf"^({TASK_ID_PATTERN})(?:-|\.md$)")
 REVIEW_LEDGER_RE = re.compile(rf"^{TASK_ID_PATTERN}-review\.md$")
 
 LIFECYCLE_VALUES = ("draft", "active", "blocked", "ready_for_review", "accepted", "superseded")
@@ -1417,11 +1417,10 @@ def git_run(target: Path, arguments: list[str], input_bytes: bytes | None = None
         return None
 
 
-def git_toplevel(target: Path) -> Path | None:
+def git_in_worktree(target: Path) -> bool:
+    """True when the target sits inside a usable Git worktree."""
     result = git_run(target, ["rev-parse", "--show-toplevel"])
-    if result is None or result.returncode != 0:
-        return None
-    return Path(result.stdout.decode("utf-8", "surrogateescape").strip())
+    return result is not None and result.returncode == 0
 
 
 def git_tracked_files(target: Path) -> set[str] | None:
@@ -1765,8 +1764,7 @@ def check_task_storage(run: VaultCheckRun, policy: dict | None, tasks: list[dict
     task_paths = [task["path"] for task in tasks] + ledgers + archive
     if not task_paths:
         return
-    toplevel = git_toplevel(run.target)
-    if toplevel is None:
+    if not git_in_worktree(run.target):
         run.add("storage", "GIT_CHECK_SKIPPED", "warning", "vault/tasks", "not a Git worktree or Git is unavailable; TASK storage was not verified")
         return
     if policy is None:
@@ -1820,12 +1818,13 @@ def check_task_storage(run: VaultCheckRun, policy: dict | None, tasks: list[dict
         if task["path"] in tracked:
             continue
         if task["legacy"] or not task["valid"]:
+            reason = "legacy" if task["legacy"] else "its state block is invalid"
             run.add(
                 "storage",
                 "TASK_STORAGE_UNRESOLVED",
                 "warning",
                 task["path"],
-                f"task_storage=tracked but {task['path']} is not tracked and its lifecycle is unresolved (legacy)",
+                f"task_storage=tracked but {task['path']} is not tracked and its lifecycle is unresolved ({reason})",
                 task_id=task["task_id"],
             )
         elif task["lifecycle"] in closed:

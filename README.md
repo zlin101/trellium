@@ -165,7 +165,7 @@ curl -fsSL https://raw.githubusercontent.com/zlin101/trellium/develop/scripts/in
 ... | sh -s -- --agent all            # 同时装 Codex 与 Claude Code
                                      # 不指定时自动探测：$CODEX_HOME/~/.codex → codex，~/.claude → claude
 ... | sh -s -- --project              # 装到当前项目 ./.claude/skills/
-... | sh -s -- --version 2026.09.1    # 固定版本（默认自动解析 GitHub 最新 release）
+... | sh -s -- --version 2026.09.2    # 固定版本（默认自动解析 GitHub 最新 release）
 ... | sh -s -- --dir <路径>           # 任意目标目录
 ```
 
@@ -240,6 +240,25 @@ python3 scripts/trellium.py upgrade /path/to/project --complete  # 提案解决�
 升级把协作层文件分为两类：**项目数据**（runtime、handoff、decisions、tasks、project、collaboration 等）对升级器只读，永不被模板替换；**协议文件**（governance、index、tasks/README、skills/agent-task、AGENTS.md 管理区域）可刷新，但本地修改永不静默丢弃——双方都改过时生成提案到 `vault/.upgrade/<version>/`，由 Agent 合并、用户确认。升级逐文件可选（`--only` / `--skip`），产出独立提交可随时 `git revert`。
 
 `adopt` 会在 `vault/.agent-init.json` 记录版本戳（各文件安装时的内容 hash）。版本戳出现之前的存量项目先运行 `baseline <target>` 补记。数据文件的格式迁移由 `init/MIGRATIONS.md` 迁移手册逐条定义：只做内容搬运，不丢事实。
+
+### 校验项目状态（check）
+
+```bash
+python3 scripts/trellium.py check /path/to/project                # 文本报告
+python3 scripts/trellium.py check /path/to/project --format json  # 稳定 JSON
+```
+
+`check` 是完全只读、确定性的校验命令，面向 2026.09.2 引入的最小状态层：
+
+- `trellium-task-state` 状态块：Level B/C 任务文件顶部的严格 JSON 块，是 lifecycle、授权等级、当前 slice 与 Gate 结果的唯一 owner；
+- `trellium-policy` 策略块：`vault/index.md` 中的项目策略，唯一配置预算与 TASK storage（`tracked | local`）；
+- runtime 投影：`runtime.md` Active Tasks 行与状态块 lifecycle 的一致性；
+- 预算测量：热文件行数、UTF-8 字节、最大单行、条目数始终报告；只有策略块显式配置的阈值会触发超限错误；
+- TASK storage：按策略对比 Git 实际状态（tracked/local）。
+
+退出码：发现 error 退出 `2`；只有 warning 退出 `0`，但 summary 必须显示 warning，不会显示无条件 PASS；目标无效等操作错误退出 `1`。`check` 不会自动修复任何文件、不写入目标项目、不访问网络、不执行文档中出现的命令。
+
+对旧项目是 fail-closed 的：没有状态块的历史 TASK 报 legacy warning，不推断状态；没有策略块时不套用隐藏默认值。状态块不授予批准——Allowed、Requires Approval、Forbidden 与验收始终由任务正文与用户指令决定。
 
 ### 修订协议
 

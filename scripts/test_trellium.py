@@ -1350,6 +1350,24 @@ class VaultCheckTest(TargetTestCase):
         self.assertEqual(code, 2)
         self.assertIn("TASK_STORAGE_MISMATCH", out)
 
+    def test_bare_task_file_name_is_discovered(self) -> None:
+        # TASK-0001.md (no slug suffix) is a current task entity per the
+        # TASK-*.md glob; discovery must not silently skip it.
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0009.md": "# TASK-0009 - Bare\n\n" + state_block(valid_state(task_id="TASK-0009")) + "\n"},
+        )
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+        self.assertIn("TASK-0009.md", out)
+
+        payload = self.check_json(target)
+        self.assertEqual(payload["measurements"]["tasks"]["current_task_files"], 1)
+
     def test_storage_handles_unicode_and_space_file_names(self) -> None:
         name = "TASK-0007-我的 任务.md"
         target = self.make_project(

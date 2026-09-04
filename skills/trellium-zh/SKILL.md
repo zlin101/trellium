@@ -50,6 +50,7 @@ description: 用于为新项目或既有软件项目添加或升级持久的 Age
   3. Agent 按提案做语义合并（逐条保留项目定制），用户逐条确认。
   4. `python3 assets/trellium.py upgrade <target> --complete`——收尾登记。
 - 无版本戳的存量项目（`vault/.agent-init.json` 不存在）先运行 `python3 assets/trellium.py baseline <target>`。
+- 校验项目状态：`python3 assets/trellium.py check <target>`（可加 `--format json`）完全只读、确定性，校验最小状态层——Level B/C 任务文件的 `trellium-task-state` 状态块、`vault/index.md` 的 `trellium-policy` 策略块、runtime 任务行与状态块的投影一致性、热文件预算测量、TASK storage 与 Git 实际状态。退出码：有 error 为 `2`；仅 warning 为 `0`（warning 必须显示，不存在无条件 PASS）；操作错误为 `1`。它不自动修复、不写任何文件；没有状态块的历史 TASK 按 unresolved 报告，不猜测状态。新建任务用带状态块的模板，重新激活旧任务时补状态块，不批量迁移历史。
 - 数据保护：runtime、handoff、decisions、tasks 等项目数据对脚本只读，永不被模板替换；数据文件的格式迁移按 `references/protocol-source/init/MIGRATIONS.md` 语义执行，只做内容搬运，不丢事实。
 - 版本判断：目标项目 `vault/.agent-init.json` 的 `protocol_version` 低于 `references/protocol-source/init/VERSION` 时提议升级。
 - 脚本无法运行时（缺少 python3 等），回退为本 SKILL 的 Agent 驱动流程：按 `references/protocol-source/` 的协议规则手工合并模板与执行迁移，遵守相同的数据保护边界。

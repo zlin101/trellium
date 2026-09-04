@@ -165,7 +165,7 @@ Installs the English Skill package into the auto-detected agent directory (`$COD
 ... | sh -s -- --agent all            # install for both Codex and Claude Code
                                      # when omitted: auto-detects $CODEX_HOME/~/.codex → codex, ~/.claude → claude
 ... | sh -s -- --project              # into ./.claude/skills/ of the current project
-... | sh -s -- --version 2026.09.1    # pin a version (default: resolves latest GitHub release)
+... | sh -s -- --version 2026.09.2    # pin a version (default: resolves latest GitHub release)
 ... | sh -s -- --dir <path>           # any destination directory
 ```
 
@@ -240,6 +240,25 @@ python3 scripts/trellium.py upgrade /path/to/project --complete  # finalize reso
 The upgrade splits collaboration files into two classes: **project data** (runtime, handoff, decisions, tasks, project, collaboration, and friends) is read-only to the upgrader and is never replaced by templates; **protocol files** (governance, index, tasks/README, skills/agent-task, the managed AGENTS.md region) may be refreshed, but local modifications are never silently discarded — when both sides changed, a proposal is written under `vault/.upgrade/<version>/` for the Agent to merge and the user to confirm. Upgrades are per-file opt-in (`--only` / `--skip`) and produce a standalone, revertable commit.
 
 `adopt` records a stamp at `vault/.agent-init.json` (the content hash of each file at install time). Projects adopted before the stamp existed should first run `baseline <target>`. Format migrations for data files are defined entry by entry in `init/MIGRATIONS.md`: content is carried over, never dropped.
+
+### Checking project state (check)
+
+```bash
+python3 scripts/trellium.py check /path/to/project                # text report
+python3 scripts/trellium.py check /path/to/project --format json  # stable JSON
+```
+
+`check` is a fully read-only, deterministic validation command for the minimal state layer introduced in 2026.09.2:
+
+- `trellium-task-state` blocks: the strict JSON block at the top of Level B/C task files, the single owner of lifecycle, authority level, current slice, and gate results;
+- the `trellium-policy` block: project policy in `vault/index.md`, the single source for budgets and TASK storage (`tracked | local`);
+- runtime projection: consistency between `runtime.md` Active Tasks rows and each task's block lifecycle;
+- budget measurements: hot-file lines, UTF-8 bytes, max line size, and entry counts are always reported; only explicitly configured policy thresholds raise over-budget errors;
+- TASK storage: actual Git state compared against the configured strategy (tracked/local).
+
+Exit codes: `2` when any error finding exists; `0` with warnings only, but the summary always shows them (never an unconditional PASS); `1` for operational failures such as an invalid target. `check` never auto-fixes, never writes to the target, never accesses the network, and never executes commands found in documents.
+
+Legacy projects fail closed: historical task files without a state block produce legacy warnings and their lifecycle is never guessed; a missing policy block is never replaced with hidden defaults. State blocks never grant approvals — Allowed, Requires Approval, Forbidden, and acceptance always stay owned by the task body and user instructions.
 
 ### Revising the protocol
 
