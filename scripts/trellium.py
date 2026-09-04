@@ -8,6 +8,7 @@ import difflib
 import hashlib
 import json
 import os
+import re
 import secrets
 import shutil
 import stat
@@ -1117,6 +1118,803 @@ def print_playbook(sections: list[tuple[str, str]]) -> None:
     print()
 
 
+# --- Vault check (read-only) -----------------------------------------------
+#
+# `check` validates the minimal canonical state layer: the trellium-task-state
+# block in Level B/C task files, the trellium-policy block in vault/index.md,
+# the runtime projection of task lifecycles, hot-file budgets, and TASK
+# storage versus Git. It never writes, never executes content, and never
+# follows symbolic links into vault inputs.
+
+CHECK_ERROR_EXIT = 2
+
+TASK_STATE_MARKER = "trellium-task-state"
+POLICY_MARKER = "trellium-policy"
+COMMENT_BLOCK_END = "-->"
+
+TASK_ID_PATTERN = r"TASK-[0-9]{4,}"
+TASK_ID_RE = re.compile(rf"^{TASK_ID_PATTERN}$")
+TASK_FILE_ID_RE = re.compile(rf"^({TASK_ID_PATTERN})(?:-|$)")
+REVIEW_LEDGER_RE = re.compile(rf"^{TASK_ID_PATTERN}-review\.md$")
+
+LIFECYCLE_VALUES = ("draft", "active", "blocked", "ready_for_review", "accepted", "superseded")
+GATE_VALUES = ("pending", "in_progress", "passed", "partial", "blocked", "not_authorized", "not_applicable")
+TASK_STORAGE_VALUES = ("tracked", "local")
+
+STATE_REQUIRED_FIELDS = ("schema_version", "task_id", "level", "authority_level", "lifecycle")
+STATE_OPTIONAL_FIELDS = ("current_slice", "gates")
+
+BUDGET_FILE_KEYS = {
+    "runtime": ("max_lines", "max_recent_entries"),
+    "handoff": ("max_lines", "max_entries"),
+    "decisions": ("max_lines", "max_records"),
+    "parked": ("max_lines", "max_entries"),
+    "tasks": ("max_active_tasks",),
+}
+# Maps a configured policy threshold to the measurement key it constrains.
+BUDGET_MEASUREMENT_KEYS = {
+    "runtime": {"max_lines": "lines", "max_recent_entries": "recent_entries"},
+    "handoff": {"max_lines": "lines", "max_entries": "entries"},
+    "decisions": {"max_lines": "lines", "max_records": "records"},
+    "parked": {"max_lines": "lines", "max_entries": "entries"},
+}
+
+REQUIRED_VAULT_FILES = (
+    "vault/index.md",
+    "vault/runtime.md",
+    "vault/handoff.md",
+    "vault/decisions.md",
+    "vault/parked.md",
+)
+
+FINDING_PHASES = (
+    "required-files",
+    "policy",
+    "task-state",
+    "runtime-projection",
+    "budgets",
+    "storage",
+)
+
+
+def _reject_json_constant(name: str) -> None:
+    raise ValueError(f"non-standard JSON constant: {name}")
+
+
+def is_strict_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def extract_comment_blocks(text: str, marker: str) -> tuple[list[str], str | None]:
+    """Return the payloads of every `<!-- marker ... -->` block in the text."""
+    start_token = f"<!-- {marker}"
+    payloads: list[str] = []
+    index = 0
+    while True:
+        start = text.find(start_token, index)
+        if start < 0:
+            return payloads, None
+        following = text[start + len(start_token) : start + len(start_token) + 1]
+        if following and following not in ("\n", "\r"):
+            # A different marker that merely shares the prefix (e.g.
+            # trellium-policy-history) is not a block of this marker.
+            index = start + len(start_token)
+            continue
+        end = text.find(COMMENT_BLOCK_END, start)
+        if end < 0:
+            return [], f"unterminated <!-- {marker} ... --> block"
+        payloads.append(text[start + len(start_token) : end].strip())
+        index = end + len(COMMENT_BLOCK_END)
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    result: dict = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def parse_block_object(payload: str) -> tuple[dict | None, str]:
+    try:
+        value = json.loads(
+            payload,
+            parse_constant=_reject_json_constant,
+            object_pairs_hook=_reject_duplicate_keys,
+        )
+    except ValueError as exc:
+        return None, f"invalid JSON ({exc})"
+    if not isinstance(value, dict):
+        return None, "block content is not a JSON object"
+    return value, ""
+
+
+def validate_state_object(state: dict) -> list[str]:
+    errors: list[str] = []
+    known = set(STATE_REQUIRED_FIELDS) | set(STATE_OPTIONAL_FIELDS)
+    unknown = sorted(set(state) - known)
+    if unknown:
+        errors.append(f"unknown field(s): {', '.join(unknown)}")
+    missing = [field for field in STATE_REQUIRED_FIELDS if field not in state]
+    if missing:
+        errors.append(f"missing field(s): {', '.join(missing)}")
+
+    if "schema_version" in state:
+        if not is_strict_int(state["schema_version"]) or state["schema_version"] != 1:
+            errors.append("schema_version must be the integer 1")
+    if "task_id" in state:
+        task_id = state["task_id"]
+        if not isinstance(task_id, str) or TASK_ID_RE.match(task_id) is None:
+            errors.append(f"task_id must match {TASK_ID_PATTERN}")
+    if "level" in state:
+        if state["level"] not in ("B", "C"):
+            errors.append('level must be "B" or "C"')
+    if "authority_level" in state:
+        authority = state["authority_level"]
+        if not is_strict_int(authority) or not 0 <= authority <= 4:
+            errors.append("authority_level must be an integer in 0..4")
+    if "lifecycle" in state:
+        if state["lifecycle"] not in LIFECYCLE_VALUES:
+            errors.append(f"lifecycle must be one of: {', '.join(LIFECYCLE_VALUES)}")
+    if "current_slice" in state:
+        current_slice = state["current_slice"]
+        if not isinstance(current_slice, str) or not current_slice.strip():
+            errors.append("current_slice must be a non-empty string")
+    if "gates" in state:
+        gates = state["gates"]
+        if not isinstance(gates, dict):
+            errors.append("gates must be an object")
+        else:
+            for gate_id, gate_value in gates.items():
+                if not isinstance(gate_id, str) or not gate_id.strip():
+                    errors.append("gate ids must be non-empty strings")
+                elif gate_value not in GATE_VALUES:
+                    errors.append(
+                        f"gate {gate_id!r} must be one of: {', '.join(GATE_VALUES)}"
+                    )
+    return errors
+
+
+def validate_policy_object(policy: dict) -> list[str]:
+    errors: list[str] = []
+    known = {"schema_version", "task_storage", "budgets"}
+    unknown = sorted(set(policy) - known)
+    if unknown:
+        errors.append(f"unknown field(s): {', '.join(unknown)}")
+    missing = [field for field in ("schema_version", "task_storage") if field not in policy]
+    if missing:
+        errors.append(f"missing field(s): {', '.join(missing)}")
+    if "schema_version" in policy:
+        if not is_strict_int(policy["schema_version"]) or policy["schema_version"] != 1:
+            errors.append("schema_version must be the integer 1")
+    if "task_storage" in policy:
+        if policy["task_storage"] not in TASK_STORAGE_VALUES:
+            errors.append(f"task_storage must be one of: {', '.join(TASK_STORAGE_VALUES)}")
+    if "budgets" in policy:
+        budgets = policy["budgets"]
+        if not isinstance(budgets, dict):
+            errors.append("budgets must be an object")
+        else:
+            for file_key, thresholds in budgets.items():
+                allowed = BUDGET_FILE_KEYS.get(file_key)
+                if allowed is None:
+                    errors.append(f"unknown budgets key: {file_key}")
+                    continue
+                if not isinstance(thresholds, dict):
+                    errors.append(f"budgets.{file_key} must be an object")
+                    continue
+                for threshold_key, threshold_value in thresholds.items():
+                    if threshold_key not in allowed:
+                        errors.append(
+                            f"unknown threshold budgets.{file_key}.{threshold_key}"
+                        )
+                    elif not is_strict_int(threshold_value) or threshold_value <= 0:
+                        errors.append(
+                            f"budgets.{file_key}.{threshold_key} must be a positive integer"
+                        )
+    return errors
+
+
+def read_regular_text(path: Path) -> tuple[str | None, str | None]:
+    """Read a file without following symlinks; (None, None) means missing."""
+    try:
+        metadata = path.lstat()
+    except FileNotFoundError:
+        return None, None
+    except OSError as exc:
+        return None, f"unreadable: {exc}"
+    if stat.S_ISLNK(metadata.st_mode):
+        return None, "symlink"
+    if not stat.S_ISREG(metadata.st_mode):
+        return None, "not a regular file"
+    try:
+        return path.read_text(encoding="utf-8"), None
+    except (OSError, UnicodeError) as exc:
+        return None, f"unreadable: {exc}"
+
+
+def markdown_section_lines(text: str, title: str) -> list[str]:
+    """Return the body lines of a `## <title>` section, stopping at the next heading."""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == f"## {title}":
+            body: list[str] = []
+            for candidate in lines[index + 1 :]:
+                if candidate.startswith("## "):
+                    break
+                body.append(candidate)
+            return body
+    return []
+
+
+def parse_runtime_task_pointers(runtime_text: str) -> tuple[list[tuple[str, str]], list[str], list[tuple[str, str]]]:
+    """Return (task rows, focus pointers, problems) from fixed runtime sections."""
+    rows: list[tuple[str, str]] = []
+    focus: list[str] = []
+    problems: list[tuple[str, str]] = []
+
+    for line in markdown_section_lines(runtime_text, "Focus"):
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            candidate = stripped[2:].strip()
+            if TASK_ID_RE.match(candidate):
+                focus.append(candidate)
+
+    for line in markdown_section_lines(runtime_text, "Active Tasks"):
+        stripped = line.strip()
+        if not (stripped.startswith("|") and stripped.endswith("|")):
+            continue
+        cells = [cell.strip() for cell in stripped[1:-1].split("|")]
+        if all(set(cell) <= {"-", ":", ""} for cell in cells):
+            continue
+        if not cells[0].startswith("TASK-"):
+            continue
+        if len(cells) < 4:
+            problems.append(("invalid", f"malformed Active Tasks row: {stripped}"))
+            continue
+        if TASK_ID_RE.match(cells[0]) is None:
+            problems.append(("invalid", f"malformed task id in Active Tasks row: {cells[0]}"))
+            continue
+        rows.append((cells[0], cells[2]))
+    return rows, focus, problems
+
+
+def count_recent_entries(runtime_text: str) -> int:
+    return sum(
+        1
+        for line in markdown_section_lines(runtime_text, "Recent Changes")
+        if re.match(r"^\s*-\s+", line)
+    )
+
+
+def count_handoff_entries(handoff_text: str) -> int:
+    return sum(1 for line in handoff_text.splitlines() if re.match(r"^##\s+(TASK-|SESSION)", line))
+
+
+def count_decision_records(decisions_text: str) -> int:
+    total = 0
+    for line in decisions_text.splitlines():
+        if re.match(r"^\s*-\s*D-[0-9]", line) or re.match(r"^##\s*[0-9]{4}-[0-9]{2}-[0-9]{2}", line):
+            total += 1
+    return total
+
+
+def count_parked_entries(parked_text: str) -> int:
+    return sum(1 for line in parked_text.splitlines() if re.match(r"^\s*-\s*P-[0-9]", line))
+
+
+def git_run(target: Path, arguments: list[str], input_bytes: bytes | None = None) -> subprocess.CompletedProcess | None:
+    try:
+        return subprocess.run(
+            ["git", *arguments],
+            cwd=target,
+            input=input_bytes,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+
+
+def git_toplevel(target: Path) -> Path | None:
+    result = git_run(target, ["rev-parse", "--show-toplevel"])
+    if result is None or result.returncode != 0:
+        return None
+    return Path(result.stdout.decode("utf-8", "surrogateescape").strip())
+
+
+def git_tracked_files(target: Path) -> set[str] | None:
+    result = git_run(target, ["ls-files", "-z", "--", "."])
+    if result is None or result.returncode != 0:
+        return None
+    return {
+        name.decode("utf-8", "surrogateescape")
+        for name in result.stdout.split(b"\0")
+        if name
+    }
+
+
+def git_ignored_files(target: Path, relatives: list[str]) -> set[str] | None:
+    if not relatives:
+        return set()
+    input_bytes = b"".join(
+        relative.encode("utf-8", "surrogateescape") + b"\0" for relative in relatives
+    )
+    result = git_run(target, ["check-ignore", "-z", "--stdin", "--"], input_bytes=input_bytes)
+    if result is None or result.returncode not in (0, 1):
+        return None
+    return {
+        name.decode("utf-8", "surrogateescape")
+        for name in result.stdout.split(b"\0")
+        if name
+    }
+
+
+class VaultCheckRun:
+    """Accumulates findings and measurements for one read-only check run."""
+
+    def __init__(self, target: Path) -> None:
+        self.target = target
+        self.findings: list[tuple[int, dict, str]] = []
+        self.measurements: dict = {}
+
+    def add(self, phase: str, code: str, severity: str, path: str, message: str, task_id: str | None = None) -> None:
+        finding = {"code": code, "severity": severity, "path": path, "message": message}
+        if task_id is not None:
+            finding["task_id"] = task_id
+        self.findings.append((FINDING_PHASES.index(phase), finding, path))
+
+    def sorted_findings(self) -> list[dict]:
+        ordered = sorted(self.findings, key=lambda item: (item[0], item[2], item[1]["code"], item[1]["message"]))
+        return [finding for _phase, finding, _path in ordered]
+
+    @property
+    def errors(self) -> list[dict]:
+        return [finding for finding in self.sorted_findings() if finding["severity"] == "error"]
+
+    @property
+    def warnings(self) -> list[dict]:
+        return [finding for finding in self.sorted_findings() if finding["severity"] == "warning"]
+
+
+def check_required_files(run: VaultCheckRun) -> dict[str, str]:
+    """Read the fixed vault files; report missing/symlinked inputs."""
+    texts: dict[str, str] = {}
+    vault = run.target / "vault"
+    tasks_dir = vault / "tasks"
+    try:
+        tasks_metadata = tasks_dir.lstat()
+    except FileNotFoundError:
+        run.add("required-files", "REQUIRED_FILE_MISSING", "warning", "vault/tasks", "required vault directory is missing: vault/tasks/")
+    else:
+        if stat.S_ISLNK(tasks_metadata.st_mode):
+            run.add("required-files", "SYMLINK_INPUT", "error", "vault/tasks", "vault/tasks/ is a symbolic link; refusing to follow it")
+        elif not stat.S_ISDIR(tasks_metadata.st_mode):
+            run.add("required-files", "REQUIRED_FILE_MISSING", "warning", "vault/tasks", "vault/tasks/ is not a directory")
+
+    for relative in REQUIRED_VAULT_FILES:
+        text, error = read_regular_text(run.target / relative)
+        if error == "symlink":
+            run.add("required-files", "SYMLINK_INPUT", "error", relative, f"{relative} is a symbolic link; refusing to follow it")
+        elif error is not None:
+            run.add("required-files", "FILE_UNREADABLE", "error", relative, f"could not read {relative}: {error}")
+        elif text is None:
+            run.add("required-files", "REQUIRED_FILE_MISSING", "warning", relative, f"required vault file is missing: {relative}")
+        else:
+            texts[relative] = text
+    return texts
+
+
+def check_policy_block(run: VaultCheckRun, index_text: str | None) -> dict | None:
+    if index_text is None:
+        run.add("policy", "POLICY_MISSING", "warning", "vault/index.md", "no vault/index.md to hold a trellium-policy block; project budgets and TASK storage are unresolved (legacy)")
+        return None
+    blocks, error = extract_comment_blocks(index_text, POLICY_MARKER)
+    if error is not None:
+        run.add("policy", "POLICY_INVALID", "error", "vault/index.md", error)
+        return None
+    if not blocks:
+        run.add("policy", "POLICY_MISSING", "warning", "vault/index.md", "no trellium-policy block in vault/index.md; project budgets and TASK storage are unresolved (legacy)")
+        return None
+    if len(blocks) > 1:
+        run.add("policy", "POLICY_INVALID", "error", "vault/index.md", f"expected at most one {POLICY_MARKER} block, found {len(blocks)}")
+        return None
+    policy, error = parse_block_object(blocks[0])
+    if policy is None:
+        run.add("policy", "POLICY_INVALID", "error", "vault/index.md", f"invalid {POLICY_MARKER} block: {error}")
+        return None
+    validation_errors = validate_policy_object(policy)
+    if validation_errors:
+        run.add("policy", "POLICY_INVALID", "error", "vault/index.md", f"invalid {POLICY_MARKER} block: " + "; ".join(validation_errors))
+        return None
+    return policy
+
+
+def discover_task_files(run: VaultCheckRun) -> tuple[list[dict], list[str], list[str]]:
+    """Collect current task entities plus review-ledger and archive paths."""
+    tasks_dir = run.target / "vault" / "tasks"
+    current: list[dict] = []
+    ledgers: list[str] = []
+    archive: list[str] = []
+    if tasks_dir.is_symlink():
+        # Reported by check_required_files; never enumerate through the link.
+        return current, ledgers, archive
+    try:
+        entries = sorted(tasks_dir.iterdir(), key=lambda path: path.name)
+    except OSError as exc:
+        run.add("task-state", "FILE_UNREADABLE", "error", "vault/tasks", f"could not list vault/tasks/: {exc}")
+        return current, ledgers, archive
+
+    for entry in entries:
+        relative = entry.relative_to(run.target).as_posix()
+        if entry.name.startswith("."):
+            continue
+        if entry.is_symlink():
+            run.add("task-state", "SYMLINK_INPUT", "error", relative, f"{relative} is a symbolic link; refusing to follow it")
+            if REVIEW_LEDGER_RE.match(entry.name):
+                ledgers.append(relative)
+            elif TASK_FILE_ID_RE.match(entry.name) and entry.name.endswith(".md"):
+                current.append({"path": relative, "task_id": TASK_FILE_ID_RE.match(entry.name).group(1), "lifecycle": None, "legacy": False, "valid": False})
+            continue
+        if REVIEW_LEDGER_RE.match(entry.name):
+            ledgers.append(relative)
+            continue
+        match = TASK_FILE_ID_RE.match(entry.name)
+        if match is None or not entry.name.endswith(".md"):
+            continue
+        text, error = read_regular_text(entry)
+        if error is not None or text is None:
+            # (None, None): the entry vanished between listing and reading.
+            if error is not None:
+                run.add("task-state", "FILE_UNREADABLE", "error", relative, f"could not read {relative}: {error}")
+            continue
+        state, failures = parse_task_state_block(text)
+        if failures is None:
+            # (None, None): a legacy task file carries no state block.
+            run.add(
+                "task-state",
+                "TASK_STATE_MISSING",
+                "warning",
+                relative,
+                "legacy task file without a trellium-task-state block; lifecycle is unresolved",
+                task_id=match.group(1),
+            )
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": True, "valid": False})
+            continue
+        if failures:
+            for code, message in failures:
+                run.add("task-state", code, "error", relative, message, task_id=match.group(1))
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False})
+            continue
+        if state["task_id"] != match.group(1):
+            run.add(
+                "task-state",
+                "TASK_ID_MISMATCH",
+                "error",
+                relative,
+                f"trellium-task-state task_id {state['task_id']!r} does not match the file name prefix {match.group(1)}",
+                task_id=match.group(1),
+            )
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False})
+            continue
+        current.append({"path": relative, "task_id": match.group(1), "lifecycle": state["lifecycle"], "legacy": False, "valid": True})
+
+    archive_dir = tasks_dir / "archive"
+    if archive_dir.is_symlink():
+        run.add("task-state", "SYMLINK_INPUT", "error", "vault/tasks/archive", "vault/tasks/archive/ is a symbolic link; refusing to follow it")
+    elif archive_dir.is_dir():
+        for entry in sorted(archive_dir.iterdir(), key=lambda path: path.name):
+            if not (TASK_FILE_ID_RE.match(entry.name) and entry.name.endswith(".md")):
+                continue
+            relative = entry.relative_to(run.target).as_posix()
+            if entry.is_symlink():
+                run.add("task-state", "SYMLINK_INPUT", "error", relative, f"{relative} is a symbolic link; refusing to follow it")
+            archive.append(relative)
+    return current, ledgers, archive
+
+
+def parse_task_state_block(text: str) -> tuple[dict | None, list[tuple[str, str]] | None]:
+    """Return (state, []) on success, (None, None) for legacy, or (None, failures)."""
+    blocks, error = extract_comment_blocks(text, TASK_STATE_MARKER)
+    if error is not None:
+        return None, [("TASK_STATE_INVALID", error)]
+    if not blocks:
+        return None, None
+    if len(blocks) > 1:
+        return None, [
+            ("TASK_STATE_DUPLICATE", f"expected at most one {TASK_STATE_MARKER} block, found {len(blocks)}")
+        ]
+    state, error = parse_block_object(blocks[0])
+    if state is None:
+        return None, [("TASK_STATE_INVALID", f"invalid {TASK_STATE_MARKER} block: {error}")]
+    validation_errors = validate_state_object(state)
+    if validation_errors:
+        return None, [
+            ("TASK_STATE_INVALID", f"invalid {TASK_STATE_MARKER} block: {message}")
+            for message in validation_errors
+        ]
+    return state, []
+
+
+def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks: list[dict]) -> None:
+    if runtime_text is None:
+        return
+    by_id: dict[str, list[dict]] = {}
+    for task in tasks:
+        by_id.setdefault(task["task_id"], []).append(task)
+
+    def resolve(task_id: str) -> None:
+        matches = by_id.get(task_id)
+        if not matches:
+            run.add("runtime-projection", "TASK_RUNTIME_MISSING", "error", "vault/runtime.md", f"runtime points to a task file that does not exist: {task_id}", task_id=task_id)
+            return
+        task = matches[0]
+        if task["legacy"]:
+            run.add("runtime-projection", "TASK_RUNTIME_UNRESOLVED", "warning", "vault/runtime.md", f"runtime row for {task_id} cannot be verified: the task file has no trellium-task-state block (legacy)", task_id=task_id)
+        elif task.get("lifecycle") is None:
+            run.add("runtime-projection", "TASK_RUNTIME_UNRESOLVED", "warning", "vault/runtime.md", f"runtime row for {task_id} cannot be verified: the task state block is invalid", task_id=task_id)
+
+    rows, focus, problems = parse_runtime_task_pointers(runtime_text)
+    for _kind, detail in problems:
+        run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", detail)
+    for task_id, status in rows:
+        resolve(task_id)
+        matches = by_id.get(task_id) or []
+        task = matches[0] if matches else None
+        if task is None or task["legacy"] or task.get("lifecycle") is None:
+            continue
+        if status not in LIFECYCLE_VALUES:
+            run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", f"Active Tasks row for {task_id} uses status {status!r} outside the lifecycle enum", task_id=task_id)
+        elif status != task["lifecycle"]:
+            run.add(
+                "runtime-projection",
+                "TASK_RUNTIME_DRIFT",
+                "error",
+                "vault/runtime.md",
+                f"runtime row for {task_id} says {status!r} but the trellium-task-state block says {task['lifecycle']!r}",
+                task_id=task_id,
+            )
+    for task_id in focus:
+        resolve(task_id)
+
+
+def measure_hot_files(run: VaultCheckRun, texts: dict[str, str]) -> None:
+    definitions = (
+        ("runtime", "vault/runtime.md", "recent_entries", count_recent_entries),
+        ("handoff", "vault/handoff.md", "entries", count_handoff_entries),
+        ("decisions", "vault/decisions.md", "records", count_decision_records),
+        ("parked", "vault/parked.md", "entries", count_parked_entries),
+    )
+    for key, relative, entry_key, counter in definitions:
+        text = texts.get(relative)
+        if text is None:
+            continue
+        lines = text.splitlines()
+        encoded = text.encode("utf-8")
+        run.measurements[key] = {
+            "lines": len(lines),
+            "bytes": len(encoded),
+            "max_line_bytes": max((len(line.encode("utf-8")) for line in lines), default=0),
+            entry_key: counter(text),
+        }
+
+
+def check_budgets(run: VaultCheckRun, policy: dict | None) -> None:
+    if policy is None:
+        return
+    budgets = policy.get("budgets") or {}
+    for file_key, measurement in run.measurements.items():
+        thresholds = budgets.get(file_key)
+        if not isinstance(thresholds, dict):
+            continue
+        for threshold_key, measured_key in BUDGET_MEASUREMENT_KEYS.get(file_key, {}).items():
+            limit = thresholds.get(threshold_key)
+            if limit is None:
+                continue
+            measured = measurement[measured_key]
+            if measured > limit:
+                run.add(
+                    "budgets",
+                    "BUDGET_EXCEEDED",
+                    "error",
+                    f"vault/{file_key}.md",
+                    f"{file_key}.{measured_key} is {measured}, above the configured limit {threshold_key}={limit}",
+                )
+
+
+def check_task_budget(run: VaultCheckRun, policy: dict | None, tasks: list[dict], ledgers: list[str], archive: list[str]) -> None:
+    limit = None
+    if policy is not None:
+        thresholds = (policy.get("budgets") or {}).get("tasks")
+        if isinstance(thresholds, dict):
+            limit = thresholds.get("max_active_tasks")
+    closed = {"accepted", "superseded"}
+    unresolved = [task for task in tasks if not task["valid"]]
+    active = [task for task in tasks if task["valid"] and task["lifecycle"] not in closed]
+    run.measurements["tasks"] = {
+        "current_task_files": len(tasks),
+        "active_tasks": len(active),
+        "closed_tasks": len(tasks) - len(active) - len(unresolved),
+        "legacy_tasks": len(unresolved),
+        "review_ledgers": len(ledgers),
+        "archive_files": len(archive),
+    }
+    if limit is None:
+        return
+    if unresolved:
+        run.add(
+            "budgets",
+            "TASK_COUNT_UNRESOLVED",
+            "warning",
+            "vault/tasks",
+            f"cannot verify budgets.tasks.max_active_tasks={limit}: {len(unresolved)} task file(s) have no valid trellium-task-state block",
+        )
+        return
+    if len(active) > limit:
+        run.add(
+            "budgets",
+            "BUDGET_EXCEEDED",
+            "error",
+            "vault/tasks",
+            f"{len(active)} open task files exceed the configured limit max_active_tasks={limit}",
+        )
+
+
+def check_task_storage(run: VaultCheckRun, policy: dict | None, tasks: list[dict], ledgers: list[str], archive: list[str]) -> None:
+    task_paths = [task["path"] for task in tasks] + ledgers + archive
+    if not task_paths:
+        return
+    toplevel = git_toplevel(run.target)
+    if toplevel is None:
+        run.add("storage", "GIT_CHECK_SKIPPED", "warning", "vault/tasks", "not a Git worktree or Git is unavailable; TASK storage was not verified")
+        return
+    if policy is None:
+        # POLICY_MISSING already reports the unresolved project strategy.
+        return
+    storage = policy.get("task_storage")
+    tracked = git_tracked_files(run.target)
+    if tracked is None:
+        run.add("storage", "GIT_CHECK_SKIPPED", "warning", "vault/tasks", "git ls-files failed; TASK storage was not verified")
+        return
+
+    if storage == "local":
+        for relative in task_paths:
+            if relative in tracked:
+                run.add(
+                    "storage",
+                    "TASK_STORAGE_MISMATCH",
+                    "error",
+                    relative,
+                    f"task_storage=local but {relative} is tracked or staged in Git; remove it from the index as the project owner decided",
+                    task_id=task_id_of(relative),
+                )
+        return
+
+    ignored = git_ignored_files(run.target, task_paths)
+    if ignored is None:
+        run.add("storage", "GIT_CHECK_SKIPPED", "warning", "vault/tasks", "git check-ignore failed; TASK storage was not verified")
+        return
+    for relative in task_paths:
+        if relative in ignored:
+            run.add(
+                "storage",
+                "TASK_STORAGE_MISMATCH",
+                "error",
+                relative,
+                f"task_storage=tracked but {relative} is Git-ignored",
+                task_id=task_id_of(relative),
+            )
+    for relative in archive:
+        if relative not in tracked:
+            run.add(
+                "storage",
+                "TASK_STORAGE_MISMATCH",
+                "error",
+                relative,
+                f"task_storage=tracked but archived task file {relative} is not tracked",
+                task_id=task_id_of(relative),
+            )
+    closed = {"accepted", "superseded"}
+    for task in tasks:
+        if task["path"] in tracked:
+            continue
+        if task["legacy"] or not task["valid"]:
+            run.add(
+                "storage",
+                "TASK_STORAGE_UNRESOLVED",
+                "warning",
+                task["path"],
+                f"task_storage=tracked but {task['path']} is not tracked and its lifecycle is unresolved (legacy)",
+                task_id=task["task_id"],
+            )
+        elif task["lifecycle"] in closed:
+            run.add(
+                "storage",
+                "TASK_STORAGE_MISMATCH",
+                "error",
+                task["path"],
+                f"task_storage=tracked but closed task ({task['lifecycle']}) {task['path']} is not tracked",
+                task_id=task["task_id"],
+            )
+        else:
+            run.add(
+                "storage",
+                "TASK_STORAGE_PENDING",
+                "warning",
+                task["path"],
+                f"task_storage=tracked but {task['path']} is not tracked yet (allowed until the task is committed)",
+                task_id=task["task_id"],
+            )
+
+
+def task_id_of(relative: str) -> str | None:
+    match = TASK_FILE_ID_RE.match(Path(relative).name)
+    return match.group(1) if match else None
+
+
+def run_vault_checks(target: Path) -> VaultCheckRun:
+    run = VaultCheckRun(target)
+    if (target / "vault").is_symlink():
+        run.add("required-files", "SYMLINK_INPUT", "error", "vault", "vault/ is a symbolic link; refusing to follow it")
+        return run
+    texts = check_required_files(run)
+    policy = check_policy_block(run, texts.get("vault/index.md"))
+    tasks, ledgers, archive = discover_task_files(run)
+    check_runtime_projection(run, texts.get("vault/runtime.md"), tasks)
+    measure_hot_files(run, texts)
+    check_budgets(run, policy)
+    check_task_budget(run, policy, tasks, ledgers, archive)
+    check_task_storage(run, policy, tasks, ledgers, archive)
+    return run
+
+
+def render_check_text(run: VaultCheckRun) -> None:
+    print(f"vault check: {run.target}")
+    for finding in run.sorted_findings():
+        task_suffix = f" [{finding['task_id']}]" if "task_id" in finding else ""
+        print(f"  {finding['severity'].upper():<7} {finding['code']} {finding['path']}{task_suffix}: {finding['message']}")
+    if run.measurements:
+        print("measurements:")
+        for key in sorted(run.measurements):
+            parts = [f"{name}={value}" for name, value in run.measurements[key].items()]
+            print(f"  {key}: {', '.join(parts)}")
+    errors, warnings = len(run.errors), len(run.warnings)
+    print(f"summary: {errors} error(s), {warnings} warning(s)")
+    if errors:
+        print("result: failed")
+    elif warnings:
+        print("result: passed with warnings")
+    else:
+        print("result: ok")
+
+
+def check_project(args: argparse.Namespace) -> int:
+    try:
+        target = resolve_existing_target(args.target)
+    except (AdoptionError, OSError) as exc:
+        return fail(str(exc))
+    if args.format not in ("text", "json"):
+        return fail(f"unknown format: {args.format} (expected text or json)")
+    if not (target / "vault").is_dir():
+        return fail(f"target has no vault/ directory; run 'adopt' first: {target}")
+
+    run = run_vault_checks(target)
+    if args.format == "json":
+        payload = {
+            "schema_version": 1,
+            "target": str(target),
+            "summary": {"errors": len(run.errors), "warnings": len(run.warnings)},
+            "findings": run.sorted_findings(),
+            "measurements": run.measurements,
+        }
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        render_check_text(run)
+    return CHECK_ERROR_EXIT if run.errors else 0
+
+
+
 # --- Release fetching (--fetch) --------------------------------------------
 
 
@@ -1854,6 +2652,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--allow-dirty", action="store_true", help="proceed even when files to touch have uncommitted changes"
     )
     upgrade.set_defaults(func=upgrade_project)
+
+    check = subparsers.add_parser(
+        "check",
+        help="read-only validation of task state blocks, policy, runtime projection, budgets, and TASK storage",
+    )
+    check.add_argument("target", nargs="?", default=".", help="target project directory")
+    check.add_argument(
+        "--format",
+        default="text",
+        help="output format: text or json (default: text)",
+    )
+    check.set_defaults(func=check_project)
 
     return parser
 

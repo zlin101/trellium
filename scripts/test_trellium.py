@@ -22,6 +22,63 @@ agent_init = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(agent_init)
 
 
+def state_block(payload: dict | None = None, *, text: str | None = None) -> str:
+    body = text if text is not None else json.dumps(payload, indent=2)
+    return f"<!-- trellium-task-state\n{body}\n-->"
+
+
+def policy_block(payload: dict | None = None, *, text: str | None = None) -> str:
+    body = text if text is not None else json.dumps(payload, indent=2)
+    return f"<!-- trellium-policy\n{body}\n-->"
+
+
+def tracked_policy() -> str:
+    return policy_block({"schema_version": 1, "task_storage": "tracked"})
+
+
+def local_policy() -> str:
+    return policy_block({"schema_version": 1, "task_storage": "local"})
+
+
+def valid_state(task_id: str = "TASK-0001", lifecycle: str = "draft", **overrides) -> dict:
+    payload = {
+        "schema_version": 1,
+        "task_id": task_id,
+        "level": "B",
+        "authority_level": 2,
+        "lifecycle": lifecycle,
+    }
+    payload.update(overrides)
+    for key, value in list(payload.items()):
+        if value is None:
+            del payload[key]
+    return payload
+
+
+def build_runtime(
+    rows: tuple[tuple[str, str, str], ...] = (),
+    focus: str = "ADOPTION",
+    recent: tuple[str, ...] = ("did a thing",),
+) -> str:
+    lines = [
+        "# Runtime Context",
+        "",
+        "## Focus",
+        "",
+        f"- {focus}",
+        "",
+        "## Active Tasks",
+        "",
+        "| Task | Objective | Status | Next Action |",
+        "| --- | --- | --- | --- |",
+    ]
+    for task_id, status, _objective in rows:
+        lines.append(f"| {task_id} | one-line objective | {status} | next action |")
+    lines += ["", "## Recent Changes", ""]
+    lines += [f"- {item}" for item in recent]
+    return "\n".join(lines) + "\n"
+
+
 class TargetTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
@@ -697,6 +754,30 @@ class EmbeddedSkillLayoutTest(TargetTestCase):
                 )
                 self.assertEqual(stamp["protocol_version"], embedded.read_protocol_version())
 
+    def test_embedded_check_passes_on_fresh_adoption(self) -> None:
+        # The shipped templates must be check-clean: a fresh adoption in both
+        # skill packages validates policy/state/template consistency.
+        repo_zh_package = agent_init.TEMPLATES_ROOT.parents[1]
+        for package_name in (repo_zh_package.name, "trellium"):
+            package_root = repo_zh_package.parent / package_name
+            with self.subTest(package=package_name):
+                copied = self.root / f"check-{package_name}"
+                shutil.copytree(package_root, copied)
+                embedded = self.load_module(copied / "assets" / "trellium.py", f"embedded_check_{package_name}")
+
+                target = self.root / f"check-target-{package_name}"
+                target.mkdir()
+                code, _, err = self.run_agent_init_module(embedded, "adopt", str(target))
+                self.assertEqual(code, 0, err)
+
+                out, err2 = StringIO(), StringIO()
+                with redirect_stdout(out), redirect_stderr(err2):
+                    check_code = embedded.main(["check", str(target), "--format", "json"])
+                self.assertEqual(check_code, 0, out.getvalue())
+                payload = json.loads(out.getvalue())
+                self.assertEqual(payload["summary"]["errors"], 0, payload["findings"])
+                self.assertIsNotNone(payload["measurements"].get("runtime"))
+
     @staticmethod
     def run_agent_init_module(module, *arguments: str) -> tuple[int, str, str]:
         out, err = StringIO(), StringIO()
@@ -858,6 +939,603 @@ class RenderedContentTest(unittest.TestCase):
         self.assertIn("cheat sheet", section)
         self.assertIn("Level B or Level C", section)
         self.assertNotIn("3. `vault/governance.md`", section)
+
+
+class VaultCheckTest(TargetTestCase):
+    def make_project(
+        self,
+        *,
+        index: str | None = None,
+        runtime: str | None = None,
+        handoff: str | None = None,
+        decisions: str | None = None,
+        parked: str | None = None,
+        files: dict[str, str] | None = None,
+        policy: str | None = None,
+    ) -> Path:
+        count = getattr(self, "_project_count", 0) + 1
+        self._project_count = count
+        name = "project" if count == 1 else f"project-{count}"
+        target = self.root / name
+        (target / "vault" / "tasks").mkdir(parents=True, exist_ok=True)
+        if index is None:
+            index = "# Vault Index\n\n" + (policy if policy is not None else tracked_policy()) + "\n\nRouting text.\n"
+        (target / "vault/index.md").write_text(index, encoding="utf-8")
+        (target / "vault/runtime.md").write_text(
+            runtime if runtime is not None else build_runtime(), encoding="utf-8"
+        )
+        (target / "vault/handoff.md").write_text(
+            handoff if handoff is not None else "# Handoff\n\n## TASK-0001 - 2026-01-01\n\n- Objective: x\n", encoding="utf-8"
+        )
+        (target / "vault/decisions.md").write_text(
+            decisions if decisions is not None else "# Decisions\n\n- D-0001 · title · Active · essence · 2026-01-01\n", encoding="utf-8"
+        )
+        (target / "vault/parked.md").write_text(
+            parked if parked is not None else "# Parked\n\n## Entries\n\n- P-0001 · task · title · context · trigger · 2026-01-01\n", encoding="utf-8"
+        )
+        for relative, content in (files or {}).items():
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(content, encoding="utf-8")
+        return target
+
+    def check(self, target: Path, *extra: str) -> tuple[int, str, str]:
+        return self.run_agent_init("check", str(target), *extra)
+
+    def check_json(self, target: Path, *extra: str) -> dict:
+        code, out, err = self.check(target, "--format", "json", *extra)
+        self.assertIn(code, (0, agent_init.CHECK_ERROR_EXIT), err)
+        return json.loads(out)
+
+    def codes(self, payload: dict) -> list[str]:
+        return [finding["code"] for finding in payload["findings"]]
+
+    def test_valid_project_passes_with_zero_findings(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-short-title.md": (
+                "# TASK-0001 - Short Title\n\n" + state_block(valid_state()) + "\n\n## Objective\n\nWork.\n"
+            )},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),), focus="TASK-0001"),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        self.assertIn("passed with warnings", out)
+        self.assertIn("GIT_CHECK_SKIPPED", out)
+
+        payload = self.check_json(target)
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["summary"], {"errors": 0, "warnings": 1})
+        self.assertEqual(self.codes(payload), ["GIT_CHECK_SKIPPED"])
+        self.assertIn("runtime", payload["measurements"])
+        self.assertIn("tasks", payload["measurements"])
+        self.assertEqual(payload["measurements"]["tasks"]["current_task_files"], 1)
+
+    def test_field_order_and_whitespace_do_not_matter(self) -> None:
+        block = state_block(text='{ "lifecycle":"draft" ,\n"authority_level":2,\n "schema_version":1, "task_id":"TASK-0001", "level":"B" }')
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": f"# TASK-0001 - A\n\n{block}\n"},
+        )
+
+        payload = self.check_json(target)
+
+        self.assertEqual(payload["summary"]["errors"], 0)
+
+    def test_missing_policy_is_legacy_warning_without_hidden_defaults(self) -> None:
+        target = self.make_project(
+            policy="",
+            runtime=build_runtime(recent=tuple(f"item {i}" for i in range(30))),
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("POLICY_MISSING", out)
+        self.assertIn("passed with warnings", out)
+        self.assertNotIn("BUDGET_EXCEEDED", out)
+
+        payload = self.check_json(target)
+        self.assertEqual(payload["summary"], {"errors": 0, "warnings": 1})
+        self.assertEqual(self.codes(payload), ["POLICY_MISSING"])
+
+    def test_policy_schema_violations_are_errors(self) -> None:
+        cases = {
+            "unknown-field": policy_block({"schema_version": 1, "task_storage": "tracked", "extra": True}),
+            "bad-storage": policy_block({"schema_version": 1, "task_storage": "hybrid"}),
+            "bad-schema-version": policy_block({"schema_version": 2, "task_storage": "tracked"}),
+            "bool-schema-version": policy_block(text='{"schema_version": true, "task_storage": "tracked"}'),
+            "trailing-comma": policy_block(text='{"schema_version": 1, "task_storage": "tracked",}'),
+            "negative-budget": policy_block({
+                "schema_version": 1,
+                "task_storage": "tracked",
+                "budgets": {"runtime": {"max_lines": -5}},
+            }),
+            "unknown-budget-key": policy_block({
+                "schema_version": 1,
+                "task_storage": "tracked",
+                "budgets": {"runtime": {"max_bytes": 100}},
+            }),
+            "unknown-budget-file": policy_block({
+                "schema_version": 1,
+                "task_storage": "tracked",
+                "budgets": {"misc": {"max_lines": 100}},
+            }),
+        }
+        for name, index in cases.items():
+            with self.subTest(case=name):
+                target = self.make_project(index="# Vault Index\n\n" + index + "\n")
+                code, out, err = self.check(target)
+                self.assertEqual(code, 2, out)
+                self.assertIn("POLICY_INVALID", out)
+
+    def test_duplicate_policy_blocks_are_invalid(self) -> None:
+        index = "# Vault Index\n\n" + tracked_policy() + "\n" + tracked_policy() + "\n"
+        target = self.make_project(index=index)
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("POLICY_INVALID", out)
+
+    def test_legacy_task_without_state_block_is_unresolved_warning(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0002-legacy.md": "# TASK-0002 - Legacy\n\n## Status\n\nActive\n"},
+            runtime=build_runtime(rows=(("TASK-0002", "active", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("TASK_STATE_MISSING", out)
+        self.assertIn("TASK_RUNTIME_UNRESOLVED", out)
+        self.assertNotIn("TASK_RUNTIME_DRIFT", out)
+
+        payload = self.check_json(target)
+        self.assertEqual(
+            sorted(self.codes(payload)),
+            ["GIT_CHECK_SKIPPED", "TASK_RUNTIME_UNRESOLVED", "TASK_STATE_MISSING"],
+        )
+        self.assertEqual(payload["measurements"]["tasks"]["legacy_tasks"], 1)
+
+    def test_state_block_violations_are_errors(self) -> None:
+        base = {"schema_version": 1, "task_id": "TASK-0001", "level": "B", "authority_level": 2, "lifecycle": "draft"}
+        cases = {
+            "unknown-field": dict(base, surprise=1),
+            "bad-lifecycle": dict(base, lifecycle="waiting-review"),
+            "bad-level": dict(base, level="A"),
+            "authority-out-of-range": dict(base, authority_level=5),
+            "authority-bool": None,  # handled with raw text below
+            "string-schema-version": None,
+            "bad-task-id": dict(base, task_id="TASK-1"),
+            "not-an-object": None,
+        }
+        raw_cases = {
+            "authority-bool": '{ "schema_version": 1, "task_id": "TASK-0001", "level": "B", "authority_level": true, "lifecycle": "draft" }',
+            "string-schema-version": '{ "schema_version": "1", "task_id": "TASK-0001", "level": "B", "authority_level": 2, "lifecycle": "draft" }',
+            "not-an-object": '["TASK-0001"]',
+        }
+        for name, payload in cases.items():
+            if payload is None:
+                continue
+            with self.subTest(case=name):
+                target = self.make_project(
+                    files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(payload) + "\n"}
+                )
+                code, out, err = self.check(target)
+                self.assertEqual(code, 2, out)
+                self.assertIn("TASK_STATE_INVALID", out)
+        for name, text in raw_cases.items():
+            with self.subTest(case=name):
+                target = self.make_project(
+                    files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(text=text) + "\n"}
+                )
+                code, out, err = self.check(target)
+                self.assertEqual(code, 2, out)
+                self.assertIn("TASK_STATE_INVALID", out)
+
+    def test_duplicate_state_blocks_are_invalid(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": (
+                "# TASK-0001 - X\n\n" + state_block(valid_state()) + "\n" + state_block(valid_state()) + "\n"
+            )}
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STATE_DUPLICATE", out)
+
+    def test_unterminated_state_block_is_invalid(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n<!-- trellium-task-state\n{ \"broken\": true }\n"},
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STATE_INVALID", out)
+
+    def test_task_id_must_match_file_name(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(task_id="TASK-0002")) + "\n"}
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_ID_MISMATCH", out)
+
+    def test_optional_state_fields_are_validated(self) -> None:
+        good = valid_state(current_slice="A4", gates={"design": "passed", "live": "not_authorized"})
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(good) + "\n"}
+        )
+        payload = self.check_json(target)
+        self.assertEqual(payload["summary"], {"errors": 0, "warnings": 1})
+        self.assertEqual(self.codes(payload), ["GIT_CHECK_SKIPPED"])
+
+        bad_gate = valid_state(gates={"design": "approved"})
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(bad_gate) + "\n"}
+        )
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STATE_INVALID", out)
+
+    def test_runtime_projection_drift_and_dangling_pointers(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="draft")) + "\n"},
+            runtime=build_runtime(
+                rows=(
+                    ("TASK-0001", "active", "drifted status"),
+                    ("TASK-0042", "draft", "missing file"),
+                    ("TASK-BAD", "draft", "malformed id"),
+                ),
+                focus="TASK-0099",
+            ),
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_RUNTIME_DRIFT", out)
+        self.assertIn("TASK_RUNTIME_MISSING", out)
+        self.assertIn("TASK_RUNTIME_INVALID", out)
+        payload = self.check_json(target)
+        self.assertIn("TASK_RUNTIME_MISSING", self.codes(payload))
+
+    def test_level_a_inline_rows_are_not_flagged(self) -> None:
+        target = self.make_project(
+            runtime=build_runtime(rows=(("ADOPTION", "active", "inline level A row"),)),
+        )
+
+        payload = self.check_json(target)
+
+        self.assertEqual(payload["summary"], {"errors": 0, "warnings": 0})
+    def test_budget_thresholds_require_explicit_policy(self) -> None:
+        long_runtime = build_runtime(recent=tuple(f"item {i}" for i in range(30)))
+        target = self.make_project(runtime=long_runtime)
+        payload = self.check_json(target)
+        self.assertEqual(payload["summary"]["errors"], 0)
+        self.assertGreaterEqual(payload["measurements"]["runtime"]["lines"], 30)
+
+        strict = policy_block({
+            "schema_version": 1,
+            "task_storage": "tracked",
+            "budgets": {"runtime": {"max_lines": 5, "max_recent_entries": 2}},
+        })
+        target = self.make_project(index="# Vault Index\n\n" + strict + "\n", runtime=long_runtime)
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("BUDGET_EXCEEDED", out)
+
+    def test_max_active_tasks_with_legacy_files_is_unresolved(self) -> None:
+        policy = policy_block({
+            "schema_version": 1,
+            "task_storage": "tracked",
+            "budgets": {"tasks": {"max_active_tasks": 1}},
+        })
+        target = self.make_project(
+            index="# Vault Index\n\n" + policy + "\n",
+            files={
+                "vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="active")) + "\n",
+                "vault/tasks/TASK-0002-legacy.md": "# TASK-0002 - Legacy\n",
+            },
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("TASK_COUNT_UNRESOLVED", out)
+
+    def test_max_active_tasks_is_enforced_when_resolvable(self) -> None:
+        policy = policy_block({
+            "schema_version": 1,
+            "task_storage": "tracked",
+            "budgets": {"tasks": {"max_active_tasks": 1}},
+        })
+        target = self.make_project(
+            index="# Vault Index\n\n" + policy + "\n",
+            files={
+                "vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="active")) + "\n",
+                "vault/tasks/TASK-0002-b.md": "# TASK-0002 - B\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="accepted")) + "\n",
+                "vault/tasks/TASK-0003-c.md": "# TASK-0003 - C\n\n" + state_block(valid_state(task_id="TASK-0003", lifecycle="active")) + "\n",
+            },
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("BUDGET_EXCEEDED", out)
+
+    def test_review_ledgers_and_archive_are_cold_history(self) -> None:
+        target = self.make_project(
+            files={
+                "vault/tasks/TASK-0001-review.md": "# TASK-0001 - Review Ledger\n\n## Findings\n",
+                "vault/tasks/archive/TASK-0002-old.md": "# TASK-0002 - Old\n",
+            },
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("TASK_STATE_MISSING", out)
+
+        payload = self.check_json(target)
+        self.assertEqual(payload["measurements"]["tasks"]["review_ledgers"], 1)
+        self.assertEqual(payload["measurements"]["tasks"]["archive_files"], 1)
+        self.assertEqual(payload["measurements"]["tasks"]["current_task_files"], 0)
+
+    def init_git_repo(self, target: Path) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.name", "test"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=target, check=True)
+
+    def git(self, target: Path, *arguments: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", *arguments], cwd=target, check=False, capture_output=True)
+
+    def test_storage_tracked_mode(self) -> None:
+        files = {
+            "vault/tasks/TASK-0001-active.md": "# TASK-0001 - Active\n\n" + state_block(valid_state(lifecycle="active")) + "\n",
+            "vault/tasks/TASK-0002-done.md": "# TASK-0002 - Done\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="accepted")) + "\n",
+            "vault/tasks/archive/TASK-0003-old.md": "# TASK-0003 - Old\n",
+        }
+        target = self.make_project(files=files)
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-qm", "base")
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("TASK_STORAGE_MISMATCH", out)
+
+        # An uncommitted new active task is a normal window: warning only.
+        new_task = target / "vault/tasks/TASK-0004-new.md"
+        new_task.write_text("# TASK-0004 - New\n\n" + state_block(valid_state(task_id="TASK-0004")) + "\n", encoding="utf-8")
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("TASK_STORAGE_MISMATCH", out)
+
+        # A closed (accepted) task that is not tracked is an error.
+        done_path = target / "vault/tasks/TASK-0005-done.md"
+        done_path.write_text("# TASK-0005 - Done\n\n" + state_block(valid_state(task_id="TASK-0005", lifecycle="accepted")) + "\n", encoding="utf-8")
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+        done_path.unlink()
+
+        # An untracked task file matched by .gitignore is an error: it would
+        # silently stay local while the project policy says tracked. (Tracked
+        # files are never reported by check-ignore; the index wins.)
+        ignored_task = target / "vault/tasks/TASK-0006-ignored.md"
+        ignored_task.write_text("# TASK-0006 - Ignored\n\n" + state_block(valid_state(task_id="TASK-0006")) + "\n", encoding="utf-8")
+        (target / ".gitignore").write_text("vault/tasks/TASK-0006-ignored.md\n", encoding="utf-8")
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+        self.assertIn("TASK-0006-ignored.md", out)
+
+    def test_storage_local_mode_rejects_tracked_tasks(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-quiet.md": "# TASK-0001 - Quiet\n\n" + state_block(valid_state()) + "\n"},
+        )
+        self.init_git_repo(target)
+
+        # Not tracked yet: no storage finding.
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+
+        self.git(target, "add", "-A")
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+
+    def test_storage_handles_unicode_and_space_file_names(self) -> None:
+        name = "TASK-0007-我的 任务.md"
+        target = self.make_project(
+            policy=local_policy(),
+            files={f"vault/tasks/{name}": f"# TASK-0007 - Unicode\n\n{state_block(valid_state(task_id='TASK-0007'))}\n"},
+        )
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+        self.assertIn(name, out)
+
+    def test_storage_check_skipped_without_git(self) -> None:
+        # A task file exists, so storage could not be verified: skipped warning.
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state()) + "\n"},
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("GIT_CHECK_SKIPPED", out)
+        self.assertNotIn("storage ok", out)
+
+    def test_symlinked_task_input_is_not_followed(self) -> None:
+        outside = self.root / "outside"
+        outside.mkdir()
+        secret = outside / "TASK-0001-real.md"
+        secret.write_text("# TASK-0001 - Real\n\nOUTSIDE-SECRET-CONTENT\n", encoding="utf-8")
+        target = self.make_project()
+        (target / "vault/tasks/TASK-0001-link.md").symlink_to(secret)
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("SYMLINK_INPUT", out)
+        self.assertNotIn("OUTSIDE-SECRET-CONTENT", out)
+
+    def test_symlinked_vault_is_not_followed(self) -> None:
+        outside = self.root / "outside-vault"
+        outside.mkdir()
+        (outside / "index.md").write_text("OUTSIDE-INDEX-CONTENT\n", encoding="utf-8")
+        target = self.root / "project"
+        target.mkdir()
+        (target / "vault").symlink_to(outside, target_is_directory=True)
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("SYMLINK_INPUT", out)
+        self.assertNotIn("OUTSIDE-INDEX-CONTENT", out)
+
+    def test_symlinked_tasks_directory_is_not_followed(self) -> None:
+        outside = self.root / "outside-tasks"
+        outside.mkdir()
+        block = state_block(text='{ "schema_version": 1, "task_id": "TASK-0500", "level": "B", "authority_level": 2, "lifecycle": "draft", "zzz_external_marker_field": 1 }')
+        (outside / "TASK-0500-secret.md").write_text(f"# TASK-0500 - Secret\n\n{block}\nOUTSIDE-SECRET-CONTENT\n", encoding="utf-8")
+        target = self.make_project()
+        (target / "vault/tasks").rmdir()
+        (target / "vault/tasks").symlink_to(outside, target_is_directory=True)
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2)
+        self.assertIn("SYMLINK_INPUT", out)
+        self.assertNotIn("OUTSIDE-SECRET-CONTENT", out)
+        self.assertNotIn("zzz_external_marker_field", out)
+        self.assertNotIn("TASK-0500-secret.md", out.replace("vault/tasks is a symbolic link", ""))
+
+        payload = self.check_json(target)
+        self.assertEqual(payload["measurements"]["tasks"]["current_task_files"], 0)
+
+    def test_symlinked_ledger_and_archive_are_errors(self) -> None:
+        outside = self.root / "outside-archive"
+        outside.mkdir()
+        (outside / "TASK-0600-old.md").write_text("# TASK-0600 - Old\n", encoding="utf-8")
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-review.md": "# TASK-0001 - Review Ledger\n"},
+        )
+        (target / "vault/tasks/TASK-0001-review.md").unlink()
+        (target / "vault/tasks/TASK-0001-review.md").symlink_to(outside / "TASK-0600-old.md")
+        (target / "vault/tasks/archive").symlink_to(outside, target_is_directory=True)
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("SYMLINK_INPUT", out)
+
+    def test_prefix_marker_lookalike_is_not_a_block(self) -> None:
+        index = "# Vault Index\n\n" + tracked_policy() + "\n\n<!-- trellium-policy-history\nsome archived notes\n-->\n"
+        target = self.make_project(index=index)
+
+        payload = self.check_json(target)
+
+        self.assertEqual(payload["summary"]["errors"], 0)
+
+    def test_duplicate_json_keys_are_rejected(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(
+                text='{ "schema_version": 1, "task_id": "TASK-0001", "level": "B", "authority_level": 2, "lifecycle": "draft", "lifecycle": "accepted" }'
+            ) + "\n"}
+        )
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STATE_INVALID", out)
+
+    def test_check_is_read_only_and_deterministic(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "active", "drift"),)),
+        )
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+        before_snapshot = self.snapshot(target)
+        before_status = self.git(target, "status", "--porcelain").stdout
+
+        results = []
+        for _ in range(3):
+            code, out, _err = self.check(target, "--format", "json")
+            self.assertEqual(code, 2)
+            payload = json.loads(out)
+            payload.pop("target")
+            results.append(payload)
+
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(results[1], results[2])
+        self.assertEqual(before_snapshot, self.snapshot(target))
+        self.assertEqual(before_status, self.git(target, "status", "--porcelain").stdout)
+
+    def test_json_output_shape_is_stable(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "active", "drift"),)),
+        )
+
+        _, out, _ = self.check(target, "--format", "json")
+        payload = json.loads(out)
+
+        self.assertEqual(
+            set(payload),
+            {"schema_version", "target", "summary", "findings", "measurements"},
+        )
+        for finding in payload["findings"]:
+            self.assertLessEqual(
+                {"code", "severity", "path", "message"} - set(finding),
+                set(),
+            )
+            self.assertLessEqual(
+                set(finding) - {"code", "severity", "path", "message", "task_id"},
+                set(),
+            )
+        self.assertEqual(
+            [(f["code"], f["severity"]) for f in payload["findings"]],
+            [("TASK_RUNTIME_DRIFT", "error"), ("GIT_CHECK_SKIPPED", "warning")],
+        )
+
+    def test_check_requires_existing_target_with_vault(self) -> None:
+        code, _, err = self.check(self.root / "missing")
+        self.assertEqual(code, 1)
+        self.assertIn("existing directory", err)
+
+        empty = self.root / "empty"
+        empty.mkdir()
+        code, _, err = self.check(empty)
+        self.assertEqual(code, 1)
+        self.assertIn("vault", err)
+
+    def test_check_rejects_unknown_format(self) -> None:
+        target = self.make_project()
+
+        code, _, err = self.check(target, "--format", "yaml")
+
+        self.assertEqual(code, 1)
+        self.assertIn("format", err)
+
+    def test_missing_required_files_are_reported(self) -> None:
+        target = self.make_project()
+        (target / "vault/parked.md").unlink()
+
+        code, out, err = self.check(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("REQUIRED_FILE_MISSING", out)
 
 
 if __name__ == "__main__":
