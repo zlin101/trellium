@@ -16,7 +16,7 @@ table holds pointers only.
 | Task | Objective | Status | Next Action |
 | --- | --- | --- | --- |
 | TASK-0001 | Run the self-hosting pilot and collect K1-K4 shadow evidence. | active | Next Agent continues pilot work; log transitions in `vault/details/shadow-run-2026-09.md`. |
-| TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | active | Run pre-release checks, create the Release, and verify latest resolution. |
+| TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | blocked | User creates the Release in GitHub UI; then verify latest resolution. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -27,7 +27,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 ## Current Progress
 
 - TASK-0001: adopted the repo in tracked mode, created the shadow-run ledger, ran the first lifecycle transition (draft -> active), first handoff recorded.
-- TASK-0002: user approved the K4 policy correction and GitHub Release creation; release verification is in progress.
+- TASK-0002: K4 policy corrected and local gates passed; blocked because this environment has no GitHub release client or connector.
 
 ## Constraints
 
@@ -56,4 +56,4 @@ python3 scripts/trellium.py check . --format json
 ## Next Steps
 
 - Continue TASK-0001: real work creates the remaining TASKs, transitions, and the second handoff.
-- Complete TASK-0002: create and verify the GitHub Release for 2026.09.3.
+- Unblock TASK-0002 after the user creates the GitHub Release for 2026.09.3; verify latest resolution and accept the task.

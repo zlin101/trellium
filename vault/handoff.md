@@ -5,6 +5,16 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。
 
+## TASK-0002 - 2026-09-04
+
+- Objective: 为既有 `2026.09.3` tag 创建 GitHub Release，使 latest release 解析拿到新版。
+- Completed: K4 policy 已校正为 measurement-only；87/87 tests、Skill 快照同步和提交后的 check 0/0 均通过；commit `1d9d19b` 已推送到 `origin/develop`。
+- In progress: Release 创建与 latest 验证。
+- Failed attempts: `gh release create` 未触发远端写入，因为执行环境没有 `gh`；未读取或转存本地凭据。
+- Blockers: 需要用户在 GitHub Releases 网页为既有 tag `2026.09.3` 创建 Release。
+- Next best action: 打开 `https://github.com/zlin101/trellium/releases/new?tag=2026.09.3`，粘贴已准备的 release notes 并发布；随后验证 `releases/latest`，将 TASK-0002 blocked → active → accepted。
+- Files to read first: `vault/tasks/TASK-0002-release-2026-09-3.md`、`vault/runtime.md`、`vault/details/shadow-run-2026-09.md`。
+
 ## TASK-0001 - 2026-09-04
 
 - Objective: 完成 review 修复并发布 2026.09.3；随后把本仓库接入为 tracked 自托管试点，开始 K1-K4 shadow 取证。
