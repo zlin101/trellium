@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（截至 2026-09-08 TASK-0003 accepted 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 5 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0003/0002/0001）；blocked→active 0 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（截至 2026-09-08 TASK-0002 accepted 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 7 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted、TASK-0002 blocked→active、TASK-0002 active→accepted；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存条目数见 handoff 现状；blocked→active 1 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -53,6 +53,8 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-08 | draft → active（M0 preflight 通过） | TASK-0003 | 2（状态块 + runtime 行） | 0 | canonical K1 校准后首个转换 |
 | 2026-09-08 | active → ready_for_review（M1-M3 实施与验证完成） | TASK-0003 | 2（状态块 + runtime 行） | 0 | 首轮记录遗漏本转换，review round 1 补记 |
 | 2026-09-08 | ready_for_review → accepted（round 2 通过 + CI 首跑全绿，owner 授权） | TASK-0003 | 2（状态块 + runtime 行） | 0 | 两个 review round，1 次返工 |
+| 2026-09-08 | blocked → active（2026.09.3 Release 已发布并成为 latest） | TASK-0002 | 2（状态块 + runtime 行） | 0 | blocker 解除；Release 标题和 notes 仍为空，未进入 ready_for_review |
+| 2026-09-08 | active → accepted（owner 决定元数据 Gate 降为可选，D-0003） | TASK-0002 | 2（状态块 + runtime 行） | 0 | 技术验收项全部达成；标题/notes 移入 Optional |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
@@ -62,6 +64,8 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | --- | --- | --- | --- | --- |
 | 2026-09-04 | 初始建行（TASK-0001 active） | < 30 秒 | 无（人工同步正确） | |
 | 2026-09-04 | TASK-0002 active → blocked | 未单独计时 | 无（人工同步正确） | 本行不计入耗时成功样本 |
+| 2026-09-08 | TASK-0002 blocked → active | 未单独计时 | 无（人工同步正确） | Release/latest 核验后同步状态块与 runtime；元数据 Gate 仍未通过 |
+| 2026-09-08 | TASK-0002 active → accepted 投影同步 | 未单独计时 | 无（人工同步正确） | owner 元数据决定（D-0003）后关闭任务；handoff 条目并入任务文件 |
 
 成功标准：单次投影更新不超过 30 秒；不出现长期双写负担（若连续两次记录"忘了同步、靠 check 抓回"，即为负担信号）。
 
@@ -102,3 +106,5 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-08 | TASK-0003 M3 后全量验证 | 0 | 0 / 1 | 同上；87/87 tests、snapshot in sync、`git diff --check` OK |
 | 2026-09-08 | TASK-0003 交接前门禁（M1-M3 提交后） | 0 | 0 / 0 | TASK_STORAGE_PENDING 已随提交消除；87/87、snapshot in sync、`git diff --check` OK |
 | 2026-09-08 | GitHub Actions 首跑 run 34181086563（develop push，gate job） | 0 | 0 / 0 | runner 端执行与本地一致；unit tests、vault check、drift 检测全部 success |
+| 2026-09-08 | TASK-0002 Release 发布后复核与 blocked→active | 0 | 0 / 0 | latest 已解析 2026.09.3；远端 tag 正确；Release 标题和正文为空，保持 active 待补齐元数据 |
+| 2026-09-08 | TASK-0002 accepted 门禁（owner 元数据决定后） | 0 | 0 / 0 | 技术验收项全部 [x]；标题/notes 移入 Optional（D-0003） |

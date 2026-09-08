@@ -10,6 +10,7 @@
 
 - D-0001 · Canonical K1-K4 实验契约 · Active · shadow 观测以 2026-09-04 计划第 2 节为唯一定义，旧标签映射为 A1/A2/canonical K2，历史不改写 · 2026-09-08
 - D-0002 · Self-hosting vault check 进入 CI 门禁 · Active · PR 与 main/develop push 运行只读 check；写权限仅限 PR self-heal job，push 任务严格只读 · 2026-09-08
+- D-0003 · Release 元数据降为可选改进 · Active · Release 验收 Gate = 既有 tag 正确、非 draft/prerelease、`releases/latest` 解析正确；标题与 notes 不阻塞 · 2026-09-08
 
 ## D-0001 - Canonical K1-K4 实验契约（2026-09-08）
 
@@ -57,3 +58,27 @@ Status: Active
 ### Impact
 
 向 `develop` 或 `main` 推送前先在本地跑同一命令；CI 报 error 时修 vault 结构，而不是放松门禁；后续改 workflow 时保持"push 路径零写权限"不变。
+
+## D-0003 - GitHub Release 元数据降为可选改进（2026-09-08）
+
+Status: Active
+
+### Background
+
+2026.09.3 Release 已发布且 `releases/latest` 解析正确，但 API 返回 `name=""`、`body=""`；TASK-0002 原契约把标题与 notes 列为验收 Gate，形成唯一残余缺口。
+
+### Decision
+
+Owner 于「09.3 Post-release Validation」方案 M0 决定：Release 验收 Gate 为——指向既有正确 tag、非 draft、非 prerelease、`releases/latest` 解析到该版本；标题与 notes 降为可选改进，不再阻塞任务关闭。
+
+### Rationale
+
+`install.sh --fetch` 等所有机器路径只依赖 tag 与 latest 解析；标题/notes 仅影响人类阅读体验。为可选的人类体验阻塞治理闭环，摩擦大于收益。
+
+### Alternatives
+
+- 阻塞等待 owner 在 UI 补齐元数据：被否，收益不抵摩擦；事实仍记录在 TASK-0002 的 Optional 条目中，随时可补。
+
+### Impact
+
+后续 Release 类任务的验收不再把元数据当 Gate；引用本决策时注意其适用边界——发布对象本身缺失或 tag 错误仍是不折不扣的失败。
