@@ -43,6 +43,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Drafted the non-Context Vault optimization and ablation plan for GLM handoff; no candidate feature is authorized or implemented, and D-0004 remains unchanged.
 - TASK-0005 (owner-mandated evidence-quality fix) ready for review: coverage counts single-sourced into the shadow ledger (D-0005), runtime no longer keeps numeric copies; cold-start Protocol v2 isolated under `docs/evals/cold-start-v2/`.
 - Owner adopted the Context No-Go as D-0004 (M4 unauthorized; reopen only via its three conditions); TASK-0004 active → blocked pending the second real project for M2.
 - M1 cold-start baseline complete (S1-S7, 7 independent sessions): 7/7 correct, 0 overreach, 0 stale-evidence misuse; M3 No-Go recommendation delivered to owner.
