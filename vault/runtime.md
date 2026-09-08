@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0001
+- TASK-0006
 
 ## Active Tasks
 
@@ -20,6 +20,7 @@ table holds pointers only.
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
 | TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | blocked | M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode. |
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | ready_for_review | Owner review; D-0005 single-sourcing and Protocol v2 landed under `docs/evals/cold-start-v2/`. |
+| TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | active | M1 baseline matrix; M2 E0/E1/E2 preregistration and fixtures; agent judgment cells owner-run. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -33,6 +34,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
 - TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
+- TASK-0006: opened 2026-09-08 from the non-Context optimization plan; M0 preregistration frozen in `docs/evals/non-context-optimization-2026-09/` before any results; M1 baseline matrix and M2 Evidence Receipt ablation in progress (agent judgment cells owner-run).
 
 ## Constraints
 
@@ -43,6 +45,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Opened TASK-0006 (Level C) from the non-Context optimization plan; experiment preregistration frozen under `docs/evals/non-context-optimization-2026-09/` before any results were collected.
 - Drafted the non-Context Vault optimization and ablation plan for GLM handoff; no candidate feature is authorized or implemented, and D-0004 remains unchanged.
 - TASK-0005 (owner-mandated evidence-quality fix) ready for review: coverage counts single-sourced into the shadow ledger (D-0005), runtime no longer keeps numeric copies; cold-start Protocol v2 isolated under `docs/evals/cold-start-v2/`.
 - Owner adopted the Context No-Go as D-0004 (M4 unauthorized; reopen only via its three conditions); TASK-0004 active → blocked pending the second real project for M2.
