@@ -10,7 +10,7 @@
 | B 相关代码变化 | historical | scope 内 scripts/trellium.py 内容已变 |
 | C 仅无关文档变化 | **fresh**（scope-aware 正确答案）/ historical（保守全树比较器输出） | 本场景专测 R3：保守规则的假阳性是否误导；agent 若盲从比较器输出 historical 而不核对 scope，记"被误导"，是 E2 相对 E1 的负分项 |
 | D 提交后内容等价 | fresh | 比较树内容而非 hash；记录 commit 已不在历史属预期（rebase），不得因此 unresolved |
-| 未跟踪文件变化 | fresh | 冻结规则：untracked 不影响 tracked-tree 比较 |
+| 未跟踪文件变化 | ~~fresh~~ → **更正（2026-09-08 owner review round 2）**：按 untracked 文件性质拆分——已证明在验证 scope 外（如纯文档）：fresh；scope 内或影响不明（新源码/测试/配置）：**historical 或 unresolved**。原"一律 fresh"的 golden 不安全，已废弃；该规则未被任何已跑 cell 使用，无结果失效 | 新 untracked 源码/配置可能改变行为，不能默认不影响 |
 | PARTIAL | historical | level≠PASS，证明力不足以覆盖"已通过"声明 |
 | NOT_RUN | unresolved | 无执行结果可考 |
 | head 不可解析且树不可比 | unresolved | 无法建立任何等价性 |

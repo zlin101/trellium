@@ -11,6 +11,18 @@
 - **成本数据局限**：子代理 runner 下 bytes/工具调用数/耗时无法精确采集，本轮 M2 结论限定为**准确率维度、exploratory**；≥30% 成本改善的强 Go 信号需 owner 亲手投放才可确立。
 - 污染判定不变：被测会话若申报读取了 scoring.md，该 cell 标 contaminated。
 
+### 修订 2（2026-09-08，owner review round 2：untracked 规则不安全）
+
+- 冻结规则 §4 第 2 条"untracked 文件变化不影响 freshness"**废弃**。更正为：untracked 变化按性质拆分——已证明在验证 scope 外（纯文档等）：fresh；scope 内或影响不明（新源码/测试/配置）：historical 或 unresolved。理由：新出现的未跟踪源码/测试/配置可能改变行为，"一律 fresh"不安全。
+- 该规则未被任何已执行 cell 使用（判断 cell 仅覆盖场景 A-D），无已采结果失效；确定性矩阵与 scoring.md 的对应行已加更正注记。
+
+### 修订 3（2026-09-08，owner review round 2：M2 结论口径收紧）
+
+- E1 的判定从"触发 kill criterion"改为 **Inconclusive / Blocked for cost evidence**：完整 kill criterion 要求"判断**和成本**无差异"，成本维度未采集，不能声称完整触发。
+- v0 结论限定为"**本周期 No-Go for implementation**"；Evidence Receipt 方向整体未被证伪。
+- M4 数值阈值（20 KB）删除：当前最大任务无阅读障碍事件，阈值必须从真实障碍 + H0/H1/H2 基线产生。
+- M5-decision：D0 sufficient，D1/D2 当前 No-Go（D-0004 原文已含相同重开条件，D1 草案无增量，已否决）。
+
 ## 1. 公平性与纪律（全部实验适用）
 
 - 同一模型、工具权限、代码快照、任务问题；Agent 行为 cell 使用无聊天历史的新会话，由 owner 投放 `prompts.md` 原文。

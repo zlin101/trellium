@@ -71,14 +71,43 @@ A = 深度使用现场报告（约 63 TASK、43–52 KB 默认读取、50–80 K
 
 要点：
 
-- **E2 触发 kill criterion**：场景 C 比较器输出设计内假阳性（historical），被测会话盲从后判错——自动 freshness 未降低成本（时长/token 无优势）且引入误导。按任务书 8.3：删除自动 freshness；即使保留也仅为实验性。
-- **E1 未显示相对 E0 的判断收益**（4/4 vs 4/4），且代理成本（tokens）持平略高、写入税为正（receipt 本身是新增强写内容）——触发"E1 与 E0 判断和成本无差异 → 删除 receipt 方案"（成本维度为代理值，exploratory）。
-- 硬指标：误标 fresh = 0；无越权；无误判为 accepted。No-Go 是"无收益"，不是"不安全"。
-- 已知局限（影响结论强度，均为如实声明）：n=1/cell；E0 材料直递未测真实仓库中的"检索成本"（深度现场的主要痛点之一）；bytes/耗时未采集。扩展任一项需新预注册。
+- **E2 触发 kill criterion（准确率退化）**：场景 C 比较器输出设计内假阳性（historical），被测会话盲从后判错；时长/token 无优势。**E2 = No-Go**，自动 freshness 删除。
+- **E1 = Inconclusive（未决）**：判断准确率与 E0 无差异（4/4 vs 4/4），但成本维度（bytes/耗时）未采集、材料为直递、n=1——任务书 8.3 的完整 kill criterion（"判断**和成本**无差异"）并未被完整触发。receipt 方案既未证明收益、也未被证伪。
+- **E0 基线在本设计下已足够**：自由文本 + 事实清单即可全对。已知局限：材料直递未测"从散落记录中检索证据、scope 与适用版本"的成本（深度现场的主要痛点），检索场景需新预注册实验。
+- 硬指标：误标 fresh = 0；无越权；无误判为 accepted。
+- 已知局限（如实声明）：n=1/cell；成本数据未采集（子代理 runner）；synthetic 材料不证明生产收益。
 
-### M2 最终结论（2026-09-08）
+### M2 最终结论（2026-09-08；owner review round 2 修正口径）
 
-**No-Go**：不实现 Evidence Receipt v0，生产代码零改动；E2 自动 freshness 删除；E1 结构化 receipt 无已证明收益，方案归档（本文件与 prompts.md 样本保留为可复现记录）。重开路径：(a) owner 亲手投放并采集 bytes/耗时，验证成本维度；(b) 真实仓库中"自由文本记录散落难检索"场景的新预注册实验。
+- **E2 自动 freshness：No-Go**（准确率退化，kill criterion 成立）。
+- **E1 结构化 receipt：Inconclusive / Blocked for cost evidence**（判断无差异但成本未测；不能声称触发完整 kill criterion）。
+- **Evidence Receipt v0：本周期 No-Go for implementation**（零代码）；**Evidence Receipt 方向整体未被证伪**，重开路径：(a) owner 亲手投放并采集 bytes/耗时，补全成本维度；(b) 真实仓库中"自由文本记录散落难检索"场景的新预注册实验；(c) 若未来成本证据成立，按 8.4 上限重新提案。
+
+### 原始首答存档（12 cell verbatim，2026-09-08 执行记录）
+
+E2-A：`fresh —— 记录的 HEAD（9f1c2ab）与当前 HEAD 一致，tracked 树摘要 t1 与当前树完全一致，worktree 状态 clean 也吻合。验证观察时间（2026-09-08）为当天，范围内命令结果为 PASS，且被排除项（external CI、GitHub Releases）不涉及本次判定。因此在给定材料下，该验证记录仍可作为当前代码树已通过这些验证的证据。`
+
+E2-B：`historical —— 验证记录锚定的是 commit 4a7b1c0 的 tracked tree（t2），而事实清单权威表明此后 scripts/trellium.py 已被修改且未提交、工作树 dirty，即当前树与被验证的树不一致。该文件恰好位于验证 scope（scripts/）内，因此 PASS 只能证明旧树状态通过验证，无法证明当前代码树通过。comparator 规则（t2 != current → historical）与事实一致，判定明确无歧义。`
+
+E2-C：`historical —— 记录的校验基准 tracked_tree "t3" 是对提交 7c8d9e0 时整个被跟踪树的指纹，而当前树因 docs/notes.md 变化已与之不等，比较器判定失败即降级为 historical。尽管变更仅在文档且验证范围 scripts/ 未变，该记录的效力规则以整树一致为准，因此不能再作为"当前代码树已通过验证"的新鲜证据。`
+
+E2-D：`fresh —— 记录的 head aa11bb2 虽已不在当前历史（因 rebase），但事实清单权威确认 tracked 树 t4 与当前树逐字节一致，验证针对的是代码内容而非提交号。被验证的命令作用域（scripts/、init/）属于 tracked 内容且未发生任何变化，因此当时的 PASS 结果对当前代码树同样成立。记录中 worktree 为 clean 也排除了未跟踪文件影响，无失效信号。`
+
+E1-A：`fresh —— 记录的 head（9f1c2ab）与当前 HEAD 一致，事实清单明确 tracked 树与记录时完全一致且工作区干净，即被验证的代码状态至今未变。观察时间与当前日期同为 2026-09-08，无时效性疑虑；excluded 项（外部 CI、GitHub Releases）只是界定证据范围，不影响对所列 unittest 命令的证明力。因此该记录仍可作为"当前代码树已通过这些验证"的证据。`
+
+E1-B：`historical —— 验证记录的 scope 明确为 scripts/，而 scripts/trellium.py 恰好在记录生成后发生了未提交修改，即当前工作树在验证范围内已偏离被验证状态（head 4a7b1c0），该 PASS 不再覆盖当前树。记录本身如实描述了 4a7b1c0 时刻的状态，因此是有效但过时的历史证据，而非无效或存疑（非 unresolved）。要在当前树上重新确立证据，需在 dirty 工作树下重跑 python3 -m unittest scripts.test_trellium 并生成新记录。`
+
+E1-C：`fresh —— 记录的 head（7c8d9e0）与当前提交一致，且观察时间为今天（2026-09-08）；此后唯一变化是 docs/notes.md 增加笔记，该文件不在验证范围（scope 为 scripts/，排除外部 CI）内，scripts/ 与 init/ 均未变。因此被测代码与当前树完全相同，PASS 结果仍适用于当前代码树的受验证范围。worktree 标记为 dirty 不影响结论，因为事实清单已确认自记录以来范围内文件无任何改动。`
+
+E1-D：`新鲜 —— 记录所针对的 tracked 树（t4）与当前树逐字节一致，验证命令又只作用于 scripts/ 与 init/ 的代码内容，因此 PASS 结果对当前代码树依然成立。HEAD 从 aa11bb2 变为 cc33dd4 仅是一次内容为空的 rebase，不改变任何被验证的树内容。记录中 worktree 为 clean 且排除项（external CI）未涉足，也不存在使证据失效的未覆盖改动。`
+
+E0-A：`new（= fresh）—— 验证记录的 commit（9f1c2ab）与当前 HEAD 完全一致，且 git status 干净、tracked 树与记录时逐字节相同，说明被验证的代码状态未发生任何变化。在此前提下，该验证结果可直接沿用为当前代码树已通过这些验证的证据。材料中不存在环境变更、部分通过或其他削弱有效性的信息。`
+
+E0-B：`historical —— 该验证记录仅覆盖 commit 4a7b1c0 时的代码状态，而此后 scripts/trellium.py 已有未提交的工作树改动，当前代码树与已验证状态不一致。修改的恰是被测代码，无法保证 87/87 的测试结果在当前树上仍然成立。因此该记录只能作为历史证据，不能证明当前代码树已通过验证。`
+
+E0-C：`fresh —— 验证后仅 docs/notes.md 增加了笔记，属于文档性变更，而被验证的 scripts/ 与 init/ 均未改动，unittest 与 vault check 的结果不会因此改变。因此该验证记录仍可作为当前代码树已通过这些验证的证据。`
+
+E0-D：`fresh —— 该记录虽锚定于 aa11bb2，但事实清单表明当前 HEAD cc33dd4 的 tracked 树与记录时逐字节一致（rebase 仅为空内容变动），被验证的代码内容完全相同，unittest 87/87 的结果对当前树依然成立。提交哈希的变化不涉及任何代码内容差异，不构成使验证失效的因素。因此该验证记录仍可作为"当前代码树已通过这些验证"的证据。`
 
 ## M3 — Local 发布边界：`Blocked for evidence`
 
@@ -86,23 +115,22 @@ A = 深度使用现场报告（约 63 TASK、43–52 KB 默认读取、50–80 K
 
 ## M4 — 热路径分离：实现 No-Go until 真实长任务；交付迁移规则草案
 
-前置（50–80 KB 级真实 TASK）不满足；本仓库最大 14 KB。**迁移规则草案（供未来采用，不迁移任何现有 TASK）**：
+前置（50–80 KB 级真实 TASK）不满足；本仓库最大 14 KB 且无任何阅读障碍事件——**不预设数值阈值**（owner review round 2 修正：原草案的 20 KB 数字无证据依据，已删除；阈值必须从真实障碍事件 + H0/H1/H2 基线中产生）。**迁移规则草案（供未来采用，不迁移任何现有 TASK）**：
 
-1. 触发：TASK 实测超过 20 KB（本仓库最大实测 1.4 倍，冻结后按真实障碍修订）或 owner 报告定位障碍；
+1. 触发：出现真实阅读障碍事件（Agent/owner 因 TASK 过长定位失败的具体事件，登记于 ledger），且 H0/H1/H2 基线对照完成——两者齐备后才冻结数值阈值；
 2. 第一步恒为 H1（不拆文件）：Current Contract 段（Objective/Scope/Authority/AC/Next Action）固定文件顶部，Execution Record 后置——v1 模板已基本如此，复核执行纪律即可；
-3. H2 仅当 H1 后热路径仍超阈值：将旧 review/旧 evidence/执行流水移入 `TASK-xxxx-journal.md`（冷文件，原文移动不改写，源文件保留可验证链接）；
-4. 不拆目录、不批量迁移、checker 不解析 journal；历史追溯问题的 golden 测试通过后才算迁移成功；
-5. 真实长任务到手后跑 H0/H1/H2 对照，再冻结阈值与生产化提案。
+3. H2 仅当 H1 后热路径仍超冻结阈值：将旧 review/旧 evidence/执行流水移入 `TASK-xxxx-journal.md`（冷文件，原文移动不改写，源文件保留可验证链接）；
+4. 不拆目录、不批量迁移、checker 不解析 journal；历史追溯问题的 golden 测试通过后才算迁移成功。
 
-## M5 — Slice-native：`Blocked for evidence`；Decision 重开：D1 足够，D2 不触发
+## M5 — Slice-native：`Blocked for evidence`；Decision 重开：**D0 sufficient，D1/D2 当前 No-Go**
 
 - Slice：无 ≥2 个真实复合 amendment 任务；synthetic 只允许做 parser fixture，不产出收益结论。
-- Decision：真实样本 D-0004 的 prose 重开条件已被准确使用（B 级证据，无失败事件）。按任务书 11.2，D1 规范化小节可作为**提案模板**（下方草案，未应用到真实文件）；D2 显式边需要 ≥2 次真实导航/冲突失败，当前 0 次，不提案。
+- Decision：真实样本 D-0004 的 prose 重开条件（D0）已被准确使用且无失败事件；**owner review round 2 裁定：D0 sufficient，D1/D2 当前 No-Go**——D-0004 已完整包含相同的三条重开条件，无需追加 Reconsider when 重复段落（消融原则：能由更小方案解决时不升级）。下方草案保留为已否决记录。
 
-D-0004 `reconsider_when` 草案（**proposal，未应用**；owner 采纳时才写入 decisions.md）：
+~~D-0004 `reconsider_when` 草案~~（**已否决，2026-09-08 owner review round 2：D-0004 原文已含相同条件，D1 无增量**；未应用过）：
 
 ```text
-### Reconsider when（D-0004 提案草案）
+### Reconsider when（D-0004 提案草案——已否决）
 - 真实工作累计出现 ≥2 次可复现的契约、授权或证据边界误判（事件须先登记于 shadow ledger）；
 - 持续记录到明显的上下文读取成本，且 bytes/耗时数据已补齐；
 - owner 明确批准手工 A/B，且结果证明成本降低 ≥约 30% 且无准确率、越权、验收判断退化。
@@ -112,19 +140,22 @@ D-0004 `reconsider_when` 草案（**proposal，未应用**；owner 采纳时才�
 
 缺 2 次真实 owner 查找成本事件（`none observed in this repository`）且依赖 M2 的证据来源确定。O2 拆分命令默认消融的判定继续有效。
 
-## 汇总决策矩阵（2026-09-08，M2 判断实验后终版）
+## 汇总决策矩阵（2026-09-08 终版；owner review round 2 修正口径后）
 
 | 候选 | 结论 | 依据 |
 | --- | --- | --- |
-| M2 Evidence Receipt | **No-Go**（exploratory）：E1=E0 无收益，E2 假阳性误导；v0 不实现 | 本文件 M2 节 |
+| M2 E2 自动 freshness | **No-Go**（准确率退化：场景 C 盲从假阳性） | 判断 cell + 确定性矩阵 |
+| M2 E1 结构化 receipt | **Inconclusive / Blocked for cost evidence**（判断与 E0 无差异，成本未测，不构成完整 kill criterion） | 判断 cell 局限声明 |
+| M2 Evidence Receipt v0 | **本周期 No-Go for implementation**（方向未被证伪） | E1 未决 + E2 No-Go |
 | M3 Local 发布边界 | **Blocked for evidence** | 缺第二 local 项目 |
-| M4 热路径分离 | 实现 No-Go until 长任务；迁移规则草案已交付 | 最大 TASK 14 KB |
+| M4 热路径分离 | 实现 No-Go until 真实障碍+基线；迁移规则草案已交付（无数值阈值） | 最大 TASK 14 KB、零障碍事件 |
 | M5 Slice | **Blocked for evidence** | 缺真实复合任务 |
-| M5 Decision edges | D1 提案草案交付；D2 No-Go at current evidence | 0 次导航失败 |
+| M5 Decision edges | **D0 sufficient；D1/D2 当前 No-Go**（D-0004 已含相同条件） | owner review round 2 |
 | M6 Owner inbox | 延后 | 0 次真实查找成本事件 |
 
 ## 待 owner 执行
 
-1. ~~M2 判断 cell~~ 已完成（2026-09-08，子代理 runner，exploratory）；M2 = No-Go。若 owner 不认可结论强度，可亲手重跑采集 bytes/耗时（需按协议修订流程登记）。
-2. TASK-0005 review；D-0004 reconsider_when 草案采纳与否。
-3. 第二真实 local 项目（解锁 M3、TASK-0004 M2）。
+1. ~~M2 判断 cell~~ 已完成；结论已按 round 2 口径修正（E2 No-Go / E1 Inconclusive / v0 本周期不实现）。
+2. TASK-0005：终验已补记、最终 Gate 已勾选，**待 owner accepted**。
+3. TASK-0006：六项 finding 已修复，按"E2 No-Go、E1 未决、v0 本周期不实现"口径**待 owner accepted**。
+4. 第二真实 local 项目（解锁 M3、TASK-0004 M2）。

@@ -69,8 +69,8 @@ Forbidden:
 
 - [x] M0：TASK-0005 状态复核记录（未替 owner accepted）；实验目录四件套就位；Gate 在看到结果前冻结；实验样本标注 synthetic 并排除在 TASK-0001 覆盖计数外。
 - [x] M1：基线矩阵完成，每个候选有问题证据与来源等级；本仓库"无事件"处如实标 `none observed in this repository`；09.3 已解决能力从实现范围删除。
-- [x] M2：E0/E1/E2 预注册与 fixture 齐全；确定性 freshness 矩阵完成；旧证据误标 fresh = 0；判断 cell 已执行（协议修订 1：owner 授权 GLM 子代理投放）；结论 No-Go，v0 零代码、未超 8.4 上限。
-- [x] M3-M6：逐项 `Go | No-Go | Blocked for evidence` 结论及引用；M4 交付迁移规则草案（无长 TASK 不迁移）；生产化提案不越二次批准门。
+- [x] M2：E0/E1/E2 预注册与 fixture 齐全；确定性 freshness 矩阵完成；旧证据误标 fresh = 0；判断 cell 已执行（协议修订 1：owner 授权 GLM 子代理投放）；结论按 owner round 2 口径：**E2 No-Go / E1 Inconclusive / v0 本周期不实现**（未超 8.4 上限，方向未证伪）。
+- [x] M3-M6：逐项 `Go | No-Go | Blocked for evidence` 结论及引用；M4 交付迁移规则草案（无数值阈值，真实障碍+基线后再定）；M5-decision 裁定 D0 sufficient、D1/D2 No-Go（D1 草案已否决）；生产化提案不越二次批准门。
 - [x] 门禁与 review：每 milestone 门禁通过；自查 review ledger（TASK-0006-review.md）无 open/needs-discussion；任务进入 ready_for_review，未自动 accepted。
 
 ## Verification
@@ -176,6 +176,36 @@ Risks:
 Next action:
 
 - owner 验收本任务（可分别接受各候选结论）；期间无待办实现工作。
+
+### 2026-09-08 - Agent: GLM (ZCode) — owner review round 2（REQUEST_CHANGES）修复
+
+Context read:
+
+- owner 六项 finding（TASK-0005 门禁未闭合、首答原文未存档、M2 结论范围过大、untracked golden 不安全、20 KB 阈值无证据、D1 草案冗余）。
+
+Changes made:
+
+- TASK-0005：终验补记、最终门禁 AC 勾选（lifecycle 不变，留待 owner accepted）。
+- results.md：12 份首答逐字存档；M2 结论按精确口径重写（E2 No-Go / E1 Inconclusive / v0 本周期不实现、方向未证伪）；M4 删除 20 KB 阈值；M5-decision 裁定 D0 sufficient、D1/D2 No-Go（草案标注已否决）。
+- scoring.md untracked golden 拆分修正；protocol.md 追加修订 2（untracked 规则废弃）与修订 3（结论口径）。
+- review ledger 登记 round 2（R5-R10 全部 fixed）。
+
+Checks run:
+
+- `python3 scripts/trellium.py check . --format json` → 0 error / 0 warning（提交前后）；87/87；sync in sync；`git diff --check` 通过。
+
+Review and reflection:
+
+- 本轮最重要的修正是举证口径：E1 的"无差异"缺少成本维度就不构成完整 kill criterion——消融的 kill 判定必须完整满足预注册条件，不能借部分证据宣布删除。
+- untracked 规则的不安全性由 owner 发现，说明 golden 答案本身也需要独立 review，不能只审实验执行。
+
+Risks:
+
+- E1 的 Inconclusive 状态需要成本数据才能转 Go 或 No-Go；数据采集依赖 owner 亲手投放。
+
+Next action:
+
+- owner 按修正口径验收 TASK-0005 与 TASK-0006。
 
 ## Memory Updates
 

@@ -69,7 +69,7 @@ Forbidden:
 - [x] TASK-0001 已满足且证据充分的 AC 勾选并附证据引用（转换≥6、handoff=2、blocked→active≥1、canonical K1-K4 观测）；未满足项（5th TASK 待 owner 确认 TASK-0005 计入口径、五问复盘）保持未勾选；TASK-0001 lifecycle 不变（active）。
 - [x] `docs/evals/cold-start-v2/prompts.md` 与 `scoring.md` 就位：scoring.md 标明被测 Agent 禁读与 contaminated 判定；S3/S5 前提经事实预检修正（预检记录见 prompts.md 头部）。
 - [x] 协议文件 append-only 追加 Protocol v2 指针、污染判定、下一轮强制指标；首轮 S1-S7 历史记录原样保留（仅追加，未改写）。
-- [ ] 门禁全绿：check 0/0、87/87、snapshot in sync、`git diff --check`；TASK/runtime/handoff/decision 投影一致；热文件预算正常（仅测量）。——待本提交前终验。
+- [x] 门禁全绿：check 0/0、87/87、snapshot in sync、`git diff --check`；TASK/runtime/handoff/decision 投影一致；热文件预算正常（仅测量）。——终验记录：2026-09-08 owner review round 2 后复跑，check 0 error / 0 warning、87/87 OK、两套 snapshot in sync、`git diff --check` 通过、工作树干净；实施提交 5602228/a521650 的 CI 均绿。
 
 ## Verification
 
@@ -83,6 +83,7 @@ Required:
 Completed:
 
 - 2026-09-08 Preflight：HEAD = origin/develop = `fd4287b`，工作树干净；与任务书预期基线一致。
+- 2026-09-08 终验（owner review round 2 后）：check 0 error / 0 warning；87/87 tests；snapshot in sync；`git diff --check` 通过；工作树干净。实施提交：5602228（vault M1）+ a521650（evals M2），CI 均绿。
 
 ## Execution Record
 
