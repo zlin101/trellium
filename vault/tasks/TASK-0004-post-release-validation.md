@@ -6,7 +6,7 @@
   "task_id": "TASK-0004",
   "level": "B",
   "authority_level": 2,
-  "lifecycle": "active"
+  "lifecycle": "blocked"
 }
 -->
 
@@ -186,6 +186,35 @@ Risks:
 Next action:
 
 - owner 采纳或否决 No-Go 建议；若否决并倾向 Go，先决定是否补手工 manifest A/B 实验。
+
+### 2026-09-08 - Agent: GLM (ZCode) — owner 采纳 No-Go（D-0004），任务 active → blocked
+
+Context read:
+
+- Owner 决定文本（No-Go 采纳、M4 不立项、暂不补 A/B、重开三条件、状态指示 blocked）。
+
+Changes made:
+
+- `vault/decisions.md` 新增 D-0004（Context 功能 No-Go 与重开条件）。
+- 本任务状态块 active → blocked：M2 未完成（owner 尚未提供第二个真实 local 项目），项目到位后 blocked → active 继续 M2 与 K1-K4 跨项目证据。
+- 协议"基线结论"更新为已采纳、runtime 投影、handoff、ledger 转换行同步。
+
+Checks run:
+
+- `python3 scripts/trellium.py check . --format json` → 0 error / 0 warning（提交前复跑）。
+
+Review and reflection:
+
+- blocked 而非 accepted 与治理语义一致：M2 验收未满足，任务不关闭。
+- M2 恢复时（第二项目到位）的 blocked → active 转换将同时是 TASK-0001 coverage gate 缺失的那类样本——真实信号，不预造。
+
+Risks:
+
+- 无新增；Context 重开条件已固化在 D-0004，后续 Agent 引用时须检查三条件是否有真实证据触发。
+
+Next action:
+
+- 等 owner 提供第二个真实 local 项目；期间 canonical K1-K4 证据由真实工作继续累积（TASK-0001）。
 
 ## Memory Updates
 

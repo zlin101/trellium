@@ -7,13 +7,13 @@
 
 ## TASK-0004 - 2026-09-08
 
-- Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 仅在 Go 后另立 Level C 任务。
-- Completed: 阶段立项与 M1 协议初稿（`vault/details/cold-start-baseline-2026-09.md`，7 个场景卡 + 指标定义 + 记录表）；M0（TASK-0002 accepted，D-0003）同日完成。
-- In progress: 等待 owner 用无聊天历史的新会话逐场景跑 M1；M2 等 owner 提供第二个真实项目（local 模式）。
-- Failed attempts: 无。
-- Blockers: M1/M2 的执行主动权在 owner（新会话与第二个项目）；无其他阻塞。
-- Next best action: owner 选 5-7 个场景逐个开新会话，按协议记录表逐行填写；跑完汇总后进入 M3 分析。
-- Files to read first: `vault/details/cold-start-baseline-2026-09.md`、`docs/superpowers/plans/2026-09-08-post-release-validation-plan.md`、`vault/tasks/TASK-0004-post-release-validation.md`、`vault/runtime.md`。
+- Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。
+- Completed: M1 完成——S1-S7 七个独立新会话，判定 7/7 对、越权 0、错误声称 accepted 0、过期证据误用 0、owner 纠正 0（记录表与基线结论在协议文件）；M3 结论 **No-Go 已被 owner 采纳为 D-0004**（M4 不立项、不实现 context、暂不补 A/B、AGENTS.md→vault 必读路径为默认；重开仅限 D-0004 三条件）。
+- In progress: 无（等待外部输入）。
+- Failed attempts: 无；实验设计备忘登记了评分 key 污染路径（3/7 场景读到 key，准确率按上限值口径）与 bytes/耗时未采集两项局限。
+- Blockers: M2 等待 owner 提供第二个真实 local 项目；任务 active → blocked，项目到位后 blocked → active 继续 M2 与跨项目证据。
+- Next best action: owner 提供第二个真实项目；期间由真实工作（TASK-0001）继续累积 K1-K4 证据，D-0004 的误判/成本重开证据若出现须先登记 ledger。
+- Files to read first: `vault/decisions.md`（D-0004）、`vault/details/cold-start-baseline-2026-09.md`（记录表+基线结论）、`vault/tasks/TASK-0004-post-release-validation.md`、`vault/runtime.md`。
 
 ## TASK-0003 - 2026-09-08（已 accepted，保留供下一会话快速入场）
 

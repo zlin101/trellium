@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0004
+- TASK-0001
 
 ## Active Tasks
 
@@ -18,7 +18,7 @@ table holds pointers only.
 | TASK-0001 | Run the self-hosting pilot and collect K1-K4 shadow evidence. | active | Next Agent continues pilot work; log transitions in `vault/details/shadow-run-2026-09.md`. |
 | TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | accepted | Closed 2026-09-08: release is live and latest resolves; title/notes demoted to optional by owner decision (D-0003). |
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
-| TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | active | Owner runs M1 scenarios in fresh sessions; M2 awaits a second real project (local mode). |
+| TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | blocked | M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -28,10 +28,10 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0004 counted per the explicit rule in the ledger): 4 real TASKs, 7 observed transitions, 1 blocked -> active.
+- TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0004 blocked): 4 real TASKs, 8 observed transitions, 1 blocked -> active.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
-- TASK-0004: M1 complete — S1-S7 run in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse (protocol record table + baseline conclusion). M3 recommendation delivered to owner: No-Go for now (0 judgment failures, bounded reading cost; manifest A/B untested; M2 second project still missing). Awaiting owner adoption.
+- TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
 
 ## Constraints
 
@@ -42,6 +42,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Owner adopted the Context No-Go as D-0004 (M4 unauthorized; reopen only via its three conditions); TASK-0004 active → blocked pending the second real project for M2.
 - M1 cold-start baseline complete (S1-S7, 7 independent sessions): 7/7 correct, 0 overreach, 0 stale-evidence misuse; M3 No-Go recommendation delivered to owner.
 
 - Opened the post-release validation phase (TASK-0004, Level B): plan formalized at `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md`, M1 cold-start protocol drafted.
@@ -73,6 +74,6 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
-- Owner: adopt or veto the M3 No-Go recommendation (recorded in `vault/details/cold-start-baseline-2026-09.md` and TASK-0004); if leaning Go, first decide on a hand-made manifest A/B (the only path to condition 3 without implementation).
-- Keep collecting canonical K1-K4 evidence from real work (TASK-0001); M2 re-opens the moment the owner provides a second real project for local mode.
-- Context implementation (M4) stays unstarted; it requires an owner-approved Level C task after any Go decision.
+- Continue TASK-0001 (the only active task): real work accumulates canonical K1-K4 shadow evidence; reopen triggers for Context (D-0004) are observed here — register any real misjudgment or cost event in the ledger.
+- Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
+- Context implementation stays closed per D-0004; any reopen requires the owner-approved Level C task first.
