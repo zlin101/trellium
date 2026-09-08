@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（截至 2026-09-08 review round 1 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 4 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0003/0002/0001）；blocked→active 0 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（截至 2026-09-08 TASK-0003 accepted 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 5 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0003/0002/0001）；blocked→active 0 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -33,6 +33,7 @@
 
 | 日期 | 事件 | checker 发现数 | 状态判断耗时 | owner 打开文件数 | 备注 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-09-08 | GitHub Actions 首跑（develop push，gate job） | 0 | n/a（CI 自动执行） | 0 | run 34181086563：self-hosting check 首次在 runner 执行，0 finding，job success |
 
 Kill criterion：状态准确率已接近 100%，checker 零有效发现，但上下文读取成本仍明显高；达到时重新评估最小 context manifest，不继续扩 checker。
 
@@ -51,6 +52,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-04 | active → blocked（发布客户端不可用） | TASK-0002 | 2（状态块 + runtime 行） | 0 | Release 未创建，不将失败误记为成功 |
 | 2026-09-08 | draft → active（M0 preflight 通过） | TASK-0003 | 2（状态块 + runtime 行） | 0 | canonical K1 校准后首个转换 |
 | 2026-09-08 | active → ready_for_review（M1-M3 实施与验证完成） | TASK-0003 | 2（状态块 + runtime 行） | 0 | 首轮记录遗漏本转换，review round 1 补记 |
+| 2026-09-08 | ready_for_review → accepted（round 2 通过 + CI 首跑全绿，owner 授权） | TASK-0003 | 2（状态块 + runtime 行） | 0 | 两个 review round，1 次返工 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
@@ -99,3 +101,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-08 | TASK-0003 M1 校准后 | 0 | 0 / 1 | TASK_STORAGE_PENDING（TASK-0003 未提交窗口），提交即消除 |
 | 2026-09-08 | TASK-0003 M3 后全量验证 | 0 | 0 / 1 | 同上；87/87 tests、snapshot in sync、`git diff --check` OK |
 | 2026-09-08 | TASK-0003 交接前门禁（M1-M3 提交后） | 0 | 0 / 0 | TASK_STORAGE_PENDING 已随提交消除；87/87、snapshot in sync、`git diff --check` OK |
+| 2026-09-08 | GitHub Actions 首跑 run 34181086563（develop push，gate job） | 0 | 0 / 0 | runner 端执行与本地一致；unit tests、vault check、drift 检测全部 success |

@@ -13,4 +13,10 @@
 
 - 6 项 finding 全部接受并修复；无 wont-fix、无 needs-discussion。
 - 验证：workflow YAML 解析确认 `gate`（push）无 job 级写权限、`sync`（PR）保留 self-heal 写权限；`trellium.py check . --format json` 0 error / 0 warning（提交后终验）；87/87 tests；snapshot in sync；`git diff --check` 通过。
-- 待 round 2：owner 复核本台账与修复提交；GitHub 端 CI 首跑仍待 push 后观察。
+
+## Round 2026-09-08（owner review round 2，通过）
+
+- canonical K1-K4 映射与 CI 范围获 owner 批准；R1-R6 修复复核通过。
+- CI 首跑证据：run 34181086563（develop push，`7af24cf`）success——`gate` job 全部步骤 success（含 Self-hosting vault check），`sync` job 按设计 skipped。
+- 处置：TASK-0003 状态块 ready_for_review → accepted（owner 授权的转换，已计入 ledger K1 表）；runtime 投影与 handoff 同步。
+- 遗留：TASK-0002 的 2026.09.3 Release 阻塞不变；canonical K3/K4 证据由 TASK-0001 长期采集。

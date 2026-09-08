@@ -6,7 +6,7 @@
   "task_id": "TASK-0003",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -83,10 +83,10 @@ M3（CI 门禁）：
 
 - [x] PR 仍运行现有测试与 snapshot 检查（self-heal 行为保留在 PR 专用 `sync` job 中）；
 - [x] `develop` push 运行相同门禁（`main` 保留，仅追加 `develop`）；
-- [ ] self-hosting check 步骤实际执行——已接入 workflow 并通过本地验证与 YAML 结构检查；GitHub 端首跑待 push 后观察（review round 1 撤销提前勾选）；
-- [x] workflow 权限最小化：push 任务（`gate`）只继承 workflow 级 `contents: read`，写权限仅存在于 PR 专用 `sync` job（review round 1 收紧）；
+- [x] self-hosting check 步骤实际执行——GitHub Actions 首跑 run 34181086563（develop push，`7af24cf`）：`gate` job success，Self-hosting vault check 步骤 success；`sync` job 按设计跳过；
+- [x] workflow 权限最小化：push 任务（`gate`）只继承 workflow 级 `contents: read`，写权限仅存在于 PR 专用 `sync` job（review round 1 收紧，round 2 CI 验证事件路由正确）；
 - [x] 本地 87 项测试、snapshot sync、`git diff --check` 通过；
-- [ ] 独立 review 无 open finding——round 1 为 REQUEST_CHANGES（R1-R6），修复后待 owner 复核。
+- [x] 独立 review 无 open finding——round 2 通过（canonical K1-K4 映射与 CI 范围获 owner 批准），round 1 R1-R6 已修复并复核。
 
 整体：
 
@@ -209,6 +209,35 @@ Risks:
 Next action:
 
 - 提交修复并交 owner 复核（round 2）；通过后本任务 accepted。
+
+### 2026-09-08 - Agent: GLM (ZCode) — Round 2 通过，accepted
+
+Context read:
+
+- owner round 2 结论（通过，canonical K1-K4 映射与 CI 范围获准）与执行指令。
+
+Changes made:
+
+- push 6 个提交（`fa2c7f4..7af24cf`）至 `origin/develop` 并观察 CI 首跑。
+- 本任务状态块 ready_for_review → accepted；runtime 投影、reconciliation 计数、review 台账 round 2、handoff 同步。
+
+Checks run:
+
+- GitHub Actions run 34181086563（develop push，`7af24cf`）→ success：`gate` job 全部步骤 success（unit tests、Self-hosting vault check、drift 检测），Fail on drift skipped（无漂移），`sync` job skipped（push 事件不路由，写权限未授予）。
+- 本地门禁复跑：check 0 error / 0 warning；87/87 tests；snapshot in sync；`git diff --check` 通过。
+
+Review and reflection:
+
+- CI 首跑同时验证了两件事：self-hosting check 在真实 runner 上通过（M3 验收闭环），以及两 job 的事件路由与最小权限设计符合预期（round 1 R1 的修复被真实运行确认）。
+- 本任务 accepted 后，M4 长期 shadow 观测由 TASK-0001 独立继续；canonical K3 仍缺缺陷捕获类观测，不因本周期关闭而宣称证据充分。
+
+Risks:
+
+- 无新增；TASK-0002 的 Release 阻塞不变。
+
+Next action:
+
+- 无（accepted）；后续入口见 runtime Next Steps。
 
 ## Memory Updates
 
