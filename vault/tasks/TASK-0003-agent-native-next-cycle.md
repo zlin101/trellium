@@ -81,12 +81,12 @@ M1（K1-K4 校准）：
 
 M3（CI 门禁）：
 
-- [x] PR 仍运行现有测试与 snapshot 检查（未改动既有步骤）；
+- [x] PR 仍运行现有测试与 snapshot 检查（self-heal 行为保留在 PR 专用 `sync` job 中）；
 - [x] `develop` push 运行相同门禁（`main` 保留，仅追加 `develop`）；
-- [x] self-hosting check 步骤实际执行——已接入 workflow 并本地验证；GitHub 端首次执行待 owner push 后观察；
-- [x] workflow 权限未扩大（permissions 块未动），CI 不修改 `vault/`；
+- [ ] self-hosting check 步骤实际执行——已接入 workflow 并通过本地验证与 YAML 结构检查；GitHub 端首跑待 push 后观察（review round 1 撤销提前勾选）；
+- [x] workflow 权限最小化：push 任务（`gate`）只继承 workflow 级 `contents: read`，写权限仅存在于 PR 专用 `sync` job（review round 1 收紧）；
 - [x] 本地 87 项测试、snapshot sync、`git diff --check` 通过；
-- [x] 独立 review 无 open finding（本执行内对全部 diff 做了收尾自查；owner review 在 ready_for_review 门进行）。
+- [ ] 独立 review 无 open finding——round 1 为 REQUEST_CHANGES（R1-R6），修复后待 owner 复核。
 
 整体：
 
@@ -174,6 +174,41 @@ Risks:
 Next action:
 
 - owner review 本任务（重点：canonical K1-K4 映射、CI 触发范围）；review 通过后 accepted，M4 长期观测由 TASK-0001 继续；owner 创建 2026.09.3 Release 解除 TASK-0002 阻塞。
+
+### 2026-09-08 - Agent: GLM (ZCode) — Review round 1（REQUEST_CHANGES）修复
+
+Context read:
+
+- owner review 意见（6 项 finding）；`vault/tasks/README.md` review ledger 规则。
+
+Changes made:
+
+- R1（CI 权限暴露）：workflow 拆分为 `sync`（仅 `pull_request`，保留 self-heal 所需 `contents: write` / `pull-requests: write`）与 `gate`（仅 `push`，继承 workflow 级 `contents: read`，严格只读）；步骤与条件同步去掉了已由 job `if` 保证的 event 冗余判断。
+- R2（转换漏记与计数过期）：K1 表补记 TASK-0003 active → ready_for_review；reconciliation 计数更新为 4 转换 / 3 个 handoff 条目；runtime TASK-0001 进度行同步。
+- R3（提前勾选）：撤销"GitHub 端 CI 已实际执行"与"独立 review 无 open finding"两项勾选，状态如实回退。
+- R4（runtime 失效风险）：Known Risks 移除已解决的 K1-K4 标签漂移条目，替换为当前真实风险。
+- R5（K3 误定性）：canonical K3 观测行更正为"预期瞬态 finding，不构成缺陷捕获证据"；本文件 M1-M3 记录中的相应推断以本条为准作废。
+- R6（decisions 模板残留）：删除模板示例索引行；真实决策编号 D-0001/D-0002 并建立真实索引；D-0002 正文同步 least-privilege 结构。
+- 新建 `vault/tasks/TASK-0003-review.md` 台账记录本轮 findings 与处置。
+
+Checks run:
+
+- workflow YAML 解析验证：`sync` job `if: pull_request` 持有写权限；`gate` job `if: push` 无 job 级 permissions，继承 `contents: read`。
+- `python3 scripts/trellium.py check . --format json` → 0 error / 0 warning（提交后终验复跑）。
+- `python3 -m unittest ...` → 87/87 OK；`sync-skills.py --check` → in sync；`git diff --check` → 通过。
+
+Review and reflection:
+
+- 本轮 6 项 finding 全部成立：权限按事件最小化、转换必须逐次观测、未发生的外部验证不得勾选、已解决的风险及时出清、瞬态 warning 不冒充缺陷捕获、模板示例不得与真实记录混放。
+- canonical K3 目前仍无缺陷捕获类观测；TASK_STORAGE_PENDING 属设计内瞬态。
+
+Risks:
+
+- workflow 重构后的 runner 端实际行为（两个 job 的事件路由、self-heal 推送）仍未被真实 CI 运行验证，待 push 后首跑确认。
+
+Next action:
+
+- 提交修复并交 owner 复核（round 2）；通过后本任务 accepted。
 
 ## Memory Updates
 

@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（截至 2026-09-08，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 3 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active；TASK-0002 创建时直接为 active，无 draft→active 记录）；已记录 handoff 2 次（handoff.md 现存条目）；blocked→active 0 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（截至 2026-09-08 review round 1 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 4 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0003/0002/0001）；blocked→active 0 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -23,7 +23,7 @@
 
 | 日期 | Vault | 触发 | errors / warnings | 是否产生真实修复 | 已知遗漏 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-09-08 | trellium（本仓库） | TASK-0003 M1 校准后 check | 0 / 1 | 是：按 tracked policy 提交任务文件后消除（TASK_STORAGE_PENDING） | 暂无 | 首条 canonical K3 观测；warning 语义与文档一致，为允许的未提交窗口 |
+| 2026-09-08 | trellium（本仓库） | TASK-0003 M1 校准后 check | 0 / 1 | 否：预期瞬态 finding（tracked 任务未提交窗口，设计内行为），随例行提交消除，不构成缺陷捕获证据 | 暂无 | review round 1 更正定性（原行误标为"真实修复"）；canonical K3 尚无缺陷捕获类观测 |
 
 成功标准：finding 对应真实修复动作。Kill criterion：连续两次真实检查只有无行动价值的 warning，且遗漏已知的状态/storage/预算错误。
 
@@ -50,6 +50,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-04 | draft → active（接入完成） | TASK-0001 | 2（状态块 + runtime 行） | 0 | 首次转换 |
 | 2026-09-04 | active → blocked（发布客户端不可用） | TASK-0002 | 2（状态块 + runtime 行） | 0 | Release 未创建，不将失败误记为成功 |
 | 2026-09-08 | draft → active（M0 preflight 通过） | TASK-0003 | 2（状态块 + runtime 行） | 0 | canonical K1 校准后首个转换 |
+| 2026-09-08 | active → ready_for_review（M1-M3 实施与验证完成） | TASK-0003 | 2（状态块 + runtime 行） | 0 | 首轮记录遗漏本转换，review round 1 补记 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 

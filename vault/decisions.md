@@ -6,11 +6,12 @@
 
 超过 150 行或 8 条完整记录时索引化：本文件变纯索引（每条 1-2 行），正文迁入 `vault/decisions/D-xxxx-slug.md`。ID 顺序分配。
 
-## 决策索引（索引化后使用）
+## 决策索引
 
-- D-0001 · 决策标题 · Active · 一句话实质 · 2026-01-01
+- D-0001 · Canonical K1-K4 实验契约 · Active · shadow 观测以 2026-09-04 计划第 2 节为唯一定义，旧标签映射为 A1/A2/canonical K2，历史不改写 · 2026-09-08
+- D-0002 · Self-hosting vault check 进入 CI 门禁 · Active · PR 与 main/develop push 运行只读 check；写权限仅限 PR self-heal job，push 任务严格只读 · 2026-09-08
 
-## 2026-09-08 - Canonical K1-K4 实验契约
+## D-0001 - Canonical K1-K4 实验契约（2026-09-08）
 
 Status: Active
 
@@ -35,23 +36,24 @@ shadow ledger 初版使用的 K1-K4 标签与 2026-09-04 实施计划第 2 节�
 
 后续 Agent 记录 shadow 观测时必须按 canonical 定义选表；引用"K1-K4"时须落到具体计划段落，不得只写缩写。
 
-## 2026-09-08 - Self-hosting vault check 进入 CI 门禁
+## D-0002 - Self-hosting vault check 进入 CI 门禁（2026-09-08）
 
 Status: Active
 
 ### Decision
 
-`.github/workflows/skill-sync.yml` 在 PR 与 push（`main`、`develop`）上运行只读 `python3 scripts/trellium.py check . --format json`；checker error（exit 2）使 job 失败，warning 保持既有 exit-0 语义；不扩大 GitHub 权限，CI 不修改 `vault/`。
+`.github/workflows/skill-sync.yml` 在 PR 与 push（`main`、`develop`）上运行只读 `python3 scripts/trellium.py check . --format json`；checker error（exit 2）使 job 失败，warning 保持既有 exit-0 语义。权限按事件最小化：写权限（`contents: write`、`pull-requests: write`）仅存在于 PR 专用 `sync` job（self-heal 所需）；push 专用 `gate` job 无 job 级权限提升，只继承 workflow 级 `contents: read`。CI 不修改 `vault/`。
 
 ### Rationale
 
-本仓库以 tracked 模式自托管 Trellium，vault 结构漂移应在合并前机械可见，而不是等下一次人工交接才发现。
+本仓库以 tracked 模式自托管 Trellium，vault 结构漂移应在合并前机械可见；同时分支 push 不需要任何写 token，单一 job 携带写权限属于不必要的暴露面。
 
 ### Alternatives
 
 - 独立新 workflow：被否，最小修改原则，避免第二套触发面。
+- 单一 job 承载 PR 与 push：被否（review round 1 R1），`permissions` 只能按 job 声明，单 job 无法让 push 事件摆脱写权限。
 - warning 也使 job 失败：被否，擅自加严会改变 checker 既有退出码语义。
 
 ### Impact
 
-向 `develop` 或 `main` 推送前先在本地跑同一命令；CI 报 error 时修 vault 结构，而不是放松门禁。
+向 `develop` 或 `main` 推送前先在本地跑同一命令；CI 报 error 时修 vault 结构，而不是放松门禁；后续改 workflow 时保持"push 路径零写权限"不变。
