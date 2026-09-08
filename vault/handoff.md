@@ -5,6 +5,16 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。
 
+## TASK-0003 - 2026-09-08
+
+- Objective: 执行 `docs/superpowers/plans/2026-09-08-agent-native-next-cycle-glm-plan.md` 的 M0-M3（M1 校准 K1-K4、M3 self-hosting CI 门禁；M2 归 TASK-0002；M4 长期观测留在 TASK-0001）。
+- Completed: M0 preflight 全部符合基线并创建 TASK-0003（draft → active）；M1 在 shadow ledger 顶部追加 2026-09-08 reconciliation（append-only，历史未改写；旧 K2/K4 → 辅助 A1/A2，旧 K3 → canonical K2；canonical K3/K4 空白观测表开启），TASK-0001 验收标准改为引用 2026-09-04 计划第 2 节，计数核对为 3 TASK / 3 转换 / 2 handoff / 0 blocked→active；M2 复核 latest 仍 2026.09.2、2026.09.3 Release 404，TASK-0002 保持 blocked；M3 workflow push 触发追加 `develop`（保留 `main`）并新增只读 self-hosting check 步骤，权限未动；TASK-0003 → ready_for_review；提交 f7aabf2（计划）、8f63586（vault）、1558601（CI），交接前门禁 0 error / 0 warning、87/87 tests、snapshot in sync。
+- In progress: 无实现工作；等待 owner review 与 push。
+- Failed attempts: 无。注意：CI 的 GitHub 端首次执行尚未发生（本环境不 push）。
+- Blockers: TASK-0002 仍需用户在 GitHub UI 为 `2026.09.3` tag 创建 Release（或提供带 repo 权限的 token）。
+- Next best action: owner review TASK-0003（重点：canonical K1-K4 映射、CI 触发范围）→ accepted；push 本地 3 个提交观察 CI 首跑；Release 创建后 TASK-0002 走 blocked → active → accepted。
+- Files to read first: `vault/tasks/TASK-0003-agent-native-next-cycle.md`、`vault/details/shadow-run-2026-09.md`（顶部 reconciliation 块）、`vault/runtime.md`、计划第 13 节（完成定义）。
+
 ## TASK-0002 - 2026-09-04
 
 - Objective: 为既有 `2026.09.3` tag 创建 GitHub Release，使 latest release 解析拿到新版。
