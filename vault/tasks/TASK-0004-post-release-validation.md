@@ -128,6 +128,34 @@ Next action:
 
 - owner 挑选时间逐场景开新会话跑 M1；或提供第二个项目启动 M2。
 
+### 2026-09-08 - Agent: GLM (ZCode) — 交接复核后的计数核对
+
+Context read:
+
+- Owner 交接复核意见（TASK 计数 3 vs checker current_task_files=4；要求明确计数规则）。
+
+Changes made:
+
+- 采用"计入 TASK-0004"方案：owner 立项、非演示交付，符合 TASK-0001 验收口径；计数规则在 ledger reconciliation 段显式化（纯演示或纯为实验构造的 TASK 不计入）。
+- runtime TASK-0001 进度行更新为 4 real TASKs；Known Risks 增加 checker 对自然语言计数不可见的限制说明。
+- canonical K3 登记真实遗漏样本：checker 0 finding 而 prose 计数实际过期，由人工复核发现。
+
+Checks run:
+
+- `python3 scripts/trellium.py check . --format json` → 0 error / 0 warning（提交前）。
+
+Review and reflection:
+
+- 该事件同时是 M3 的候选证据（跨文档计数漂移），但属单次且已人工消除，不自动触发 Phase 2 准入；是否构成"可复现模式"由后续冷启动数据说话。
+
+Risks:
+
+- 冷启动实验期间任务/计数还会变化；每次阶段记录后需按本条同样的口径复核计数。
+
+Next action:
+
+- owner 按 `vault/details/cold-start-baseline-2026-09.md` 启动 S1-S7 新会话。
+
 ## Memory Updates
 
 - `vault/runtime.md`（状态投影）

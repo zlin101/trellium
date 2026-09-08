@@ -28,7 +28,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0002 accepted): 3 real TASKs, 7 observed transitions, 1 blocked -> active.
+- TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0004 counted per the explicit rule in the ledger): 4 real TASKs, 7 observed transitions, 1 blocked -> active.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
 - TASK-0004: phase opened 2026-09-08; M1 protocol drafted (`vault/details/cold-start-baseline-2026-09.md`), awaiting fresh-session scenario runs and an owner-provided second project for M2.
@@ -59,6 +59,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 ## Known Risks
 
 - The PR-only snapshot self-heal push path has not yet been observed in a real GitHub PR run; develop push event routing and the read-only gate have been verified.
+- The checker validates the Active Tasks table and structure but cannot see natural-language counts elsewhere; stale prose numbers need manual reconciliation (observed 2026-09-08: "3 TASKs" vs `current_task_files: 4`).
 - The 2026.09.3 Release title and body remain empty; per D-0003 this is an optional improvement, not a risk to machine paths.
 - Single-developer pace may produce fewer than 5 real TASKs quickly; coverage grows only with real work, never manufactured.
 

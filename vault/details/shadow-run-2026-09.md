@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（截至 2026-09-08 TASK-0002 accepted 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 3 个（TASK-0001/0002/0003）；观测到 lifecycle 转换 7 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted、TASK-0002 blocked→active、TASK-0002 active→accepted；TASK-0002 创建时直接为 active，无 draft→active 记录）；handoff.md 现存条目数见 handoff 现状；blocked→active 1 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（截至 2026-09-08 TASK-0004 立项并复核计数后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 4 个（TASK-0001/0002/0003/0004）。计数规则（显式化，沿用 TASK-0001 验收口径）：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示任务、或纯为实验构造的 TASK 不计入。TASK-0004 属真实任务（owner 下达的验证阶段工作），计入。观测到 lifecycle 转换 7 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted、TASK-0002 blocked→active、TASK-0002 active→accepted；TASK-0002 与 TASK-0004 创建时均直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0004/0003/0001）；blocked→active 1 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -24,6 +24,7 @@
 | 日期 | Vault | 触发 | errors / warnings | 是否产生真实修复 | 已知遗漏 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-09-08 | trellium（本仓库） | TASK-0003 M1 校准后 check | 0 / 1 | 否：预期瞬态 finding（tracked 任务未提交窗口，设计内行为），随例行提交消除，不构成缺陷捕获证据 | 暂无 | review round 1 更正定性（原行误标为"真实修复"）；canonical K3 尚无缺陷捕获类观测 |
+| 2026-09-08 | trellium（本仓库） | 交接复核发现计数不一致（runtime/ledger 写 3 TASK，checker 报 current_task_files=4） | 0 / 0 | 是：人工核对后更新 runtime 与 ledger 计数；checker 未参与发现 | checker 不解析自然语言统计数字，prose 计数过期不可见 | 真实遗漏样本，佐证 K3 边界；同时是跨文档计数漂移的候选证据（单次，不自动触发 Phase 2 准入） |
 
 成功标准：finding 对应真实修复动作。Kill criterion：连续两次真实检查只有无行动价值的 warning，且遗漏已知的状态/storage/预算错误。
 
