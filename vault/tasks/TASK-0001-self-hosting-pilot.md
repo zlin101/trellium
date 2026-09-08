@@ -69,7 +69,8 @@ Forbidden:
 - [ ] 试点累计 6 次 lifecycle 转换，全部有对应观测条目。
 - [ ] 试点累计 2 次跨 Agent handoff，每次交接前 `check --format json` 已运行且结论留档。
 - [ ] 出现过至少 1 次 blocked → active 转换，阻塞原因与解除条件有记录。
-- [ ] K1-K4 四个实验按预注册指标填写观测，不追加新指标。
+- [ ] K1-K4 四个实验按 canonical 契约填写观测：指标定义唯一来源为 `docs/superpowers/plans/2026-09-04-agent-native-vault-check-plan.md` 第 2 节；初版标签到 canonical/辅助指标（A1/A2）的映射以 `vault/details/shadow-run-2026-09.md` 顶部 2026-09-08 `Experiment contract reconciliation` 为准；不追加新指标。
+- [ ] 上方 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）仅为本仓库 self-hosting 覆盖门槛，不替代 canonical K1-K4 要求的跨项目证据（两个真实项目、至少 10 次状态变化等）。
 - [ ] 复盘五问（check 真正捕获了什么 / 哪些字段没人用 / 投影维护成本 / 哪些规则需频繁解释 / 哪些预算只是理论值）逐条回答并形成结论。
 
 ## Verification
