@@ -65,11 +65,11 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] 试点累计覆盖 5 个真实 TASK（不含纯演示任务）。
-- [ ] 试点累计 6 次 lifecycle 转换，全部有对应观测条目。
-- [ ] 试点累计 2 次跨 Agent handoff，每次交接前 `check --format json` 已运行且结论留档。
-- [ ] 出现过至少 1 次 blocked → active 转换，阻塞原因与解除条件有记录。
-- [ ] K1-K4 四个实验按 canonical 契约填写观测：指标定义唯一来源为 `docs/superpowers/plans/2026-09-04-agent-native-vault-check-plan.md` 第 2 节；初版标签到 canonical/辅助指标（A1/A2）的映射以 `vault/details/shadow-run-2026-09.md` 顶部 2026-09-08 `Experiment contract reconciliation` 为准；不追加新指标。
+- [ ] 试点累计覆盖 5 个真实 TASK（不含纯演示任务）。——审计基准 fd4287b 时为 4/5；TASK-0005 立项后名义上 5/5，但 TASK-0005 是否计入本 Gate 由 owner 在 review 时确认（计数规则见 D-0005 与 ledger 的 derived snapshot）。
+- [x] 试点累计 6 次 lifecycle 转换，全部有对应观测条目。——证据：shadow ledger 初版 K1 表 9 行事件观测（含 TASK-0005 自身 draft→active），每行含修改位置数与人工修正数。
+- [x] 试点累计 2 次跨 Agent handoff，每次交接前 `check --format json` 已运行且结论留档。——证据：事件①09-04 adopt 会话→Codex（TASK-0001 handoff 条目 + check 台账「adopt 后基线」0/0）；事件②09-04 Codex→09-08 GLM（TASK-0002 handoff 条目已按压缩规则并入任务文件 + check 台账「TASK-0002 发布前门禁」0/0）。Agent 署名见各任务文件 Execution Record。
+- [x] 出现过至少 1 次 blocked → active 转换，阻塞原因与解除条件有记录。——证据：TASK-0002 blocked→active（ledger K1 行；阻塞原因"环境无 gh/无凭据"，解除条件"Release 发布且 latest 解析正确"，见 TASK-0002 执行记录）。
+- [x] K1-K4 四个实验按 canonical 契约填写观测：指标定义唯一来源为 `docs/superpowers/plans/2026-09-04-agent-native-vault-check-plan.md` 第 2 节；初版标签到 canonical/辅助指标（A1/A2）的映射以 `vault/details/shadow-run-2026-09.md` 顶部 2026-09-08 `Experiment contract reconciliation` 为准；不追加新指标。——证据：canonical K1（6 行）、canonical K2（初版 K3 表）、canonical K3（2 行）、canonical K4（2 行）均已有观测。
 - [ ] 上方 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）仅为本仓库 self-hosting 覆盖门槛，不替代 canonical K1-K4 要求的跨项目证据（两个真实项目、至少 10 次状态变化等）。
 - [ ] 复盘五问（check 真正捕获了什么 / 哪些字段没人用 / 投影维护成本 / 哪些规则需频繁解释 / 哪些预算只是理论值）逐条回答并形成结论。
 

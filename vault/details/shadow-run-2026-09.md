@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（截至 2026-09-08 TASK-0004 转 blocked 后更新，依据本 ledger 与 git 历史，不采信传闻数字）：真实 TASK 共 4 个（TASK-0001/0002/0003/0004）。计数规则（显式化，沿用 TASK-0001 验收口径）：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示任务、或纯为实验构造的 TASK 不计入。TASK-0004 属真实任务（owner 下达的验证阶段工作），计入。观测到 lifecycle 转换 8 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted、TASK-0002 blocked→active、TASK-0002 active→accepted、TASK-0004 active→blocked；TASK-0002 与 TASK-0004 创建时均直接为 active，无 draft→active 记录）；handoff.md 现存 3 个条目（TASK-0004/0003/0001）；blocked→active 1 次。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-08，审计基准 commit fd4287b**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 5 个（TASK-0001/0002/0003/0004/0005；TASK-0003-review.md 为台账非实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示或纯为实验构造的 TASK 不计入；TASK-0005 为真实治理修复任务，非为凑 TASK-0001 数量门槛而创建。观测到 lifecycle 转换 10 次（TASK-0001 draft→active、TASK-0002 active→blocked、TASK-0003 draft→active、TASK-0003 active→ready_for_review、TASK-0003 ready_for_review→accepted、TASK-0002 blocked→active、TASK-0002 active→accepted、TASK-0004 active→blocked、TASK-0005 draft→active、TASK-0005 active→ready_for_review；TASK-0002 与 TASK-0004 创建时直接为 active，无 draft→active 记录）。blocked→active 1 次。handoff：handoff.md 现存 3 个条目（TASK-0004/0003/0001）≠ 历史跨 Agent handoff 次数（压缩归并会使条目减少）；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**：①09-04 adopt 会话→Codex（TASK-0001 handoff 条目 + 上方 check 台账「adopt 后基线」0/0）；②09-04 Codex→09-08 GLM（TASK-0002 handoff 条目已并入任务文件 + check 台账「TASK-0002 发布前门禁」0/0）。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）继续有效，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -58,6 +58,8 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-08 | blocked → active（2026.09.3 Release 已发布并成为 latest） | TASK-0002 | 2（状态块 + runtime 行） | 0 | blocker 解除；Release 标题和 notes 仍为空，未进入 ready_for_review |
 | 2026-09-08 | active → accepted（owner 决定元数据 Gate 降为可选，D-0003） | TASK-0002 | 2（状态块 + runtime 行） | 0 | 技术验收项全部达成；标题/notes 移入 Optional |
 | 2026-09-08 | active → blocked（M3 No-Go 采纳为 D-0004；M2 等待 owner 第二项目） | TASK-0004 | 2（状态块 + runtime 行） | 0 | 首例因等待外部输入主动转 blocked；恢复时的 blocked → active 将计入 TASK-0001 coverage gate 样本 |
+| 2026-09-08 | draft → active（owner 任务书立项：证据质量与计数收敛） | TASK-0005 | 2（状态块 + runtime 行） | 0 | 真实治理修复任务，非为凑 TASK-0001 数量门槛（D-0005） |
+| 2026-09-08 | active → ready_for_review（M1 计数单源化 + M2 Protocol v2 完成） | TASK-0005 | 2（状态块 + runtime 行） | 0 | 待 owner 最终验收 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
