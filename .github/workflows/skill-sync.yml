@@ -11,22 +11,23 @@ permissions:
   contents: read
 
 jobs:
+  # PR job: tests + drift detection + self-heal. It is the only job granted
+  # write access: contents: write lets it push regenerated snapshots back to
+  # the PR branch; pull-requests: write lets it leave a remediation comment
+  # on fork PRs (which it cannot push to).
   sync:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      # contents: write lets the job push regenerated snapshots back to a PR
-      # branch; pull-requests: write lets it leave a remediation comment on
-      # fork PRs (which it cannot push to).
       contents: write
       pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # On PRs, check out the PR head branch so regenerated snapshots can be
-          # pushed straight back to it. On push events head_ref is empty, so fall
-          # back to the pushed ref.
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          # Check out the PR head branch so regenerated snapshots can be
+          # pushed straight back to it.
+          ref: ${{ github.head_ref }}
 
       - name: Run unit tests
         run: python3 -m unittest discover -s scripts -p 'test_*.py'
@@ -46,7 +47,7 @@ jobs:
       # the PR branch, so a contributor editing init/ never has to remember the
       # sync step. (Fork PRs cannot be pushed to and are handled below.)
       - name: Regenerate and push snapshots (same-repo PR)
-        if: steps.drift.outcome == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: steps.drift.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
           python3 scripts/sync-skills.py
           git config user.name "github-actions[bot]"
@@ -59,13 +60,13 @@ jobs:
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
 
       - name: Confirm snapshots are in sync
-        if: steps.drift.outcome == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: steps.drift.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
         run: python3 scripts/sync-skills.py --check
 
       # Fork PR: we cannot push to the branch, so leave a comment with the exact
       # command and then fail the check (the PR is genuinely still out of sync).
       - name: Comment remediation (fork PR)
-        if: steps.drift.outcome == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        if: steps.drift.outcome == 'failure' && github.event.pull_request.head.repo.full_name != github.repository
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -85,9 +86,31 @@ jobs:
           gh pr comment "$PR_NUMBER" --body-file "$body"
           exit 1
 
-      # Push to main should never drift; if it does, fail loudly with the fix.
-      - name: Fail on drift (push to main)
-        if: steps.drift.outcome == 'failure' && github.event_name == 'push'
+  # Push job: the same gates on branch pushes (main, develop). Strictly
+  # read-only — it inherits the workflow-level contents: read and never
+  # receives a write token.
+  gate:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+
+      - name: Self-hosting vault check
+        run: python3 scripts/trellium.py check . --format json
+
+      - name: Detect protocol snapshot drift
+        id: drift
+        continue-on-error: true
+        run: python3 scripts/sync-skills.py --check
+
+      # A push whose init/ changes do not match the committed snapshots must
+      # fail loudly with the fix.
+      - name: Fail on drift
+        if: steps.drift.outcome == 'failure'
         run: |
           echo "Protocol snapshots are out of sync with init/." >&2
           echo "Fix: python3 scripts/sync-skills.py" >&2
