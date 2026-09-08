@@ -57,13 +57,28 @@ A = 深度使用现场报告（约 63 TASK、43–52 KB 默认读取、50–80 K
 
 确定性矩阵结论：保守全树规则产生 **1/10 假阳性**（无关 docs 变化），无误标 fresh；FP 是否可接受由 agent 判断 cell 与 R3 kill criterion 裁定——若 agent 盲从比较器的 historical 判定（场景 C golden 为 fresh），E2 相对 E1 为负收益。
 
-### 判断 cell（E0/E1/E2 × 场景 A-D，owner 新会话）
+### 判断 cell（E0/E1/E2 × 场景 A-D，2026-09-08 执行完毕）
 
-状态：**待 owner 执行**（`prompts.md` 四场景材料就绪；每 cell 首轮 1 次为 exploratory，可扩展至 3 次）。结果将追加于下节。
+执行方式：协议修订 1——GLM 经隔离子代理投放（每 cell 一个全新无历史会话，封闭书，指示不读 docs/evals/）；无 cell 申报或发现读取评分材料，无 contaminated。n=1/cell，全部标 **exploratory**；成本仅有子代理 tokens/时长代理值，bytes 未采集。
 
-### M2 当前结论
+原始首答（golden：A fresh / B historical / C fresh / D fresh）：
 
-`Pending evidence`（判断 cell 未跑）。v0 不实现。前置 Go 条件：判断 cell 显示 E1/E2 相对 E0 中位改善 ≥约 30% 且硬指标零退化（含场景 C 不被 FP 误导）。
+| Cell | 场景 A | 场景 B | 场景 C | 场景 D | 准确率 | tokens（代理成本） |
+| --- | --- | --- | --- | --- | --- | --- |
+| E2 自动比较 | fresh ✓ | historical ✓ | **historical ✗** | fresh ✓ | 3/4 | 9.0-9.5k |
+| E1 结构化 receipt | fresh ✓ | historical ✓ | fresh ✓（以 scope 字段推理：变更在范围外） | fresh ✓ | 4/4 | 9.3-9.9k |
+| E0 自由文本 | fresh ✓（答"new"） | historical ✓ | fresh ✓（以事实清单推理） | fresh ✓ | 4/4 | 8.9-9.5k |
+
+要点：
+
+- **E2 触发 kill criterion**：场景 C 比较器输出设计内假阳性（historical），被测会话盲从后判错——自动 freshness 未降低成本（时长/token 无优势）且引入误导。按任务书 8.3：删除自动 freshness；即使保留也仅为实验性。
+- **E1 未显示相对 E0 的判断收益**（4/4 vs 4/4），且代理成本（tokens）持平略高、写入税为正（receipt 本身是新增强写内容）——触发"E1 与 E0 判断和成本无差异 → 删除 receipt 方案"（成本维度为代理值，exploratory）。
+- 硬指标：误标 fresh = 0；无越权；无误判为 accepted。No-Go 是"无收益"，不是"不安全"。
+- 已知局限（影响结论强度，均为如实声明）：n=1/cell；E0 材料直递未测真实仓库中的"检索成本"（深度现场的主要痛点之一）；bytes/耗时未采集。扩展任一项需新预注册。
+
+### M2 最终结论（2026-09-08）
+
+**No-Go**：不实现 Evidence Receipt v0，生产代码零改动；E2 自动 freshness 删除；E1 结构化 receipt 无已证明收益，方案归档（本文件与 prompts.md 样本保留为可复现记录）。重开路径：(a) owner 亲手投放并采集 bytes/耗时，验证成本维度；(b) 真实仓库中"自由文本记录散落难检索"场景的新预注册实验。
 
 ## M3 — Local 发布边界：`Blocked for evidence`
 
@@ -97,11 +112,11 @@ D-0004 `reconsider_when` 草案（**proposal，未应用**；owner 采纳时才�
 
 缺 2 次真实 owner 查找成本事件（`none observed in this repository`）且依赖 M2 的证据来源确定。O2 拆分命令默认消融的判定继续有效。
 
-## 汇总决策矩阵（2026-09-08）
+## 汇总决策矩阵（2026-09-08，M2 判断实验后终版）
 
 | 候选 | 结论 | 依据 |
 | --- | --- | --- |
-| M2 Evidence Receipt | Pending evidence（确定性矩阵完成；判断 cell 待 owner） | 本文件 M2 节 |
+| M2 Evidence Receipt | **No-Go**（exploratory）：E1=E0 无收益，E2 假阳性误导；v0 不实现 | 本文件 M2 节 |
 | M3 Local 发布边界 | **Blocked for evidence** | 缺第二 local 项目 |
 | M4 热路径分离 | 实现 No-Go until 长任务；迁移规则草案已交付 | 最大 TASK 14 KB |
 | M5 Slice | **Blocked for evidence** | 缺真实复合任务 |
@@ -110,7 +125,6 @@ D-0004 `reconsider_when` 草案（**proposal，未应用**；owner 采纳时才�
 
 ## 待 owner 执行
 
-1. M2 判断 cell：按 `prompts.md` 投放（E2→E1→E0 × 场景 A-D，首轮各 1 次）；结果交回后本文件追加并出 M2 最终结论；
-2. 若 M2 Go：授权按 8.4 上限实现 Evidence Receipt v0（另需确认聚焦测试与模板同步范围）；
-3. 第二真实 local 项目（解锁 M3、TASK-0004 M2）；
-4. TASK-0005 review 与 D-0004 reconsider_when 草案的采纳与否。
+1. ~~M2 判断 cell~~ 已完成（2026-09-08，子代理 runner，exploratory）；M2 = No-Go。若 owner 不认可结论强度，可亲手重跑采集 bytes/耗时（需按协议修订流程登记）。
+2. TASK-0005 review；D-0004 reconsider_when 草案采纳与否。
+3. 第二真实 local 项目（解锁 M3、TASK-0004 M2）。

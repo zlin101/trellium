@@ -6,7 +6,7 @@
   "task_id": "TASK-0006",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active"
+  "lifecycle": "ready_for_review"
 }
 -->
 
@@ -67,11 +67,11 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] M0：TASK-0005 状态复核记录（未替 owner accepted）；实验目录四件套就位；Gate 在看到结果前冻结；实验样本标注 synthetic 并排除在 TASK-0001 覆盖计数外。
-- [ ] M1：基线矩阵完成，每个候选有问题证据与来源等级；本仓库"无事件"处如实标 `none observed in this repository`；09.3 已解决能力从实现范围删除。
-- [ ] M2：E0/E1/E2 预注册与 fixture 齐全；确定性 freshness 矩阵完成；旧证据误标 fresh = 0；判断 cell 交 owner 执行；v0 仅在实验 Go 后实现且不超 8.4 上限。
-- [ ] M3-M6：逐项 `Go | No-Go | Blocked for evidence` 结论及引用；M4 交付迁移规则草案（无长 TASK 不迁移）；生产化提案不越二次批准门。
-- [ ] 门禁与 review：每 milestone 门禁通过；finding 走独立 review ledger；最终 `ready_for_review`，不自动 accepted。
+- [x] M0：TASK-0005 状态复核记录（未替 owner accepted）；实验目录四件套就位；Gate 在看到结果前冻结；实验样本标注 synthetic 并排除在 TASK-0001 覆盖计数外。
+- [x] M1：基线矩阵完成，每个候选有问题证据与来源等级；本仓库"无事件"处如实标 `none observed in this repository`；09.3 已解决能力从实现范围删除。
+- [x] M2：E0/E1/E2 预注册与 fixture 齐全；确定性 freshness 矩阵完成；旧证据误标 fresh = 0；判断 cell 已执行（协议修订 1：owner 授权 GLM 子代理投放）；结论 No-Go，v0 零代码、未超 8.4 上限。
+- [x] M3-M6：逐项 `Go | No-Go | Blocked for evidence` 结论及引用；M4 交付迁移规则草案（无长 TASK 不迁移）；生产化提案不越二次批准门。
+- [x] 门禁与 review：每 milestone 门禁通过；自查 review ledger（TASK-0006-review.md）无 open/needs-discussion；任务进入 ready_for_review，未自动 accepted。
 
 ## Verification
 
@@ -146,6 +146,36 @@ Risks:
 Next action:
 
 - owner 跑 M2 判断 cell；结果回填 results.md 后出 M2 最终结论；第二 local 项目到位解锁 M3。
+
+### 2026-09-08 - Agent: GLM (ZCode) — M2 判断实验完成，结论 No-Go；任务 ready_for_review
+
+Context read:
+
+- 协议修订 1（owner 指令"你开始做呗"授权 GLM 子代理投放）；12 个 cell 的首答原文。
+
+Changes made:
+
+- results.md 追加判断 cell 原始结果、要点与 M2 最终结论（No-Go）；汇总决策矩阵转终版。
+- 新建 `vault/tasks/TASK-0006-review.md`（自查 7 项 review 门全过，R1-R4 均 fixed/声明）。
+- 状态块 active → ready_for_review。
+
+Checks run:
+
+- 评分对照冻结 golden：E0 4/4、E1 4/4、E2 3/4；误标 fresh = 0。
+- 门禁：check 0/0（提交前后）、87/87、sync in sync、`git diff --check` 通过。
+
+Review and reflection:
+
+- E2 触发 kill criterion（假阳性误导 + 无成本降低）→ 删除自动 freshness；E1 与 E0 判断无差异且代理成本持平略高 → receipt 方案整体 No-Go、归档。
+- 本轮消融的价值再次是"阻止无证据实现"：v0 零代码，E2/E1 的样本与规则留档可复现。诚实声明两项强度局限：n=1/cell；成本维度只有子代理代理值。
+
+Risks:
+
+- owner 若认为 exploratory 结论不足以关闭 M2，可亲手重跑采集 bytes/耗时（协议修订流程已就位）。
+
+Next action:
+
+- owner 验收本任务（可分别接受各候选结论）；期间无待办实现工作。
 
 ## Memory Updates
 
