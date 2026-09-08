@@ -31,7 +31,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0004 counted per the explicit rule in the ledger): 4 real TASKs, 7 observed transitions, 1 blocked -> active.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
-- TASK-0004: phase opened 2026-09-08; M1 protocol drafted (`vault/details/cold-start-baseline-2026-09.md`), awaiting fresh-session scenario runs and an owner-provided second project for M2.
+- TASK-0004: M1 complete — S1-S7 run in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse (protocol record table + baseline conclusion). M3 recommendation delivered to owner: No-Go for now (0 judgment failures, bounded reading cost; manifest A/B untested; M2 second project still missing). Awaiting owner adoption.
 
 ## Constraints
 
@@ -41,6 +41,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - Keep this file short; current line and entry budgets live in the `trellium-policy` block in `vault/index.md`.
 
 ## Recent Changes
+
+- M1 cold-start baseline complete (S1-S7, 7 independent sessions): 7/7 correct, 0 overreach, 0 stale-evidence misuse; M3 No-Go recommendation delivered to owner.
 
 - Opened the post-release validation phase (TASK-0004, Level B): plan formalized at `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md`, M1 cold-start protocol drafted.
 - TASK-0002 accepted: owner demoted Release title/notes to a non-gating optional improvement (D-0003); Codex had already verified the release live and moved it blocked -> active.
@@ -71,6 +73,6 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
-- Continue TASK-0001: real work (TASKs, transitions, handoffs) accumulates canonical K1-K4 shadow evidence; log observations per the reconciled contract.
-- Start the post-release validation phase: run the cold-start baseline (M1) in fresh sessions and adopt a second real project in local mode (M2, owner-provided).
-- Context manifest re-entry stays closed until the M3 Go/No-Go decision has real evidence.
+- Owner: adopt or veto the M3 No-Go recommendation (recorded in `vault/details/cold-start-baseline-2026-09.md` and TASK-0004); if leaning Go, first decide on a hand-made manifest A/B (the only path to condition 3 without implementation).
+- Keep collecting canonical K1-K4 evidence from real work (TASK-0001); M2 re-opens the moment the owner provides a second real project for local mode.
+- Context implementation (M4) stays unstarted; it requires an owner-approved Level C task after any Go decision.

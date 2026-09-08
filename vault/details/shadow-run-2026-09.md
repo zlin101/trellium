@@ -35,6 +35,7 @@
 | 日期 | 事件 | checker 发现数 | 状态判断耗时 | owner 打开文件数 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | 2026-09-08 | GitHub Actions 首跑（develop push，gate job） | 0 | n/a（CI 自动执行） | 0 | run 34181086563：self-hosting check 首次在 runner 执行，0 finding，job success |
+| 2026-09-08 | 冷启动基线 S1-S7（各独立新会话，详见 cold-start-baseline-2026-09.md） | n/a | 每场景读取 5-16 个文件，bytes/耗时大部分未采集 | 0（owner 仅记录，未打开文件代答） | 判断 7/7 正确、0 越权、0 过期证据误用；上下文选择成本有界但可见——K4 kill criterion 的首轮量化输入 |
 
 Kill criterion：状态准确率已接近 100%，checker 零有效发现，但上下文读取成本仍明显高；达到时重新评估最小 context manifest，不继续扩 checker。
 
