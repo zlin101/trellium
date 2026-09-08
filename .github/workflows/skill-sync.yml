@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 permissions:
   contents: read
@@ -29,6 +30,12 @@ jobs:
 
       - name: Run unit tests
         run: python3 -m unittest discover -s scripts -p 'test_*.py'
+
+      # Self-hosting gate: this repo maintains its own vault with the same
+      # checker it ships. Errors fail the job (exit 2); warnings keep the
+      # checker's exit-0 semantics and stay visible in the log. Read-only.
+      - name: Self-hosting vault check
+        run: python3 scripts/trellium.py check . --format json
 
       - name: Detect protocol snapshot drift
         id: drift
