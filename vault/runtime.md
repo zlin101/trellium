@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0001
+- TASK-0004
 
 ## Active Tasks
 
@@ -16,8 +16,9 @@ table holds pointers only.
 | Task | Objective | Status | Next Action |
 | --- | --- | --- | --- |
 | TASK-0001 | Run the self-hosting pilot and collect K1-K4 shadow evidence. | active | Next Agent continues pilot work; log transitions in `vault/details/shadow-run-2026-09.md`. |
-| TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | blocked | User creates the Release in GitHub UI; then verify latest resolution. |
+| TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | accepted | Closed 2026-09-08: release is live and latest resolves; title/notes demoted to optional by owner decision (D-0003). |
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
+| TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | active | Owner runs M1 scenarios in fresh sessions; M2 awaits a second real project (local mode). |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -27,9 +28,10 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0001: adopted the repo in tracked mode, created the shadow-run ledger, ran the first lifecycle transition (draft -> active), first handoff recorded. Reconciled coverage as of 2026-09-08 (TASK-0003 accepted): 3 real TASKs, 5 observed transitions (TASK-0002 was created directly as active), 3 handoff entries, 0 blocked -> active.
-- TASK-0002: K4 policy corrected and local gates passed; blocked because this environment has no GitHub release client or connector.
+- TASK-0001: adopted the repo in tracked mode and continues shadow evidence collection. Reconciled coverage as of 2026-09-08 (TASK-0002 accepted): 3 real TASKs, 7 observed transitions, 1 blocked -> active.
+- TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
+- TASK-0004: phase opened 2026-09-08; M1 protocol drafted (`vault/details/cold-start-baseline-2026-09.md`), awaiting fresh-session scenario runs and an owner-provided second project for M2.
 
 ## Constraints
 
@@ -40,6 +42,9 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Opened the post-release validation phase (TASK-0004, Level B): plan formalized at `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md`, M1 cold-start protocol drafted.
+- TASK-0002 accepted: owner demoted Release title/notes to a non-gating optional improvement (D-0003); Codex had already verified the release live and moved it blocked -> active.
+- Verified the published 2026.09.3 Release and latest resolution; TASK-0002 moved blocked → active, with title/notes completion still pending.
 - Pushed the next-cycle work to `origin/develop`; first GitHub Actions run (34181086563) green: `gate` job executed the self-hosting check on push, `sync` job correctly skipped.
 - TASK-0003 accepted after review round 2 (canonical K1-K4 mapping and CI scope approved; round 1 findings R1-R6 fixed).
 - Accepted the 2026-09-08 GLM plan via the owner's start instruction; created TASK-0003 (Level C, M1+M3 in scope, M4 stays with TASK-0001).
@@ -53,8 +58,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Known Risks
 
-- The CI gate's runner-side behavior (event routing across the `sync`/`gate` jobs, snapshot self-heal push) has not been observed in a real GitHub run yet; verify on the next push.
-- TASK-0002 stays blocked: `install.sh --fetch` resolves only 2026.09.2 until the user creates the 2026.09.3 Release.
+- The PR-only snapshot self-heal push path has not yet been observed in a real GitHub PR run; develop push event routing and the read-only gate have been verified.
+- The 2026.09.3 Release title and body remain empty; per D-0003 this is an optional improvement, not a risk to machine paths.
 - Single-developer pace may produce fewer than 5 real TASKs quickly; coverage grows only with real work, never manufactured.
 
 ## Required Checks
@@ -66,5 +71,5 @@ python3 scripts/trellium.py check . --format json
 ## Next Steps
 
 - Continue TASK-0001: real work (TASKs, transitions, handoffs) accumulates canonical K1-K4 shadow evidence; log observations per the reconciled contract.
-- Unblock TASK-0002 after the user creates the GitHub Release for 2026.09.3; verify latest resolution and accept the task.
-- Context manifest re-entry (plan section 10) stays closed until its Go conditions have real evidence.
+- Start the post-release validation phase: run the cold-start baseline (M1) in fresh sessions and adopt a second real project in local mode (M2, owner-provided).
+- Context manifest re-entry stays closed until the M3 Go/No-Go decision has real evidence.

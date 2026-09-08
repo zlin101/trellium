@@ -5,25 +5,25 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。
 
+## TASK-0004 - 2026-09-08
+
+- Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 仅在 Go 后另立 Level C 任务。
+- Completed: 阶段立项与 M1 协议初稿（`vault/details/cold-start-baseline-2026-09.md`，7 个场景卡 + 指标定义 + 记录表）；M0（TASK-0002 accepted，D-0003）同日完成。
+- In progress: 等待 owner 用无聊天历史的新会话逐场景跑 M1；M2 等 owner 提供第二个真实项目（local 模式）。
+- Failed attempts: 无。
+- Blockers: M1/M2 的执行主动权在 owner（新会话与第二个项目）；无其他阻塞。
+- Next best action: owner 选 5-7 个场景逐个开新会话，按协议记录表逐行填写；跑完汇总后进入 M3 分析。
+- Files to read first: `vault/details/cold-start-baseline-2026-09.md`、`docs/superpowers/plans/2026-09-08-post-release-validation-plan.md`、`vault/tasks/TASK-0004-post-release-validation.md`、`vault/runtime.md`。
+
 ## TASK-0003 - 2026-09-08（已 accepted，保留供下一会话快速入场）
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-agent-native-next-cycle-glm-plan.md` 的 M0-M3（M1 校准 K1-K4、M3 self-hosting CI 门禁；M2 归 TASK-0002；M4 长期观测留在 TASK-0001）。
 - Completed: 全部完成并 accepted。M1 reconciliation 落地（canonical 映射，历史未改写）；M2 复核 latest 仍 2026.09.2；M3 CI 接入只读 self-hosting check（写权限仅限 PR self-heal job）。Review round 1（REQUEST_CHANGES，R1-R6）修复后 round 2 通过（canonical K1-K4 映射与 CI 范围获准）；push `fa2c7f4..7af24cf` 后首跑 run 34181086563 全绿（`gate` job 执行 vault check，`sync` job 正确跳过）；ready_for_review → accepted 转换经 owner 授权并计入 ledger。
 - In progress: 无。
 - Failed attempts: 首轮实现 6 项 review finding（权限暴露、转换漏记、提前勾选、失效风险、K3 误定性、模板残留），均已修复并复核。
-- Blockers: TASK-0002 仍需用户在 GitHub UI 为 `2026.09.3` tag 创建 Release（或提供带 repo 权限的 token）。
-- Next best action: 继续 TASK-0001 的 M4 长期观测（canonical K3/K4 证据仍缺，不因本周期关闭而宣称充分）；Release 创建后 TASK-0002 走 blocked → active → accepted。
+- Blockers: 无（TASK-0002 已于同日 accepted）。
+- Next best action: 进入「09.3 Post-release Validation」阶段（TASK-0004）；TASK-0002 交接已按压缩规则并入其任务文件。
 - Files to read first: `vault/tasks/TASK-0003-review.md`、`vault/details/shadow-run-2026-09.md`（顶部 reconciliation）、`vault/runtime.md`。
-
-## TASK-0002 - 2026-09-04
-
-- Objective: 为既有 `2026.09.3` tag 创建 GitHub Release，使 latest release 解析拿到新版。
-- Completed: K4 policy 已校正为 measurement-only；87/87 tests、Skill 快照同步和提交后的 check 0/0 均通过；commit `1d9d19b` 已推送。用户已创建 **2026.09.2** 的 Release（latest 从 2026.09.0 改善到 2026.09.2），但 2026.09.3 的 Release 仍缺。
-- In progress: Release 创建与 latest 验证。
-- Failed attempts: `gh release create` 未触发远端写入，因为执行环境没有 `gh`；未读取或转存本地凭据。
-- Blockers: 需要为既有 tag `2026.09.3` 创建 Release（notes 已备好在 `/tmp/trellium-2026-09-3-release-notes.md`；注意上次建到了 2026.09.2 tag 上）。
-- Next best action: 打开 `https://github.com/zlin101/trellium/releases/new?tag=2026.09.3`（务必选 2026.09.3 tag），标题 `Trellium 2026.09.3 — Agent-native Vault checks`，粘贴已备好的 notes 并发布；或提供带 repo 权限的 token 由 Agent 经 API 创建。随后验证 `releases/latest` 解析到 2026.09.3，执行 blocked → active → accepted。
-- Files to read first: `vault/tasks/TASK-0002-release-2026-09-3.md`、`vault/runtime.md`、`vault/details/shadow-run-2026-09.md`。
 
 ## TASK-0001 - 2026-09-04
 
