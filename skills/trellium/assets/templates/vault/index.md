@@ -93,5 +93,6 @@ When the user mentions a parked, shelved, or suspended item:
 - Update `handoff.md` when interrupted or handing off.
 - Record parked items in `parked.md` when the user suspends them; promote back to a task file or `runtime.md` when mentioned again.
 - Move long details out of `runtime.md`.
+- For local tasks (`task_storage=local`), remove the `runtime.md` row after close; a runtime row whose local task file is missing is an unverified clue, not authority (see governance.md).
 - Check hot-file budgets when updating them; current limits live in the `trellium-policy` block above.
 - When a budget is exceeded, compact: measure → classify → restructure → verify → record. Semantic judgments (Superseded / Merged / Expired) are proposals only; keep Active until the user confirms.

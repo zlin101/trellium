@@ -130,6 +130,14 @@ Next action:
 
 - C0/W0 基线采集 → W 组实验 → M1。
 
+### 消融预注册（2026-09-09 冻结，先于任何实现）
+
+**W 组（Accepted 知识处置载体）**：三个短任务案例（①产生长期约束；②无长期约束；③错误契约需立即 supersede），按 W2 → W1 → W0 顺序交给无历史 reviewer 会话（GLM 子代理投放，沿用 TASK-0006 先例），判断"能否进入 accepted、关闭前应更新哪里"。每 cell 不得读取本文、scoring 或其他 cell 材料；读到即 contaminated 重跑。记录首答、判断正确性、是否错误阻塞 supersede、材料 bytes、纠正数。Gate：W0 为 baseline，synthetic 平手只能记 Inconclusive，不能 No-Go 流程增强；W1≡W2 取 W1；仅当 W2 修复 W1 真实漏判且不错误阻塞 supersede 才用独立段；任一方案要求复制 TASK 正文或新增状态 owner 即 No-Go。
+
+**C 组（Checker characterization）**：临时 fixture 仓库（synthetic），三层 C0（09.3 现状）→ C1（仅改协议文档）→ C2（协议+最小 local-aware projection）。场景：fresh-clone open local 指针、closed local stale row、tracked dangling pointer，另加 present local open/closed 对照。C0 必须在任何代码修改前记录真实 code/severity/exit。Gate：C0/C1 已不误阻断则 C2 No-Go；C2 必须把 missing open local 收敛为带恢复边界的 warning，同时保持 closed-local error 与 tracked error；任何 tracked finding 降级、missing local 静默忽略即 No-Go。
+
+预注册扩展删除项（不进 cell）：自动扫描 TASK/publish proposal、`trellium-task-memory` schema、新存储层、自动 `.gitignore`/untrack。
+
 ### 2026-09-09 - Agent: GLM (ZCode) — 消融执行与 M1-M4 实施
 
 Context read:
@@ -194,13 +202,35 @@ Next action:
 
 - owner 验收本任务；accepted 后另行发布 2026.09.4 tag/Release（不在本任务范围）。
 
-### 消融预注册（2026-09-09 冻结，先于任何实现）
+### 2026-09-09 - Agent: GLM (ZCode) — owner review round 2（REQUEST_CHANGES）修复
 
-**W 组（Accepted 知识处置载体）**：三个短任务案例（①产生长期约束；②无长期约束；③错误契约需立即 supersede），按 W2 → W1 → W0 顺序交给无历史 reviewer 会话（GLM 子代理投放，沿用 TASK-0006 先例），判断"能否进入 accepted、关闭前应更新哪里"。每 cell 不得读取本文、scoring 或其他 cell 材料；读到即 contaminated 重跑。记录首答、判断正确性、是否错误阻塞 supersede、材料 bytes、纠正数。Gate：W0 为 baseline，synthetic 平手只能记 Inconclusive，不能 No-Go 流程增强；W1≡W2 取 W1；仅当 W2 修复 W1 真实漏判且不错误阻塞 supersede 才用独立段；任一方案要求复制 TASK 正文或新增状态 owner 即 No-Go。
+Context read:
 
-**C 组（Checker characterization）**：临时 fixture 仓库（synthetic），三层 C0（09.3 现状）→ C1（仅改协议文档）→ C2（协议+最小 local-aware projection）。场景：fresh-clone open local 指针、closed local stale row、tracked dangling pointer，另加 present local open/closed 对照。C0 必须在任何代码修改前记录真实 code/severity/exit。Gate：C0/C1 已不误阻断则 C2 No-Go；C2 必须把 missing open local 收敛为带恢复边界的 warning，同时保持 closed-local error 与 tracked error；任何 tracked finding 降级、missing local 静默忽略即 No-Go。
+- owner 五项 finding（R1 W 组裁决违反冻结 Gate、R2 下发模板未完整同步、R3 unittest.main 位置、R4 duplicate row 顺序敏感、R5 vault 记录未闭合事实）。
 
-预注册扩展删除项（不进 cell）：自动扫描 TASK/publish proposal、`trellium-task-memory` schema、新存储层、自动 `.gitignore`/untrack。
+Changes made:
+
+- R1：Case3 复跑（W1/W2 各 3 独立子代理会话，封闭书），完整存档输入/scoring/首答/session id 至 `vault/details/task-0007-w-group-records.md` Case3 复跑节；复跑两载体核心判断无差异、W2 0/3 提及废止类终态 → 按冻结 Gate 保留 W1（实测裁决）。
+- R2：zh/en governance、两套 index、两套 handoff 下发模板补齐 local 语义；新增 `LocalTemplateSemanticsTest` 6 项 rendered-content 断言防再漏。
+- R3：`unittest.main()` 移至文件末尾，直接运行文件与模块运行同为 94 项。
+- R4：duplicate row 只报 `TASK_RUNTIME_DUPLICATE`、跳过 freshness/closed 推断（resolve 入口按 row_counts 短路）；正反顺序验证均仅 DUPLICATE。
+- R5：runtime 矛盾 Recent Changes 行改写；review ledger F2 按 owner 裁认转 fixed（DAG 顺序 + C0 重放脚本存档于 ledger 附录）。
+
+Checks run:
+
+- 全量三模块 99 tests OK（含新增 rendered-content 6 项与 duplicate 顺序 2 例）；`trellium.py check . --format json` → 0 error / 0 warning；`sync-skills.py --check` → in sync；`git diff --check` 通过。
+
+Review and reflection:
+
+- 首轮 Case3 的"W2 胜出"印象在 n=3 复跑中反转（W2 0/3 提及 superseded）——单轮采样的裁决必须按 owner 要求补足重复数，冻结 Gate 的价值正在于此。
+
+Risks:
+
+- 无新增；disposition 仍是人工 gate，真实遗漏 ≥2 次再提机器校验。
+
+Next action:
+
+- 增量 review（owner 指定）→ owner 决定 accepted。
 
 ## Memory Updates
 

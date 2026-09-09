@@ -1667,6 +1667,10 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
     reported_missing_local: set[str] = set()
 
     def resolve(task_id: str, row_status: str | None = None) -> None:
+        if row_counts.get(task_id, 0) > 1:
+            # TASK_RUNTIME_DUPLICATE already covers this task; freshness/closed
+            # inference must not depend on the order of the duplicate rows.
+            return
         matches = by_id.get(task_id)
         if not matches:
             if local_mode:

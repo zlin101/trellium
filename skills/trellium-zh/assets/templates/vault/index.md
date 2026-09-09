@@ -85,5 +85,6 @@
 - 中断或交接时更新 `handoff.md`。
 - 用户挂起任务时在 `parked.md` 记条目；重新提起时升回任务文件或 `runtime.md`。
 - 将长细节移出 `runtime.md`。
+- local 任务（`task_storage=local`）关闭后删除 `runtime.md` 对应行；runtime 指向的 missing local TASK 只是线索，不授予授权（见 governance.md）。
 - 更新热文件时检查预算线；当前上限以上方 `trellium-policy` 策略块为唯一来源。
 - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。

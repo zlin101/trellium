@@ -3,7 +3,9 @@
 Use this only for recent interrupted or transferred work, at most 3 entries.
 Do not use it as a permanent log. Name each entry after its task id, or
 SESSION when there is none. Earlier entries merge into their task files by
-task id during compaction.
+task id during compaction. After a local task (`task_storage=local`)
+closes, remove its `runtime.md` row and compress its related entries here;
+durable conclusions land in canonical files first.
 
 Branch, HEAD, and dirty files are read live from Git at resume time; do not
 record them as authoritative handoff facts. An optional environment snapshot

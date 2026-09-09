@@ -1653,8 +1653,6 @@ class VaultCheckTest(VaultCheckMixin, TargetTestCase):
         )
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class LocalProjectionTest(VaultCheckMixin, TargetTestCase):
@@ -1824,3 +1822,73 @@ class LocalProjectionTest(VaultCheckMixin, TargetTestCase):
         finding = next(f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_LOCAL_UNRESOLVED")
         self.assertEqual(finding["severity"], "warning")
         self.assertEqual(finding["task_id"], "TASK-0001")
+
+
+
+
+class LocalTemplateSemanticsTest(TargetTestCase):
+    """Round-2 R2: the hand-maintained distribution templates must carry the
+    local lifecycle semantics; sync-skills does not validate these files."""
+
+    REPO = Path(__file__).resolve().parent.parent
+
+    def read(self, relative: str) -> str:
+        return (self.REPO / relative).read_text(encoding="utf-8")
+
+    def test_governance_templates_carry_local_disposition_gate(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/vault/governance.md",
+            "skills/trellium/assets/templates/vault/governance.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("Durable Knowledge Disposition", text)
+            self.assertIn("task_storage=local", text)
+            self.assertIn("superseded", text)
+
+    def test_index_templates_carry_local_close_rule(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/vault/index.md",
+            "skills/trellium/assets/templates/vault/index.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("task_storage=local", text)
+            self.assertIn("runtime.md", text)
+
+    def test_handoff_templates_carry_local_close_compression(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/vault/handoff.md",
+            "skills/trellium/assets/templates/vault/handoff.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("task_storage=local", text)
+            self.assertIn("runtime.md", text)
+
+    def test_task_readme_templates_carry_disposition_line(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/vault/tasks/README.md",
+            "skills/trellium/assets/templates/vault/tasks/README.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("Durable knowledge disposition", text)
+            self.assertIn("distilled", text)
+
+    def test_agent_task_templates_carry_disposition_step(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/skills/agent-task/SKILL.md",
+            "skills/trellium/assets/templates/skills/agent-task/SKILL.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("Durable knowledge disposition", text)
+            self.assertIn("pending", text)
+
+    def test_runtime_templates_carry_clone_safe_clue_rule(self) -> None:
+        for relative in (
+            "skills/trellium-zh/assets/templates/vault/runtime.md",
+            "skills/trellium/assets/templates/vault/runtime.md",
+        ):
+            text = self.read(relative)
+            self.assertIn("task_storage=local", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

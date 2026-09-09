@@ -73,6 +73,14 @@ Before closing work:
 
 Tests passing alone is not completion.
 
+For `task_storage=local` tasks, entering `accepted` also requires the
+Durable Knowledge Disposition in Memory Updates (`none — <reason>` or
+`distilled — <canonical destinations>`; an unfilled line counts as `pending`
+and blocks `ready_for_review` and `accepted`). Wrong contracts go to
+`superseded` immediately — the gate never blocks that. After a local task
+closes, remove its `runtime.md` row. Tracked tasks default to
+`not_applicable`.
+
 ## Escalation
 
 Escalate or ask the user when requirements are ambiguous, scope expands, high-impact files are involved, required checks fail, docs conflict with implementation, or user changes conflict with the plan.
