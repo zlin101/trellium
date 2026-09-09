@@ -91,7 +91,7 @@ Completed:
 
 - 2026-09-09 M0 preflight：09.4 Release/Vault 已闭环；`develop==origin/develop`；工作树干净；基线 106/106 tests、check 0/0、snapshot in sync。
 - 2026-09-09 R1 盲测（实现前）：3 份手写 golden（当前仓库 / fixture-mixed / fixture-conflict-local）交 3 个无历史会话只看输出作答五问，3/3 场景全部首答正确、0 纠正、未触发 kill criterion；契约未修改即冻结。
-- 2026-09-09 S0 臂补齐（owner review round 后）：同三场景以现行流程材料（runtime 全文 + 全部状态块）盲测 3 个新无历史会话；双臂逐字首答、材料与评分存 `vault/details/status-blind-test-2026-09.md`。结果：S1 3/3 五问全对、0 纠正、零材料外推断；S0 场景 1 全对，场景 2 closed 计数只能靠材料未定义的推断（状态层不携带 open/closed 分类学），场景 3 把缺失文件任务的 Next Action 记录过度声称可用（1 次纠正）。
+- 2026-09-09 S0 臂补齐（owner review round 后）：同三场景以现行流程材料（runtime 全文 + 全部状态块）盲测 3 个新无历史会话；双臂结果：S1 3/3 五问全对、0 纠正、零材料外推断；S0 场景 1 全对，场景 2 closed 计数只能靠材料未定义的推断（状态层不携带 open/closed 分类学），场景 3 把缺失文件任务的 Next Action 记录过度声称可用（1 次纠正）。原文存档（提示词/首答/golden/材料原字节/运行台账）在 `vault/details/status-blind-test-2026-09/`，索引与评分在 `vault/details/status-blind-test-2026-09.md`。
 - 2026-09-09 M1：S0 基线留档——`vault/runtime.md` 11039 bytes、check JSON 802 bytes（审计基准 `55ae985`，存 `/tmp/check-before.json` 用于逐字节对照）；场景 1 golden 真值 = active{0001,0008}/blocked{0004}/closed 5/focus 0008。
 - 2026-09-09 M2/M3（提交 `4604a0c`）：`status` text/JSON 实现 + 8 项聚焦测试；当前仓库 S1 文本 1149 bytes < 11039 bytes；三场景 S1 输出与手写 golden 逐字节一致（A/B exit 0，C exit 2）；`check --format json` 与变更前逐字节一致；六冻结场景全过，kill criteria 零命中。
 - 2026-09-09 M4（提交 `62c2a0e`）：VERSION 2026.09.5、MIGRATIONS 条目、双语 README status 小节、两包 protocol-model 引用、sync-skills 快照刷新且 `--check` in sync。
@@ -196,6 +196,31 @@ Risks:
 Next action:
 
 - Owner 复核本轮修复；通过后决定 accepted 与 `2026.09.5` tag/Release。
+
+### 2026-09-09 - Agent: GLM — 增量复核闭合（证据原文存档）
+
+Context read:
+
+- Owner 增量审查结论（P1：存档非原文；P2：handoff 残留"修复中"）。
+
+Changes made:
+
+- 原始回答仍在实施会话上下文中，按 owner 的第一选项逐字落盘：新建 `vault/details/status-blind-test-2026-09/`——`prompt-s1-a/b/c.md`、`prompt-s0-a/b/c.md` 六份实际投放提示词（S0 材料段直接从原字节文件拼接）、`answer-s1-a/b/c.md`、`answer-s0-a/b/c.md` 六份未改写完整首答、`golden-scenario1/2/3.txt`（原字节）、`s0-material-scenario1-runtime.md`（`git show 55ae985` 原字节）、`blocks-scenario1/2.txt`（全部状态块全文）、`run-log.md`（六个 agentId、subagent_tokens、tool_uses=0、duration、宿主会话与模型标识说明、污染控制）。
+- 重写 `status-blind-test-2026-09.md` 为索引：移除把摘要标注为"逐字首答"的表述，评分与结论以目录原文为准。
+- handoff 条目改为"三项已处置 + 本轮存档闭合 + 118/118 通过 + 待 owner 复核"。
+
+Checks run:
+
+- `python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` 118/118；`trellium.py check .` 0/0；`sync-skills.py --check` in sync；`git diff --check` 通过；golden B/C 与实现输出仍逐字节一致。
+
+Review and reflection:
+
+- owner 的批评成立：上一版把"要点概括"标成"逐字首答"是不可接受的证据表述；正确顺序是先存原文再评分，本轮已按此补齐且未反向重构任何内容。
+- 子代理模型标识未由运行时返回，已在 run-log 如实标注，不冒充可验证项。
+
+Next action:
+
+- Owner 复核证据原文目录后决定验收与发布。
 
 ## Memory Updates
 

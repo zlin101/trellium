@@ -1,0 +1,68 @@
+=== TASK-0010-draft ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0010",
+  "level": "B",
+  "authority_level": 1,
+  "lifecycle": "draft"
+}
+-->
+=== TASK-0011-active ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0011",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "active",
+  "current_slice": "M2",
+  "gates": {
+    "design": "passed",
+    "launch": "not_authorized"
+  }
+}
+-->
+=== TASK-0012-blocked ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0012",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "blocked",
+  "gates": {
+    "vendor": "blocked"
+  }
+}
+-->
+=== TASK-0013-ready ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0013",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "ready_for_review"
+}
+-->
+=== TASK-0014-accepted ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0014",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0015-superseded ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0015",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "superseded"
+}
+-->

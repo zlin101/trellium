@@ -1,0 +1,22 @@
+trellium status: /tmp/fixture-mixed
+focus: TASK-0013 (resolved)
+summary: 1 draft, 1 active, 1 blocked, 1 ready_for_review, 2 closed, 0 unresolved
+draft (1):
+  TASK-0010 authority=1 path=vault/tasks/TASK-0010-draft.md
+    objective: Draft the onboarding guide rewrite.
+    next: Split the outline into reviewable sections.
+active (1):
+  TASK-0011 authority=2 slice=M2 gates: design=passed, launch=not_authorized path=vault/tasks/TASK-0011-active.md
+    objective: Migrate the exporter to the stable writer API.
+    next: Run the characterization suite after the slice lands.
+blocked (1):
+  TASK-0012 authority=2 gates: vendor=blocked path=vault/tasks/TASK-0012-blocked.md
+    objective: Cut the 3.2 release once the vendor fix lands.
+    next: Blocked on the vendor patch; revisit after upstream merges.
+ready_for_review (1):
+  TASK-0013 authority=3 path=vault/tasks/TASK-0013-ready.md
+    objective: Land the retention policy documentation.
+    next: Owner review of the documented retention rules.
+unresolved: (none)
+findings: none
+result: 0 error(s), 0 warning(s)

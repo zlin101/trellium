@@ -1,0 +1,14 @@
+trellium status: /tmp/fixture-conflict-local
+focus: TASK-0020 (unresolved)
+summary: 0 draft, 0 active, 0 blocked, 0 ready_for_review, 0 closed, 2 unresolved
+draft: (none)
+active: (none)
+blocked: (none)
+ready_for_review: (none)
+unresolved (2):
+  TASK-0020 reason=TASK_RUNTIME_DRIFT path=vault/tasks/TASK-0020-drift.md
+  TASK-0021 reason=TASK_RUNTIME_LOCAL_UNRESOLVED
+findings (2):
+  ERROR   TASK_RUNTIME_DRIFT vault/runtime.md [TASK-0020]: runtime row for TASK-0020 says 'active' but the trellium-task-state block says 'draft'
+  WARNING TASK_RUNTIME_LOCAL_UNRESOLVED vault/runtime.md [TASK-0021]: runtime points to local task TASK-0021, but its file is not in this worktree: this is expected in a fresh clone (local task files are ignored) or the file may have been lost locally; recover the original task file or rebuild the contract with owner approval; the runtime summary is an unverified clue and grants no authority
+result: 1 error(s), 1 warning(s)

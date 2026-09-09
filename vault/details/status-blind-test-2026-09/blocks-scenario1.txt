@@ -1,0 +1,80 @@
+=== TASK-0001-self-hosting-pilot ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0001",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "active"
+}
+-->
+=== TASK-0002-release-2026-09-3 ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0002",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0003-agent-native-next-cycle ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0003",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0004-post-release-validation ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0004",
+  "level": "B",
+  "authority_level": 2,
+  "lifecycle": "blocked"
+}
+-->
+=== TASK-0005-vault-evidence-quality ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0005",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0006-non-context-optimization ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0006",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0007-local-task-lifecycle ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0007",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "accepted"
+}
+-->
+=== TASK-0008-owner-status ===
+<!-- trellium-task-state
+{
+  "schema_version": 1,
+  "task_id": "TASK-0008",
+  "level": "C",
+  "authority_level": 3,
+  "lifecycle": "active"
+}
+-->

@@ -1,0 +1,19 @@
+trellium status: /home/liam/git/trellium
+focus: TASK-0008 (resolved)
+summary: 0 draft, 2 active, 1 blocked, 0 ready_for_review, 5 closed, 0 unresolved
+draft: (none)
+active (2):
+  TASK-0001 authority=2 path=vault/tasks/TASK-0001-self-hosting-pilot.md
+    objective: Run the self-hosting pilot and collect K1-K4 shadow evidence.
+    next: Next Agent continues pilot work; log transitions in `vault/details/shadow-run-2026-09.md`.
+  TASK-0008 authority=3 path=vault/tasks/TASK-0008-owner-status.md
+    objective: Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary.
+    next: Plan/red-team/preregistration frozen; GLM runs the handwritten-output five-question test, then M1-M5 only if it passes.
+blocked (1):
+  TASK-0004 authority=2 path=vault/tasks/TASK-0004-post-release-validation.md
+    objective: Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go.
+    next: M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode.
+ready_for_review: (none)
+unresolved: (none)
+findings: none
+result: 0 error(s), 0 warning(s)

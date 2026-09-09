@@ -9,11 +9,11 @@
 
 - Objective: 在 2026.09.5 交付唯一功能候选：确定性只读 `trellium.py status` summary；实现、消融与独立 review 全部完成后停在 `ready_for_review`，不代 owner accepted、不创建 tag/Release。
 - Completed: Codex M0 预注册（`55ae985`）；GLM 完成实现前手写输出盲测并补齐 S0/S1 双臂消融（原始材料与逐字首答存 `vault/details/status-blind-test-2026-09.md`）；M1-M5 实现（`4604a0c`）、2026.09.5 版本/文档/快照（`62c2a0e`）；内部独立 review 两轮（round 1 P1 修复于 `7e494da`，round 2 APPROVE）。
-- In progress: owner review round 的 3 项 P1 闭合中——①unresolved 原因码改为按 check finding phase 结构化推导（不再伪造 `TASK_RUNTIME_UNRESOLVED`，closed-local/dangling-duplicate 有专项测试）；②S0/S1 消融双臂补齐并存档；③本 handoff 条目同步。代码与记录更新后需复跑全量门禁。
-- Failed Attempts: 无失败尝试；两轮 review 的 P1 均已修复或修复中（见上）。
+- In progress: 无进行中工作；owner review round 的 3 项 P1 已处置（原因码 phase 化 `5a622b5`、消融存档与 handoff 同步 `2acf0af`）；增量复核指出的"存档非逐字原文"一项已在本轮闭合——六份实际提示词、六份完整首答、golden/S0 材料原字节与运行台账（agentId/tool_uses/时长）逐字存入 `vault/details/status-blind-test-2026-09/`。118/118 tests、check 0/0、snapshot in sync、`git diff --check` 通过。
+- Failed Attempts: 无失败尝试；两轮 review 的 P1 均已修复；首轮消融存档因含摘要与省略号被 owner 退回，已按"原文仍在→逐字落盘"路径更正。
 - Blockers: 无外部 blocker。
-- Next Best Action: 复核本轮 P1 修复提交；确认后由 owner 决定 accepted 与 `2026.09.5` tag/Release（D-0003：元数据可选）。不要重新实现——现状是修复与复验，不是从零开始。
-- Files To Read First: `vault/tasks/TASK-0008-owner-status.md`、`vault/details/status-blind-test-2026-09.md`、`docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md`、`scripts/trellium.py`（status 段）、`scripts/test_trellium.py`（StatusSummaryTest）。
+- Next Best Action: owner 复核证据原文目录与修复提交；确认后由 owner 决定 accepted 与 `2026.09.5` tag/Release（D-0003：元数据可选）。不要重新实现——现状是证据复核与验收，不是从零开始。
+- Files To Read First: `vault/details/status-blind-test-2026-09.md`（索引）与 `vault/details/status-blind-test-2026-09/`（原文）、`vault/tasks/TASK-0008-owner-status.md`、`docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md`、`scripts/trellium.py`（status 段）、`scripts/test_trellium.py`（StatusSummaryTest）。
 
 ## TASK-0004 - 2026-09-08
 
