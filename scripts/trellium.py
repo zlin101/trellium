@@ -1351,9 +1351,15 @@ def markdown_section_lines(text: str, title: str) -> list[str]:
     return []
 
 
-def parse_runtime_task_pointers(runtime_text: str) -> tuple[list[tuple[str, str]], list[str], list[tuple[str, str]]]:
-    """Return (task rows, focus pointers, problems) from fixed runtime sections."""
-    rows: list[tuple[str, str]] = []
+def parse_runtime_task_pointers(
+    runtime_text: str,
+) -> tuple[list[tuple[str, str, str, str]], list[str], list[tuple[str, str]]]:
+    """Return (task rows, focus pointers, problems) from fixed runtime sections.
+
+    Task rows carry (task_id, status, objective, next_action); the objective
+    and next_action cells are the runtime projection quoted by `status`.
+    """
+    rows: list[tuple[str, str, str, str]] = []
     focus: list[str] = []
     problems: list[tuple[str, str]] = []
 
@@ -1379,7 +1385,7 @@ def parse_runtime_task_pointers(runtime_text: str) -> tuple[list[tuple[str, str]
         if TASK_ID_RE.match(cells[0]) is None:
             problems.append(("invalid", f"malformed task id in Active Tasks row: {cells[0]}"))
             continue
-        rows.append((cells[0], cells[2]))
+        rows.append((cells[0], cells[2], cells[1], cells[3]))
     return rows, focus, problems
 
 
@@ -1557,7 +1563,7 @@ def discover_task_files(run: VaultCheckRun) -> tuple[list[dict], list[str], list
             if REVIEW_LEDGER_RE.match(entry.name):
                 ledgers.append(relative)
             elif TASK_FILE_ID_RE.match(entry.name) and entry.name.endswith(".md"):
-                current.append({"path": relative, "task_id": TASK_FILE_ID_RE.match(entry.name).group(1), "lifecycle": None, "legacy": False, "valid": False})
+                current.append({"path": relative, "task_id": TASK_FILE_ID_RE.match(entry.name).group(1), "lifecycle": None, "legacy": False, "valid": False, "state": None})
             continue
         if REVIEW_LEDGER_RE.match(entry.name):
             ledgers.append(relative)
@@ -1582,12 +1588,12 @@ def discover_task_files(run: VaultCheckRun) -> tuple[list[dict], list[str], list
                 "legacy task file without a trellium-task-state block; lifecycle is unresolved",
                 task_id=match.group(1),
             )
-            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": True, "valid": False})
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": True, "valid": False, "state": None})
             continue
         if failures:
             for code, message in failures:
                 run.add("task-state", code, "error", relative, message, task_id=match.group(1))
-            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False})
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False, "state": None})
             continue
         if state["task_id"] != match.group(1):
             run.add(
@@ -1598,9 +1604,9 @@ def discover_task_files(run: VaultCheckRun) -> tuple[list[dict], list[str], list
                 f"trellium-task-state task_id {state['task_id']!r} does not match the file name prefix {match.group(1)}",
                 task_id=match.group(1),
             )
-            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False})
+            current.append({"path": relative, "task_id": match.group(1), "lifecycle": None, "legacy": False, "valid": False, "state": None})
             continue
-        current.append({"path": relative, "task_id": match.group(1), "lifecycle": state["lifecycle"], "legacy": False, "valid": True})
+        current.append({"path": relative, "task_id": match.group(1), "lifecycle": state["lifecycle"], "legacy": False, "valid": True, "state": state})
 
     archive_dir = tasks_dir / "archive"
     if archive_dir.is_symlink():
@@ -1709,7 +1715,7 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
         run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", detail)
 
     row_counts: dict[str, int] = {}
-    for task_id, _status in rows:
+    for task_id, _status, _objective, _next_action in rows:
         row_counts[task_id] = row_counts.get(task_id, 0) + 1
     for task_id, count in row_counts.items():
         if count > 1:
@@ -1736,7 +1742,7 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
                 task_id=task["task_id"],
             )
 
-    for task_id, status in rows:
+    for task_id, status, _objective, _next_action in rows:
         resolve(task_id, status)
         matches = by_id.get(task_id) or []
         task = matches[0] if matches else None
@@ -1940,11 +1946,12 @@ def task_id_of(relative: str) -> str | None:
     return match.group(1) if match else None
 
 
-def run_vault_checks(target: Path) -> VaultCheckRun:
+def collect_vault_state(target: Path) -> tuple[VaultCheckRun, dict[str, str], list[dict]]:
+    """Run all read-only vault checks and also return inputs and task records."""
     run = VaultCheckRun(target)
     if (target / "vault").is_symlink():
         run.add("required-files", "SYMLINK_INPUT", "error", "vault", "vault/ is a symbolic link; refusing to follow it")
-        return run
+        return run, {}, []
     texts = check_required_files(run)
     policy = check_policy_block(run, texts.get("vault/index.md"))
     tasks, ledgers, archive = discover_task_files(run)
@@ -1953,7 +1960,11 @@ def run_vault_checks(target: Path) -> VaultCheckRun:
     check_budgets(run, policy)
     check_task_budget(run, policy, tasks, ledgers, archive)
     check_task_storage(run, policy, tasks, ledgers, archive)
-    return run
+    return run, texts, tasks
+
+
+def run_vault_checks(target: Path) -> VaultCheckRun:
+    return collect_vault_state(target)[0]
 
 
 def render_check_text(run: VaultCheckRun) -> None:
@@ -1998,6 +2009,253 @@ def check_project(args: argparse.Namespace) -> int:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         render_check_text(run)
+    return CHECK_ERROR_EXIT if run.errors else 0
+
+
+
+# --- Vault status (read-only) -----------------------------------------------
+#
+# `status` compiles the same checked state layer as `check` into an owner
+# summary: focus, open-task classification, closed counts, and explicit
+# unresolved entries. It adds no facts and claims no authority: lifecycle and
+# authority come only from validated task state blocks, runtime rows only
+# contribute their objective/Next Action projection, and anything else is
+# reported as unresolved with the blocking finding codes. Closed tasks appear
+# as counts only. Like `check`, it never writes, never follows symlinks into
+# vault inputs, and never executes content.
+
+STATUS_OPEN_LIFECYCLES = ("draft", "active", "blocked", "ready_for_review")
+CLOSED_LIFECYCLES = frozenset({"accepted", "superseded"})
+
+# Finding codes that make a task's lifecycle undeterminable. Runtime rows are
+# projections: a drifted row demotes the task to unresolved instead of letting
+# either side win, while storage and budget findings never demote a lifecycle
+# that the state block owns.
+STATUS_UNRESOLVED_CODES = frozenset({
+    "FILE_UNREADABLE",
+    "SYMLINK_INPUT",
+    "TASK_ID_DUPLICATE",
+    "TASK_ID_MISMATCH",
+    "TASK_RUNTIME_DRIFT",
+    "TASK_RUNTIME_LOCAL_UNRESOLVED",
+    "TASK_RUNTIME_MISSING",
+    "TASK_RUNTIME_UNRESOLVED",
+    "TASK_STATE_DUPLICATE",
+    "TASK_STATE_INVALID",
+    "TASK_STATE_MISSING",
+})
+
+
+def status_unresolved_reasons(findings: list[dict]) -> dict[str, list[str]]:
+    """Map task ids to ordered unique finding codes that block classification."""
+    reasons: dict[str, list[str]] = {}
+    for finding in findings:
+        code = finding["code"]
+        if code not in STATUS_UNRESOLVED_CODES:
+            continue
+        task_id = finding.get("task_id")
+        if task_id is None:
+            match = TASK_FILE_ID_RE.match(Path(finding["path"]).name)
+            task_id = match.group(1) if match else None
+        if task_id is None:
+            continue
+        codes = reasons.setdefault(task_id, [])
+        if code not in codes:
+            codes.append(code)
+    return reasons
+
+
+def build_status_payload(
+    target: Path,
+    run: VaultCheckRun,
+    texts: dict[str, str],
+    tasks: list[dict],
+) -> dict:
+    findings = run.sorted_findings()
+    runtime_text = texts.get("vault/runtime.md")
+    rows: list[tuple[str, str, str, str]] = []
+    focus_ids: list[str] = []
+    if runtime_text is not None:
+        rows, focus_ids, _problems = parse_runtime_task_pointers(runtime_text)
+
+    # One projection per task: duplicated or enum-invalid rows cannot quote a
+    # trustworthy Next Action, so their tasks lose the projection but keep the
+    # lifecycle owned by their state block.
+    invalid_row_ids = {
+        finding["task_id"]
+        for finding in findings
+        if finding["code"] == "TASK_RUNTIME_INVALID" and "task_id" in finding
+    }
+    row_counts: dict[str, int] = {}
+    projections: dict[str, dict] = {}
+    for task_id, _status, objective, next_action in rows:
+        row_counts[task_id] = row_counts.get(task_id, 0) + 1
+        if row_counts[task_id] == 1 and task_id not in invalid_row_ids:
+            projections[task_id] = {"objective": objective, "next_action": next_action}
+        elif task_id in projections:
+            del projections[task_id]
+
+    reasons = status_unresolved_reasons(findings)
+    open_buckets: dict[str, list[dict]] = {lifecycle: [] for lifecycle in STATUS_OPEN_LIFECYCLES}
+    unresolved: list[dict] = []
+    unresolved_ids: set[str] = set()
+    resolved_ids: set[str] = set()
+    closed = 0
+
+    def unresolved_entry(task_id: str, path: str | None) -> dict:
+        entry: dict = {
+            "task_id": task_id,
+            "reason": ",".join(reasons.get(task_id) or ["TASK_RUNTIME_UNRESOLVED"]),
+        }
+        if path is not None:
+            entry["task_path"] = path
+        return entry
+
+    for task in tasks:
+        task_id = task["task_id"]
+        drifted = "TASK_RUNTIME_DRIFT" in reasons.get(task_id, [])
+        if not task["valid"] or drifted:
+            if task_id not in unresolved_ids:
+                unresolved_ids.add(task_id)
+                # A duplicated id spans several files; the findings list keeps
+                # every path, so the entry stays pathless instead of picking one.
+                ambiguous = "TASK_ID_DUPLICATE" in reasons.get(task_id, [])
+                unresolved.append(unresolved_entry(task_id, None if ambiguous else task["path"]))
+            continue
+        resolved_ids.add(task_id)
+        if task["lifecycle"] in CLOSED_LIFECYCLES:
+            closed += 1
+            continue
+        state = task["state"]
+        item: dict = {
+            "task_id": task_id,
+            "lifecycle": task["lifecycle"],
+            "authority_level": state["authority_level"],
+            "task_path": task["path"],
+        }
+        if "current_slice" in state:
+            item["current_slice"] = state["current_slice"]
+        if "gates" in state:
+            item["gates"] = state["gates"]
+        if task_id in projections:
+            item["runtime_projection"] = projections[task_id]
+        open_buckets[task["lifecycle"]].append(item)
+
+    # Runtime rows and focus pointers that resolve to no classified task stay
+    # visible as unresolved without inventing lifecycle or authority.
+    for task_id in row_counts:
+        if task_id in resolved_ids or task_id in unresolved_ids:
+            continue
+        unresolved_ids.add(task_id)
+        unresolved.append(unresolved_entry(task_id, None))
+    for task_id in focus_ids:
+        if task_id in resolved_ids or task_id in unresolved_ids:
+            continue
+        unresolved_ids.add(task_id)
+        unresolved.append(unresolved_entry(task_id, None))
+    unresolved.sort(key=lambda entry: entry["task_id"])
+
+    return {
+        "schema_version": 1,
+        "target": str(target),
+        "focus": [
+            {"task_id": task_id, "resolved": task_id in resolved_ids}
+            for task_id in focus_ids
+        ],
+        "summary": {
+            "draft": len(open_buckets["draft"]),
+            "active": len(open_buckets["active"]),
+            "blocked": len(open_buckets["blocked"]),
+            "ready_for_review": len(open_buckets["ready_for_review"]),
+            "closed": closed,
+            "unresolved": len(unresolved),
+        },
+        "tasks": {
+            "ready_for_review": open_buckets["ready_for_review"],
+            "blocked": open_buckets["blocked"],
+            "active": open_buckets["active"],
+            "draft": open_buckets["draft"],
+            "unresolved": unresolved,
+        },
+        "findings": findings,
+    }
+
+
+def render_status_text(payload: dict) -> None:
+    print(f"trellium status: {payload['target']}")
+    if payload["focus"]:
+        focus_cells = [
+            f"{item['task_id']} ({'resolved' if item['resolved'] else 'unresolved'})"
+            for item in payload["focus"]
+        ]
+        print(f"focus: {', '.join(focus_cells)}")
+    else:
+        print("focus: (none)")
+    summary = payload["summary"]
+    print(
+        "summary: {draft} draft, {active} active, {blocked} blocked, "
+        "{ready_for_review} ready_for_review, {closed} closed, {unresolved} unresolved".format(**summary)
+    )
+    for lifecycle in STATUS_OPEN_LIFECYCLES:
+        items = payload["tasks"][lifecycle]
+        if not items:
+            print(f"{lifecycle}: (none)")
+            continue
+        print(f"{lifecycle} ({len(items)}):")
+        for item in items:
+            head = f"  {item['task_id']} authority={item['authority_level']}"
+            if "current_slice" in item:
+                head += f" slice={item['current_slice']}"
+            if "gates" in item:
+                gates = ", ".join(f"{gate}={value}" for gate, value in sorted(item["gates"].items()))
+                head += f" gates: {gates}"
+            head += f" path={item['task_path']}"
+            print(head)
+            projection = item.get("runtime_projection")
+            if projection is not None:
+                if projection["objective"]:
+                    print(f"    objective: {projection['objective']}")
+                if projection["next_action"]:
+                    print(f"    next: {projection['next_action']}")
+    unresolved = payload["tasks"]["unresolved"]
+    if not unresolved:
+        print("unresolved: (none)")
+    else:
+        print(f"unresolved ({len(unresolved)}):")
+        for item in unresolved:
+            line = f"  {item['task_id']} reason={item['reason']}"
+            if "task_path" in item:
+                line += f" path={item['task_path']}"
+            print(line)
+    findings = payload["findings"]
+    if not findings:
+        print("findings: none")
+    else:
+        print(f"findings ({len(findings)}):")
+        for finding in findings:
+            task_suffix = f" [{finding['task_id']}]" if "task_id" in finding else ""
+            print(f"  {finding['severity'].upper():<7} {finding['code']} {finding['path']}{task_suffix}: {finding['message']}")
+    errors = sum(1 for finding in findings if finding["severity"] == "error")
+    warnings = sum(1 for finding in findings if finding["severity"] == "warning")
+    print(f"result: {errors} error(s), {warnings} warning(s)")
+
+
+def status_project(args: argparse.Namespace) -> int:
+    try:
+        target = resolve_existing_target(args.target)
+    except (AdoptionError, OSError) as exc:
+        return fail(str(exc))
+    if args.format not in ("text", "json"):
+        return fail(f"unknown format: {args.format} (expected text or json)")
+    if not (target / "vault").is_dir():
+        return fail(f"target has no vault/ directory; run 'adopt' first: {target}")
+
+    run, texts, tasks = collect_vault_state(target)
+    payload = build_status_payload(target, run, texts, tasks)
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        render_status_text(payload)
     return CHECK_ERROR_EXIT if run.errors else 0
 
 
@@ -2751,6 +3009,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="output format: text or json (default: text)",
     )
     check.set_defaults(func=check_project)
+
+    status = subparsers.add_parser(
+        "status",
+        help="read-only owner summary: focus, open-task classification, closed counts, and unresolved pointers",
+    )
+    status.add_argument("target", nargs="?", default=".", help="target project directory")
+    status.add_argument(
+        "--format",
+        default="text",
+        help="output format: text or json (default: text)",
+    )
+    status.set_defaults(func=status_project)
 
     return parser
 

@@ -1841,6 +1841,255 @@ class LocalProjectionTest(VaultCheckMixin, TargetTestCase):
 
 
 
+class StatusSummaryTest(VaultCheckMixin, TargetTestCase):
+    """Frozen 2026.09.5 contract: read-only status summary (TASK-0008)."""
+
+    def status(self, target: Path, *extra: str) -> tuple[int, str, str]:
+        return self.run_agent_init("status", str(target), *extra)
+
+    def status_json(self, target: Path) -> tuple[int, dict, str]:
+        code, out, err = self.status(target, "--format", "json")
+        return code, json.loads(out), err
+
+    def mixed_fixture(self, **kwargs) -> Path:
+        files = {
+            "vault/tasks/TASK-0010-draft.md": "# TASK-0010 - Draft\n\n" + state_block(valid_state(task_id="TASK-0010", level="B", authority_level=1)) + "\n",
+            "vault/tasks/TASK-0011-active.md": "# TASK-0011 - Active\n\n" + state_block(valid_state(
+                task_id="TASK-0011", lifecycle="active", authority_level=2,
+                current_slice="M2", gates={"design": "passed", "launch": "not_authorized"},
+            )) + "\n",
+            "vault/tasks/TASK-0012-blocked.md": "# TASK-0012 - Blocked\n\n" + state_block(valid_state(
+                task_id="TASK-0012", lifecycle="blocked", gates={"vendor": "blocked"},
+            )) + "\n",
+            "vault/tasks/TASK-0013-ready.md": "# TASK-0013 - Ready\n\n" + state_block(valid_state(
+                task_id="TASK-0013", level="C", lifecycle="ready_for_review", authority_level=3,
+            )) + "\n",
+            "vault/tasks/TASK-0014-accepted.md": "# TASK-0014 - Accepted\n\n" + state_block(valid_state(
+                task_id="TASK-0014", lifecycle="accepted",
+            )) + "\n",
+            "vault/tasks/TASK-0015-superseded.md": "# TASK-0015 - Superseded\n\n" + state_block(valid_state(
+                task_id="TASK-0015", lifecycle="superseded",
+            )) + "\n",
+        }
+        runtime = build_runtime(
+            rows=(
+                ("TASK-0010", "draft", "obj"),
+                ("TASK-0011", "active", "obj"),
+                ("TASK-0012", "blocked", "obj"),
+                ("TASK-0013", "ready_for_review", "obj"),
+            ),
+            focus="TASK-0013",
+        )
+        return self.make_project(files=files, runtime=runtime, **kwargs)
+
+    def test_mixed_fixture_classifies_and_keeps_contract(self) -> None:
+        target = self.mixed_fixture()
+
+        code, out, err = self.status(target)
+        self.assertEqual(code, 0, err)
+        self.assertIn("focus: TASK-0013 (resolved)", out)
+        self.assertIn(
+            "summary: 1 draft, 1 active, 1 blocked, 1 ready_for_review, 2 closed, 0 unresolved", out
+        )
+        self.assertIn(
+            "  TASK-0011 authority=2 slice=M2 gates: design=passed, launch=not_authorized"
+            " path=vault/tasks/TASK-0011-active.md",
+            out,
+        )
+        self.assertIn("    next: next action", out)
+        # Closed tasks are counts only: they never reach action lists.
+        self.assertNotIn("TASK-0014", out)
+        self.assertNotIn("TASK-0015", out)
+
+        exit_json, payload, err = self.status_json(target)
+        self.assertEqual(exit_json, 0, err)
+        self.assertEqual(
+            set(payload), {"schema_version", "target", "focus", "summary", "tasks", "findings"}
+        )
+        self.assertEqual(
+            set(payload["tasks"]),
+            {"ready_for_review", "blocked", "active", "draft", "unresolved"},
+        )
+        self.assertEqual(payload["summary"], {
+            "draft": 1, "active": 1, "blocked": 1, "ready_for_review": 1, "closed": 2, "unresolved": 0,
+        })
+        self.assertEqual(payload["focus"], [{"task_id": "TASK-0013", "resolved": True}])
+        self.assertEqual(
+            [item["task_id"] for item in payload["tasks"]["ready_for_review"]], ["TASK-0013"]
+        )
+        active = payload["tasks"]["active"][0]
+        self.assertEqual(
+            set(active),
+            {"task_id", "lifecycle", "authority_level", "task_path", "current_slice", "gates", "runtime_projection"},
+        )
+        self.assertEqual(active["lifecycle"], "active")
+        self.assertEqual(active["authority_level"], 2)
+        self.assertEqual(active["gates"], {"design": "passed", "launch": "not_authorized"})
+        self.assertEqual(active["runtime_projection"], {"objective": "one-line objective", "next_action": "next action"})
+        self.assertEqual(
+            [item["task_id"] for bucket in ("draft", "active", "blocked", "ready_for_review") for item in payload["tasks"][bucket]],
+            ["TASK-0010", "TASK-0011", "TASK-0012", "TASK-0013"],
+        )
+
+    def test_missing_runtime_row_keeps_block_lifecycle_without_projection(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-open.md": "# TASK-0001 - Open\n\n" + state_block(valid_state(lifecycle="active")) + "\n"},
+        )
+
+        code, payload, err = self.status_json(target)
+
+        self.assertEqual(code, 2, err)
+        self.assertEqual([item["task_id"] for item in payload["tasks"]["active"]], ["TASK-0001"])
+        self.assertNotIn("runtime_projection", payload["tasks"]["active"][0])
+        self.assertEqual(payload["tasks"]["unresolved"], [])
+        self.assertIn("TASK_PROJECTION_MISSING", self.codes({"findings": payload["findings"]}))
+
+    def test_drifted_task_is_unresolved_without_lifecycle_claims(self) -> None:
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="draft")) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),), focus="TASK-0001"),
+        )
+
+        code, payload, err = self.status_json(target)
+
+        self.assertEqual(code, 2, err)
+        self.assertEqual(payload["tasks"]["draft"], [])
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual(len(unresolved), 1)
+        self.assertEqual(unresolved[0]["task_id"], "TASK-0001")
+        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_DRIFT")
+        self.assertEqual(unresolved[0]["task_path"], "vault/tasks/TASK-0001-a.md")
+        self.assertNotIn("lifecycle", unresolved[0])
+        self.assertNotIn("authority_level", unresolved[0])
+        self.assertNotIn("runtime_projection", unresolved[0])
+        self.assertEqual(payload["focus"], [{"task_id": "TASK-0001", "resolved": False}])
+        self.assertEqual(
+            payload["summary"],
+            {"draft": 0, "active": 0, "blocked": 0, "ready_for_review": 0, "closed": 0, "unresolved": 1},
+        )
+        code, out, _err = self.status(target)
+        self.assertEqual(code, 2)
+        self.assertIn("  TASK-0001 reason=TASK_RUNTIME_DRIFT path=vault/tasks/TASK-0001-a.md", out)
+        self.assertNotIn("authority=", out)
+
+    def test_local_missing_task_is_unresolved_warning_without_invention(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),), focus="TASK-0001"),
+        )
+
+        code, payload, err = self.status_json(target)
+
+        self.assertEqual(code, 0, err)
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0001"])
+        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_LOCAL_UNRESOLVED")
+        self.assertNotIn("task_path", unresolved[0])
+        self.assertNotIn("lifecycle", unresolved[0])
+        self.assertNotIn("authority_level", unresolved[0])
+        self.assertEqual(payload["focus"], [{"task_id": "TASK-0001", "resolved": False}])
+
+    def test_fail_closed_inputs_stay_unresolved(self) -> None:
+        invalid = self.make_project(
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(valid_state(lifecycle="onfire")) + "\n"},
+        )
+        code, payload, _err = self.status_json(invalid)
+        self.assertEqual(code, 2)
+        self.assertEqual(payload["tasks"]["unresolved"][0]["reason"], "TASK_STATE_INVALID")
+        self.assertEqual(payload["tasks"]["draft"], [])
+
+        block = state_block(valid_state())
+        duplicate = self.make_project(
+            files={
+                "vault/tasks/TASK-0001-a.md": f"# TASK-0001 - A\n\n{block}\n",
+                "vault/tasks/TASK-0001-b.md": f"# TASK-0001 - B\n\n{block}\n",
+            },
+        )
+        code, payload, _err = self.status_json(duplicate)
+        self.assertEqual(code, 2)
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0001"])
+        self.assertEqual(unresolved[0]["reason"], "TASK_ID_DUPLICATE")
+        self.assertNotIn("task_path", unresolved[0])
+
+        outside = self.root / "outside-status"
+        outside.mkdir()
+        (outside / "secret.md").write_text("OUTSIDE-STATUS-SECRET\n", encoding="utf-8")
+        symlinked = self.make_project()
+        (symlinked / "vault/tasks/TASK-0002-link.md").symlink_to(outside / "secret.md")
+        code, payload, _err = self.status_json(symlinked)
+        self.assertEqual(code, 2)
+        self.assertEqual(payload["tasks"]["unresolved"][0]["reason"], "SYMLINK_INPUT")
+        code, out, _err = self.status(symlinked)
+        self.assertNotIn("OUTSIDE-STATUS-SECRET", out)
+
+    def test_broken_projection_rows_drop_next_action_but_not_lifecycle(self) -> None:
+        files = {"vault/tasks/TASK-0001-a.md": "# TASK-0001 - A\n\n" + state_block(valid_state(lifecycle="active")) + "\n"}
+        duplicate_rows = self.make_project(
+            files=files,
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"), ("TASK-0001", "active", "obj2"))),
+        )
+        code, payload, _err = self.status_json(duplicate_rows)
+        self.assertEqual(code, 2)
+        self.assertEqual([item["task_id"] for item in payload["tasks"]["active"]], ["TASK-0001"])
+        self.assertNotIn("runtime_projection", payload["tasks"]["active"][0])
+        self.assertEqual(payload["tasks"]["unresolved"], [])
+
+        invalid_status = self.make_project(
+            files=dict(files),
+            runtime=build_runtime(rows=(("TASK-0001", "onfire", "obj"),)),
+        )
+        code, payload, _err = self.status_json(invalid_status)
+        self.assertEqual(code, 2)
+        self.assertEqual([item["task_id"] for item in payload["tasks"]["active"]], ["TASK-0001"])
+        self.assertNotIn("runtime_projection", payload["tasks"]["active"][0])
+
+        dangling_duplicate = self.make_project(
+            runtime=build_runtime(rows=(("TASK-0042", "active", "obj"), ("TASK-0042", "active", "obj2"))),
+        )
+        code, payload, _err = self.status_json(dangling_duplicate)
+        self.assertEqual(code, 2)
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0042"])
+        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_UNRESOLVED")
+        self.assertNotIn("task_path", unresolved[0])
+
+    def test_status_is_read_only_and_deterministic(self) -> None:
+        target = self.mixed_fixture()
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-qm", "base")
+        before_snapshot = self.snapshot(target)
+        before_status = self.git(target, "status", "--porcelain").stdout
+
+        outputs = []
+        for _ in range(3):
+            code, out, _err = self.status(target)
+            self.assertEqual(code, 0)
+            outputs.append(out)
+
+        self.assertEqual(outputs[0], outputs[1])
+        self.assertEqual(outputs[1], outputs[2])
+        self.assertEqual(before_snapshot, self.snapshot(target))
+        self.assertEqual(before_status, self.git(target, "status", "--porcelain").stdout)
+
+    def test_status_requires_target_vault_and_known_format(self) -> None:
+        code, _, err = self.status(self.root / "missing")
+        self.assertEqual(code, 1)
+        self.assertIn("existing directory", err)
+
+        empty = self.root / "empty"
+        empty.mkdir()
+        code, _, err = self.status(empty)
+        self.assertEqual(code, 1)
+        self.assertIn("vault", err)
+
+        target = self.make_project()
+        code, _, err = self.status(target, "--format", "yaml")
+        self.assertEqual(code, 1)
+        self.assertIn("format", err)
+
+
 class LocalTemplateSemanticsTest(TargetTestCase):
     """Round-2 R2: the hand-maintained distribution templates must carry the
     local lifecycle semantics; sync-skills does not validate these files."""
