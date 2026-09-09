@@ -46,6 +46,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Owner approved the local TASK lifecycle direction; the GLM contract at `docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md` passed final plan review after R1-R6 fixes (real test command, supersede safety, tracked N/A, full distribution surface, executable ablation, explicit dirty handoff). No 09.4 implementation has started.
 - Owner formally accepted TASK-0005 and TASK-0006 (2026-09-09); TASK-0006 conclusions strictly scoped: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle, direction not falsified; D-0004 unchanged, no Evidence Receipt decision added, M3-M6 not reopened. Focus back to TASK-0001.
 - Owner review round 2 (REQUEST_CHANGES) on TASK-0005/0006: six findings fixed — TASK-0005 final gate closed; 12 raw first answers archived; M2 conclusions narrowed (E2 No-Go, E1 Inconclusive, v0 not implemented this cycle, direction not falsified); unsafe untracked golden split; 20 KB threshold removed; D-0004 reconsider_when draft rejected (D0 sufficient).
 
