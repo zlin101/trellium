@@ -212,13 +212,13 @@ Changes made:
 
 - R1：Case3 复跑（W1/W2 各 3 独立子代理会话，封闭书），完整存档输入/scoring/首答/session id 至 `vault/details/task-0007-w-group-records.md` Case3 复跑节；复跑两载体核心判断无差异、W2 0/3 提及废止类终态 → 按冻结 Gate 保留 W1（实测裁决）。
 - R2：zh/en governance、两套 index、两套 handoff 下发模板补齐 local 语义；新增 `LocalTemplateSemanticsTest` 6 项 rendered-content 断言防再漏。
-- R3：`unittest.main()` 移至文件末尾，直接运行文件与模块运行同为 94 项。
+- R3：`unittest.main()` 移至文件末尾；修正后直接运行 95 项、三模块 106 项。
 - R4：duplicate row 只报 `TASK_RUNTIME_DUPLICATE`、跳过 freshness/closed 推断（resolve 入口按 row_counts 短路）；正反顺序验证均仅 DUPLICATE。
 - R5：runtime 矛盾 Recent Changes 行改写；review ledger F2 按 owner 裁认转 fixed（DAG 顺序 + C0 重放脚本存档于 ledger 附录）。
 
 Checks run:
 
-- 全量三模块 99 tests OK（含新增 rendered-content 6 项与 duplicate 顺序 2 例）；`trellium.py check . --format json` → 0 error / 0 warning；`sync-skills.py --check` → in sync；`git diff --check` 通过。
+- 全量三模块 106 tests OK（含新增 rendered-content 6 项与 duplicate 顺序 2 例；直接运行 95 项）；`trellium.py check . --format json` → 0 error / 0 warning；`sync-skills.py --check` → in sync；`git diff --check` 通过。
 
 Review and reflection:
 

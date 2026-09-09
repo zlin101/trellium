@@ -22,7 +22,7 @@ R1 已修复；F3 已修复；F2 经 owner round-2 裁认转为 fixed（见下�
 
 - R1 · fixed · W 组裁决违反冻结 Gate（Case3 n=1、归档不全即声称 W1≡W2）· 仅 Case3 复跑：W1/W2 各 3 个独立会话，完整存档输入/scoring/首答/session id（`vault/details/task-0007-w-group-records.md` Case3 复跑节）；复跑结果两载体核心判断无差异、W2 0/3 提及废止类终态 → 按冻结 Gate 保留 W1，实测裁决非事后解释
 - R2 · fixed · 下发模板未完整同步（zh/en governance、两套 index、两套 handoff 缺 local 语义；sync --check 不校验人工模板）· 六套模板全部补齐；新增 `LocalTemplateSemanticsTest` rendered-content 测试（6 项断言防再漏）
-- R3 · fixed · `unittest.main()` 位于 LocalProjectionTest 之前，直接运行文件漏掉新增测试 · 已移至文件末尾；直接运行与模块运行均为 94 项
+- R3 · fixed · `unittest.main()` 位于 LocalProjectionTest 之前，直接运行文件漏掉新增测试 · 已移至文件末尾；修正后直接运行 95 项、三模块 106 项（含 R4 顺序测试追加后的最终口径）
 - R4 · fixed · duplicate row 的 freshness/closed 分类依赖行顺序 · 重复 TASK 现只报 `TASK_RUNTIME_DUPLICATE`、跳过 freshness/closed 推断（scripts/trellium.py resolve 入口）；正反顺序测试通过（均仅 DUPLICATE）
 - R5 · fixed · runtime Recent Changes 新旧矛盾行；F2 状态非标准 · 矛盾行已改写为当前事实；F2 经 owner 裁认（DAG 顺序 + C0 可重放）转 fixed，重放脚本如下
 

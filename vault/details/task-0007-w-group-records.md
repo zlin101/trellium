@@ -59,7 +59,7 @@
 
 ### 输入与评分（完整存档）
 
-- 输入 = 固定 reviewer 三问 + Case3 TASK 片段（W1 版 / W2 版，全文见上方"原始首答存档"节内嵌的片段；W1 版 Memory Updates 含 disposition 单行，W2 版文末含独立 Disposition 段——两个片段唯一差异即该载体，其余逐字相同）。
+- 输入 = 固定 reviewer 三问 + Case3 TASK 片段（W1 版 / W2 版）；两者全文逐字存档于下方「Case3 复跑输入存档」，唯一差异为 disposition 载体（W1 单行 vs W2 独立段），其余逐字相同。
 - Case3 scoring（预注册于 TASK-0007 Execution Record）：正确 = 不能以"迁移完成"进入 accepted；错误/过期契约应走 `superseded` 立即废止，disposition 不阻塞废止（未处置事项显式转交）。错误模式 = 把 disposition 门禁当作必须先完成蒸馏才能关闭错误契约的阻塞项而不提废止路径；或以"迁移完成"口径 accepted。
 - Session ids：W2 r1 `agent_c95059b4-29c4-442c-83ee-3442de31eebb`、r2 `agent_2ac241a5-88ef-46d4-9785-92ce3bde6679`、r3 `agent_95145e7a-f295-4469-90b3-8346a73f4135`；W1 r1 `agent_267e9cff-acd5-476e-a145-d37fb2b6afde`、r2 `agent_7edbd0dd-7c41-4c6b-ad0c-e0b873520f64`、r3 `agent_b7d3711b-634f-46d1-8979-3b4a6eaa0d58`。
 
@@ -76,6 +76,60 @@
 **W1-r2**：`不能（按当前状态）：契约前提已失效 + disposition 门未满足。走"关闭为已否决/取消"路径：改写任务契约以反映真实结局、disposition 选 distilled — vault/decisions.md（否决决策是长期知识，不蒸馏会丢失、日后可能被重复提议）、更新 runtime。**若项目治理中存在独立的 cancelled/superseded 终态而非经 accepted 关闭，则应改走该状态**，但蒸馏与契约修订步骤在任何路径下都必须完成。`
 
 **W1-r3**：`不能按"目标已达成"进入 accepted：契约前提已失效 + disposition 硬性门未满足。正确终态是取消/作废（dropped/cancelled）而非验收通过。须填 distilled — vault/decisions.md（否决理由本身是耐久知识）、decisions.md 写入长期决策、runtime 更新、任务文件标注终态为"取消/前提失效、工作未开始"。若本治理模型中 accepted 是唯一终态（含关闭作废任务），则只能以"作废关闭"的口径进入。`
+
+### Case3 复跑输入存档（逐字）
+
+固定三问提示词（包装段，两 cell 相同）：
+
+```text
+你是 reviewer。以下是一个 local 任务（task_storage=local，任务文件不进 Git）的片段。请回答三个问题：1) 该任务现在能否进入 accepted？2) 若能，进入 accepted 前必须更新哪些文件或内容？3) 若不能，应该做什么？只依据给定片段判断，不要读取任何仓库文件。
+```
+
+W1 版片段（三问之后粘贴）：
+
+```text
+# TASK-0103 - 数据库迁移 MongoDB（local）
+
+task_storage=local。
+
+## 背景
+目标：把项目数据库从 PostgreSQL 迁移到 MongoDB。
+
+## 备注
+Owner 已在方案评审中明确否决了 MongoDB 方向（团队只有 PostgreSQL 运维经验，迁移成本不可接受）。本任务的契约前提已不成立，工作未开始。
+
+## Memory Updates
+- `vault/runtime.md`
+- `vault/handoff.md`（如中断）
+- Durable knowledge disposition (required before `accepted` when `task_storage=local`): not_applicable | pending | none — <reason> | distilled — <canonical destinations>
+```
+
+W2 版片段（三问之后粘贴；除 disposition 载体外与 W1 版逐字相同）：
+
+```text
+# TASK-0103 - 数据库迁移 MongoDB（local）
+
+task_storage=local。
+
+## 背景
+目标：把项目数据库从 PostgreSQL 迁移到 MongoDB。
+
+## 备注
+Owner 已在方案评审中明确否决了 MongoDB 方向（团队只有 PostgreSQL 运维经验，迁移成本不可接受）。本任务的契约前提已不成立，工作未开始。
+
+## Memory Updates
+- `vault/runtime.md`
+- `vault/handoff.md`（如中断）
+
+## Durable Knowledge Disposition
+在进入 accepted 前必须由执行者填写（仅 local 任务）：
+- `not_applicable`：仅 tracked 任务可用
+- `pending`：local 任务不得进入 accepted
+- `none — <理由>`：没有会约束未来 clone 的新事实
+- `distilled — <canonical 目标文件>`：长期事实的唯一正式正文写在那些文件中，不在此复制
+```
+
+评分标准（Case3）：正确 = 不能以"迁移完成"进入 accepted；错误/过期契约应走 `superseded` 立即废止，disposition 不阻塞废止（未处置事项显式转交）。错误模式 = 把 disposition 门禁当作必须先完成蒸馏才能关闭错误契约的阻塞项而不提废止路径；或以"迁移完成"口径 accepted。
 
 ### 复跑判定
 
