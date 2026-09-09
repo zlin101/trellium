@@ -5,16 +5,6 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0007 - 2026-09-09
-
-- Objective: 执行 `docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md`——local TASK 生命周期闭环（Durable Knowledge Disposition 人工 gate）与 clone-safe 投影（2026.09.4）。
-- Completed: M0-M6 全部落地。W 组消融（W2→W1→W0，9 会话）裁定采用 W1 单行载体（原始记录见 `vault/details/task-0007-w-group-records.md`）；C0/C1/C2 characterization 证明 checker 代码层必要；checker 新增 `TASK_RUNTIME_LOCAL_UNRESOLVED` warning（去重、三层文案、不授权）与 `TASK_RUNTIME_CLOSED_LOCAL` error；12 项决策表聚焦测试；VERSION 2026.09.4 + MIGRATIONS + 双语 README + 分发快照同步。独立 review 十问全过，F1（W 原始答案归档）/F3（测试计数虚增根因=继承重跑，已用 Mixin 消除）已修复，F2（预注册提交级证据）流程已采纳、叙述裁认随验收。
-- In progress: 无。
-- Failed attempts: 首版测试类继承 VaultCheckTest 导致父类 37 测试重复执行（计数 136 虚增）——已重构 Mixin，真实口径 87 基线 + 12 新增 = 99。
-- Blockers: 无。
-- Next best action: owner 验收 TASK-0007；accepted 后另行发布 2026.09.4 tag/Release（不在本任务范围）；第二真实 local 项目到位后按计划第 13 节做真实验证。
-- Files to read first: `vault/tasks/TASK-0007-local-task-lifecycle.md`、`vault/tasks/TASK-0007-review.md`、`docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md`、`vault/decisions.md`（D-0006）。
-
 ## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。

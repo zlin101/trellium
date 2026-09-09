@@ -19,7 +19,7 @@ table holds pointers only.
 | TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | accepted | Closed 2026-09-08: release is live and latest resolves; title/notes demoted to optional by owner decision (D-0003). |
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
 | TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | blocked | M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode. |
-| TASK-0007 | Local TASK lifecycle close-out and clone-safe projection (2026.09.4). | ready_for_review | Implementation and independent review complete; awaiting owner acceptance and 2026.09.4 release. |
+| TASK-0007 | Local TASK lifecycle close-out and clone-safe projection (2026.09.4). | accepted | Closed 2026-09-09; 2026.09.4 tag pushed, Release object pending owner creation (metadata optional per D-0003). |
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 
@@ -36,6 +36,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
 - TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
 - TASK-0005: coverage counts single-sourced into the shadow ledger (D-0005); cold-start Protocol v2 isolated under `docs/evals/cold-start-v2/`. Accepted 2026-09-09 after owner review round 2 (final gate closed, six findings fixed).
+- TASK-0007: local lifecycle disposition gate + clone-safe projection implemented, ablation-driven (W1 carrier; C0/C1/C2 characterization), 12 focused tests, 2026.09.4 shipped with migrations and bilingual docs. Accepted 2026-09-09; tag pushed, Release object pending owner creation.
 - TASK-0006: M0-M2 complete — preregistration frozen before results; E0/E1/E2 ablation run (E0 4/4, E1 4/4, E2 3/4 with the designed false-positive causing the only error). Accepted 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified); M3 Blocked, M4 rules draft (no numeric threshold), M5 Blocked + D0-sufficient, M6 deferred.
 
 ## Constraints
@@ -46,6 +47,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - Keep this file short; current line and entry budgets live in the `trellium-policy` block in `vault/index.md`.
 
 ## Recent Changes
+
+- TASK-0007 accepted; `2026.09.4` tag pushed to origin (Release object creation handed to the owner — metadata optional per D-0003).
 
 - 2026.09.4 implemented per the local-task-lifecycle plan (TASK-0007): W-group ablation picked the single-line disposition gate; checker gained local-aware projection (`TASK_RUNTIME_LOCAL_UNRESOLVED` warning, `TASK_RUNTIME_CLOSED_LOCAL` error); 12 focused tests; version/migrations/README/snapshots synced; independent review passed with F1-F3 closed. ready_for_review.
 - Owner approved the local TASK lifecycle direction (plan passed R1-R6 review); 2026.09.4 implemented under TASK-0007 (see the 2026.09.4 implemented entry above).

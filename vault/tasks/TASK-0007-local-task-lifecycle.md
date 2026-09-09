@@ -6,7 +6,7 @@
   "task_id": "TASK-0007",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -231,6 +231,33 @@ Risks:
 Next action:
 
 - 增量 review（owner 指定）→ owner 决定 accepted。
+
+### 2026-09-09 - Agent: GLM (ZCode) — owner 验收，accepted
+
+Context read:
+
+- Owner 验收指令（"接受，继续吧"）。
+
+Changes made:
+
+- 状态块 ready_for_review → accepted；runtime 投影、ledger 转换行、handoff 归并同步。
+- 按验收后的发布流程推送 `2026.09.4` tag（Release 对象仍需 owner 在 GitHub 侧创建，D-0003：标题与 notes 可选）。
+
+Checks run:
+
+- 提交前门禁复跑：check 0/0、106/106 tests、sync in sync、`git diff --check` 通过。
+
+Review and reflection:
+
+- 本任务关闭后，唯一 active 任务回到 TASK-0001；M3 真实验证等第二 local 项目。
+
+Risks:
+
+- 无新增。
+
+Next action:
+
+- 无（accepted）。
 
 ## Memory Updates
 
