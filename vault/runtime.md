@@ -82,7 +82,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 - The PR-only snapshot self-heal push path has not yet been observed in a real GitHub PR run; develop push event routing and the read-only gate have been verified.
 - The checker validates the Active Tasks table and structure but cannot see natural-language counts elsewhere; stale prose numbers need manual reconciliation (observed 2026-09-08: "3 TASKs" vs `current_task_files: 4`).
-- The 2026.09.3 Release title and body remain empty; per D-0003 this is an optional improvement, not a risk to machine paths.
+- The 2026.09.3/2026.09.4 Release titles and bodies remain empty; per D-0003 this is an optional improvement, not a risk to machine paths.
 - Single-developer pace may produce fewer than 5 real TASKs quickly; coverage grows only with real work, never manufactured.
 
 ## Required Checks

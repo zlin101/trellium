@@ -259,6 +259,8 @@ Next action:
 
 - 无（accepted）。
 
+补记（2026-09-09）：owner 已创建 2026.09.4 Release（published 04:26 UTC，`releases/latest` 解析到 2026.09.4，标题与正文为空——D-0003 元数据可选）。同日 owner 经正式 upgrade 流程将自托管 Vault 升级到 2026.09.4（见 TASK-0001 执行记录）。
+
 ## Memory Updates
 
 - `vault/runtime.md`、`vault/handoff.md`、`vault/decisions.md`（D-0006）
