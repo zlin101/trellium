@@ -1808,6 +1808,21 @@ class LocalProjectionTest(VaultCheckMixin, TargetTestCase):
         )
         self.assertIn("TASK_RUNTIME_DUPLICATE", self.codes(self.check_json(duplicate_target)))
 
+    def test_duplicate_rows_skip_freshness_in_both_orders(self) -> None:
+        # R4: a duplicated local task reports only TASK_RUNTIME_DUPLICATE;
+        # the freshness/closed classification must not depend on row order.
+        for rows in (
+            (("TASK-0001", "active", "obj"), ("TASK-0001", "superseded", "obj")),
+            (("TASK-0001", "superseded", "obj"), ("TASK-0001", "active", "obj")),
+        ):
+            target = self.make_project(policy=local_policy(), runtime=build_runtime(rows=rows))
+            payload = self.check_json(target)
+            codes = self.codes(payload)
+            self.assertEqual(codes.count("TASK_RUNTIME_DUPLICATE"), 1)
+            self.assertNotIn("TASK_RUNTIME_LOCAL_UNRESOLVED", codes)
+            self.assertNotIn("TASK_RUNTIME_CLOSED_LOCAL", codes)
+            self.assertNotIn("TASK_RUNTIME_MISSING", codes)
+
     def test_text_and_json_render_new_codes(self) -> None:
         target = self.make_project(
             policy=local_policy(),
