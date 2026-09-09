@@ -73,6 +73,8 @@ Agent 不按身份获得信任，而是按任务契约获得授权。工作只�
 
 测试通过不等于完成。
 
+`task_storage=local` 的任务进入 `accepted` 前还必须完成 Durable Knowledge Disposition（Memory Updates 中的 `none — <理由>` 或 `distilled — <canonical 目标文件>`；未填写视为 `pending`，不得进入 `ready_for_review` 或 `accepted`）。契约错误走 `superseded` 立即废止，不受该 gate 阻塞。local 任务关闭后删除 `runtime.md` 对应行。tracked 任务默认 `not_applicable`。
+
 ## Escalation
 
 需求有歧义、范围扩大、涉及高影响文件、必要检查失败、文档与实现冲突或用户改动与计划冲突时，升级或询问用户。

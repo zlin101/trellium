@@ -22,6 +22,9 @@ superseded. For a task with a task file, the status here is a projection of
 its `trellium-task-state` block: update the block first, then this row.
 Focus names the current attention, not lifecycle; a status change edits only
 the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
+Closed local tasks (`task_storage=local`) leave no row here; in a fresh
+clone, a row whose local task file is absent is an unverified clue that
+grants no authority.
 
 ## Current Progress
 

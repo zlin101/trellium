@@ -14,6 +14,15 @@ draft -> active -> ready_for_review -> accepted
 Use `superseded` when replaced by another task. Paused-and-shelved work moves
 to `vault/parked.md`, it is not a lifecycle value.
 
+For local tasks (`task_storage=local`), record the Durable knowledge
+disposition line in Memory Updates before entering `accepted`: `none —
+<reason>` or `distilled — <canonical destinations>`; an unfilled line counts
+as `pending`, which blocks `ready_for_review` and `accepted`. Wrong or unsafe
+contracts go to `superseded` immediately — the gate never blocks that, and
+undisposed facts become an explicit handover. After a local task closes,
+remove its `runtime.md` row and compress the related handoff entry. Tracked
+tasks default to `not_applicable` and may keep their runtime row when closed.
+
 ## Task State Block
 
 Level B/C task files carry a `trellium-task-state` block right after the
@@ -130,6 +139,7 @@ Next action:
 - `vault/runtime.md`
 - `vault/decisions.md` if durable decisions were made
 - `vault/handoff.md` if interrupted or handed off
+- Durable knowledge disposition (required before `accepted` when `task_storage=local`): not_applicable | pending | none — <reason> | distilled — <canonical destinations>
 ```
 
 ## Review Ledger
