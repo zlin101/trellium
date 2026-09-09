@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-09（TASK-0008 立项后刷新），审计基准 commit 909d720**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 8 个（TASK-0001…0008；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008 均为 owner 立项的真实产品任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换仍为 15 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-09（TASK-0008 ready_for_review 后刷新），审计基准 commit 7e494da**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 8 个（TASK-0001…0008；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008 均为 owner 立项的真实产品任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 16 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -36,6 +36,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 2026-09-08 | GitHub Actions 首跑（develop push，gate job） | 0 | n/a（CI 自动执行） | 0 | run 34181086563：self-hosting check 首次在 runner 执行，0 finding，job success |
 | 2026-09-08 | 冷启动基线 S1-S7（各独立新会话，详见 cold-start-baseline-2026-09.md） | n/a | 每场景读取 5-16 个文件，bytes/耗时大部分未采集 | 0（owner 仅记录，未打开文件代答） | 判断 7/7 正确、0 越权、0 过期证据误用；上下文选择成本有界但可见——K4 kill criterion 的首轮量化输入 |
+| 2026-09-09 | TASK-0008 status 五问盲测（3 个无历史会话各只看一份手写 S1 输出） | n/a | 每会话仅凭 S1 输出回答五问，未打开任何 runtime/TASK 文件；3/3 场景首答全对、0 纠正 | 0 | S1 文本 1149 bytes < runtime.md 11039 bytes；bytes 仅 guardrail，未做 owner 可用性复核，不声称时间节省 |
 
 Kill criterion：状态准确率已接近 100%，checker 零有效发现，但上下文读取成本仍明显高；达到时重新评估最小 context manifest，不继续扩 checker。
 
@@ -64,6 +65,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-09 | ready_for_review → accepted（owner 复核 6a2043e 通过，正式验收） | TASK-0005 | 2（状态块 + runtime 行） | 0 | 六项 round-2 finding 已闭合 |
 | 2026-09-09 | ready_for_review → accepted（owner 验收，结论严格限定：E2 No-Go / E1 Inconclusive / v0 本周期不实现） | TASK-0006 | 2（状态块 + runtime 行） | 0 | 方向未证伪；其余候选等待真实证据 |
 | 2026-09-09 | ready_for_review → accepted（owner 验收通过；2026.09.4 实现闭环） | TASK-0007 | 2（状态块 + runtime 行） | 0 | tag 随验收推送；Release 对象由 owner 创建（D-0003：元数据可选） |
+| 2026-09-09 | active → ready_for_review（2026.09.5 status 实现与独立 review 闭合） | TASK-0008 | 2（状态块 + runtime 行） | 0 | 实现前手写盲测 3/3 零纠正；review round 1 唯一 P1 已修复；owner 验收前不代做 tag/Release |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
@@ -118,3 +120,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-08 | TASK-0002 Release 发布后复核与 blocked→active | 0 | 0 / 0 | latest 已解析 2026.09.3；远端 tag 正确；Release 标题和正文为空，保持 active 待补齐元数据 |
 | 2026-09-08 | TASK-0002 accepted 门禁（owner 元数据决定后） | 0 | 0 / 0 | 技术验收项全部 [x]；标题/notes 移入 Optional（D-0003） |
 | 2026-09-09 | Vault 2026.09.4 升级终验 | 0 | 0 / 0 | 唯一 `vault/index.md` 提案经 owner 确认后合并；106/106 tests、中英 snapshot in sync、`git diff --check` OK |
+| 2026-09-09 | TASK-0008 M5 终验（vault 更新提交前） | 0 | 0 / 0 | 代码里程碑期间 check 输出与 M0 审计基准（`55ae985`）逐字节一致；本行留档后 runtime.md 随本任务编辑更新，测量变为 bytes 11469 / 27 entries，发现保持 0 / 0；116/116 tests、snapshot in sync、`git diff --check` OK |

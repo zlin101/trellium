@@ -6,7 +6,7 @@
   "task_id": "TASK-0008",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active"
+  "lifecycle": "ready_for_review"
 }
 -->
 
@@ -69,12 +69,12 @@ Forbidden:
 
 - [x] 剩余功能清单完成，已解决能力不重复开发；Context/Evidence/slice 结论未被越过。
 - [x] Status Summary 作为 09.5 唯一 Go-with-experiments 项；S0/S1 场景、硬指标、guardrail 和 kill criteria 在任何代码前冻结。
-- [ ] `status` text/JSON 同源，正确分类 draft/active/blocked/ready_for_review，closed 不进行动清单。
-- [ ] malformed/duplicate/drift/local missing/symlink 全部 fail-closed；不声称未解析的 Authority/lifecycle。
-- [ ] 命令不写目标，不访网，不执行文档命令；现有 check finding/severity/exit 零变化。
-- [ ] 当前仓库 S1 输出 bytes < S0 `runtime.md` bytes，分类 golden 100%。
-- [ ] `init/VERSION=2026.09.5`，migration/双语 README/Skill/快照只描述已验证行为。
-- [ ] 全量门禁通过；独立 review 无 open finding；任务停在 `ready_for_review`。
+- [x] `status` text/JSON 同源，正确分类 draft/active/blocked/ready_for_review，closed 不进行动清单。
+- [x] malformed/duplicate/drift/local missing/symlink 全部 fail-closed；不声称未解析的 Authority/lifecycle。
+- [x] 命令不写目标，不访网，不执行文档命令；现有 check finding/severity/exit 零变化。
+- [x] 当前仓库 S1 输出 bytes < S0 `runtime.md` bytes，分类 golden 100%。
+- [x] `init/VERSION=2026.09.5`，migration/双语 README/Skill/快照只描述已验证行为。
+- [x] 全量门禁通过；独立 review 无 open finding；任务停在 `ready_for_review`。
 
 ## Verification
 
@@ -90,6 +90,12 @@ Required:
 Completed:
 
 - 2026-09-09 M0 preflight：09.4 Release/Vault 已闭环；`develop==origin/develop`；工作树干净；基线 106/106 tests、check 0/0、snapshot in sync。
+- 2026-09-09 R1 盲测（实现前）：3 份手写 golden（当前仓库 / fixture-mixed / fixture-conflict-local）交 3 个无历史会话只看输出作答五问，3/3 场景全部首答正确、0 纠正、未触发 kill criterion；契约未修改即冻结。
+- 2026-09-09 M1：S0 基线留档——`vault/runtime.md` 11039 bytes、check JSON 802 bytes（审计基准 `55ae985`，存 `/tmp/check-before.json` 用于逐字节对照）；场景 1 golden 真值 = active{0001,0008}/blocked{0004}/closed 5/focus 0008。
+- 2026-09-09 M2/M3（提交 `4604a0c`）：`status` text/JSON 实现 + 8 项聚焦测试；当前仓库 S1 文本 1149 bytes < 11039 bytes；三场景 S1 输出与手写 golden 逐字节一致（A/B exit 0，C exit 2）；`check --format json` 与变更前逐字节一致；六冻结场景全过，kill criteria 零命中。
+- 2026-09-09 M4（提交 `62c2a0e`）：VERSION 2026.09.5、MIGRATIONS 条目、双语 README status 小节、两包 protocol-model 引用、sync-skills 快照刷新且 `--check` in sync。
+- 2026-09-09 M5 review round 1：REQUEST_CHANGES（1×P1：指针未引用的不可读任务不进 unresolved；4×P3）。P1+P3-3 于提交 `7e494da` 修复并补 2 项测试；round 2 复审 APPROVE（0 open P0/P1/P2；剩余 P3-1/P3-2/P3-5 为非阻断可选，P3-4 即本次 vault 同步）。
+- 2026-09-09 M5 终验：116/116 tests、check 0/0 且与 M0 基线逐字节一致、snapshot in sync、`git diff --check` 通过、真仓库多次运行 status 后工作树无新增脏文件。
 
 ## Execution Record
 
@@ -122,6 +128,41 @@ Risks:
 Next action:
 
 - 独立提交 M0 文档与交接；由 GLM 先执行 R1 的手写输出五问测试，再按 M1-M5 开发。
+
+### 2026-09-09 - Agent: GLM — R1 盲测与 M1-M5 实现
+
+Context read:
+
+- 计划全文、TASK-0008 契约、`vault/index.md`/`runtime.md`/`governance.md`/`decisions.md`/`project.md`、`scripts/trellium.py`、`scripts/test_trellium.py`、shadow ledger、双语 README 与 skill 引用。
+
+Changes made:
+
+- R1 最便宜实验先行：按 §4 契约手写 3 份预期 status 文本输出（场景 1 当前仓库、场景 2 混合 fixture、场景 3+4 冲突+local-missing fixture），3 个无历史子代理各只看一份输出回答五问——3/3 首答全对、0 纠正，未触发 kill criterion；契约未修改，随后才写 parser。
+- M1：S0 基线留档（runtime 11039 bytes；check JSON 802 bytes 存档供对照）。
+- M2/M3（`4604a0c`）：`trellium.py` 新增 `status` 子命令——复用 `collect_vault_state`（check 全管线，行为不变）与既有 parser；`discover_task_files` 记录补 `state` 键、`parse_runtime_task_pointers` 行扩为 4 元组（仅内部形状，check 语义零变化）；text/JSON 从同一 payload 渲染；drift→unresolved、closed 只计数、unresolved 附阻塞发现码且无 lifecycle/authority；8 项聚焦测试。
+- M4（`62c2a0e`）：VERSION 2026.09.5 + MIGRATIONS 条目 + 双语 README + 两包 protocol-model 一行引用 + sync 快照。
+- M5：独立 review round 1 REQUEST_CHANGES（1×P1：不被 runtime/focus 引用的不可读任务不进 unresolved；另 4×P3）；`7e494da` 修复 P1 并顺带闭合 P3-3（路径回退限定当前任务文件，ledger/archive 发现码不再污染 reason），补 2 项测试。
+
+Checks run:
+
+- 每里程碑：`python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh`（106→114→116 全绿）；`trellium.py status .`（text/JSON）；`trellium.py check . --format json` 与 M0 基线逐字节一致（每轮重验）；`sync-skills.py --check` in sync；`git diff --check`。
+- S1 对照：三场景输出与手写 golden 逐字节一致；当前仓库 S1 1149 bytes < S0 11039 bytes；真仓库只读性以快照+`git status --porcelain` 断言。
+- 独立 review round 2（复审 `7e494da`）：APPROVE——P1-1/P3-3 确认闭合且回归全过；无 P0/P1/P2 open；新报告 1 项非阻断 P3-5（同 id 不可读副本在有效副本存在时不可见，check 既有语义的投影，随 owner 裁量）。
+
+Review and reflection:
+
+- 盲测暴露两处外观观察（focus `(resolved)` 标记未在文本内定义；场景 C 无 Next Action 的原因需推断）——均不影响五问作答，按最小修改保留原契约。
+- 场景 C 手写 golden 首轮与实现有一处转写差（finding 消息的 `!r` 引号与 severity 对齐）；实现复用 check 原样渲染是正确行为，修正的是手写誊抄。
+- review P1 根因与 check 既有行为一致（读失败不产生任务记录），status 层未把 findings 中的孤儿 id 物化；修复选择物化而非改 check 记录逻辑，保持 check 逐字节不变。
+
+Risks:
+
+- runtime 投影文本与 bytes guardrail 不证明人类时间节省；owner 可用性复核未做，不声称降幅。
+- 悬空重复 runtime 行的 unresolved reason 落到回退码 `TASK_RUNTIME_UNRESOLVED`（round-1 P3-2，保留现状，确定且 fail-closed）。
+
+Next action:
+
+- Owner 验收；接受后由 owner 侧打 `2026.09.5` tag 并发布 Release（本任务不代做）。
 
 ## Memory Updates
 
