@@ -13,6 +13,7 @@
 - D-0003 · Release 元数据降为可选改进 · Active · Release 验收 Gate = 既有 tag 正确、非 draft/prerelease、`releases/latest` 解析正确；标题与 notes 不阻塞 · 2026-09-08
 - D-0004 · Context 功能 No-Go · Active · M4/`trellium.py context` 未授权不实现；AGENTS.md→vault 必读路径为默认；重开仅限 D-0004 三条件 · 2026-09-08
 - D-0005 · 覆盖计数单源 · Active · 覆盖事件以 shadow ledger append-only 行为唯一事实源；数字汇总仅为 dated derived snapshot；runtime/handoff 只引用不维护副本 · 2026-09-08
+- D-0006 · Local TASK 私有边界 · Active · local TASK 是私有可丢弃工作日志，只有长期约束蒸馏进 canonical 文件；missing-local warning 不授予恢复权限；tracked 校验保持严格 · 2026-09-09
 
 ## D-0001 - Canonical K1-K4 实验契约（2026-09-08）
 
@@ -138,3 +139,28 @@ Status: Active
 ### Impact
 
 后续 Agent 更新覆盖信息时：先写 ledger 事件行，再（可选）刷新 dated 快照；runtime 只写一句话+指针。在其他文件发现独立维护的计数副本时，按本决策收敛并引用 D-0005。
+
+## D-0006 - Local TASK 私有边界与 clone-safe 投影（2026-09-09）
+
+Status: Active
+
+### Background
+
+local TASK 设计上就是 ignored 的私有工作日志（不进仓库、可丢弃），但 09.3 的 checker 把 fresh clone 中 runtime 指向的 missing local TASK 判成与 tracked 丢失相同的 error，没有表达"按策略不可见"与"真丢失"的区别；且 local 任务进入 accepted 前没有显式的长期知识处置检查点。
+
+### Decision
+
+local TASK 保持私有、临时、低仓库负担：任务关闭前把会约束未来实现的最小结论蒸馏到 canonical 文件（decisions/project/details/公开契约），没有则记录 `none`；蒸馏是人工 review gate，不做自动提取。runtime 中 missing open local TASK 产生 clone-safe warning，明确"可能是正常 fresh clone 也可能误删"，并声明 runtime 摘要不授予任何 Authority——继续任务必须取回原任务文件或经 owner 批准重建契约。closed local TASK 不得留在 runtime 热路径。tracked 模式的全部严格校验保持不变。
+
+### Rationale
+
+local TASK 的价值在于私有和低负担；把它重新包装成需要发布的资产会制造重复事实源。机器无法判断"什么值得长期保留"，这是人工判断；机器能做的是把证据边界表达清楚并 fail closed。
+
+### Alternatives
+
+- 自动发布/归档 local TASK 或 publish generator：被否，制造第二事实源。
+- 把 missing local 静默忽略：被否，无法区分正常 fresh clone 与误删，且会诱导 Agent 从 runtime 摘要恢复越权工作。
+
+### Impact
+
+Agent 遇到 missing local TASK 的 runtime 行时：不据此获得授权、不重建契约，先向 owner 取回原文件或申请重建。`2026.09.4` 起新关闭的 local 任务需人工完成 Durable Knowledge Disposition；历史任务不批量回填。tracked 项目行为零变化。
