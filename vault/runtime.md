@@ -32,7 +32,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0008: 2026.09.5 implemented and reviewed — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped after the pre-implementation handwritten five-question blind test passed 3/3 with zero corrections; S1 1149 bytes < runtime 11039 bytes; check byte-identical throughout; 116/116 tests; ready_for_review pending owner acceptance.
+- TASK-0008: 2026.09.5 implemented and reviewed — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only); S0/S1 blind ablation completed with raw records archived (`vault/details/status-blind-test-2026-09.md`); owner-review round closed the reason-code, ablation-archive, and handoff findings; ready_for_review pending owner acceptance.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
@@ -50,7 +50,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
-- Implemented the 2026.09.5 read-only `status` subcommand per the frozen TASK-0008 contract: handwritten-output blind test first (3/3 scenarios, 0 corrections), text/JSON v1 from one payload, six frozen scenarios byte-identical to the handwritten goldens, check output byte-identical to baseline, independent review APPROVE after one P1 fix; ready_for_review.
+- Closed the owner-review round on TASK-0008: unresolved reasons now derive structurally from check finding phases (no fabricated codes, no hand-maintained allowlist), the S0/S1 blind ablation was completed with raw records archived in `vault/details/status-blind-test-2026-09.md`, and the stale handoff entry was rewritten; ready_for_review pending owner acceptance.
 - Re-audited the Codex deep-use feedback for 2026.09.5; selected deterministic read-only Status Summary as the sole Go-with-experiments candidate and froze TASK-0008's ablation contract before GLM implementation.
 - Installed `trellium-zh 2026.09.4` for Codex and Claude Code, removed the old `agent-native-init-zh` package, and upgraded this project's Vault stamp from 2026.09.3 to 2026.09.4; preserved the measurement-only budget policy and owner-approved the sole semantic merge.
 - TASK-0007 accepted; `2026.09.4` tag and Release published.

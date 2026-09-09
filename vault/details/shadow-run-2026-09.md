@@ -37,6 +37,7 @@
 | 2026-09-08 | GitHub Actions 首跑（develop push，gate job） | 0 | n/a（CI 自动执行） | 0 | run 34181086563：self-hosting check 首次在 runner 执行，0 finding，job success |
 | 2026-09-08 | 冷启动基线 S1-S7（各独立新会话，详见 cold-start-baseline-2026-09.md） | n/a | 每场景读取 5-16 个文件，bytes/耗时大部分未采集 | 0（owner 仅记录，未打开文件代答） | 判断 7/7 正确、0 越权、0 过期证据误用；上下文选择成本有界但可见——K4 kill criterion 的首轮量化输入 |
 | 2026-09-09 | TASK-0008 status 五问盲测（3 个无历史会话各只看一份手写 S1 输出） | n/a | 每会话仅凭 S1 输出回答五问，未打开任何 runtime/TASK 文件；3/3 场景首答全对、0 纠正 | 0 | S1 文本 1149 bytes < runtime.md 11039 bytes；bytes 仅 guardrail，未做 owner 可用性复核，不声称时间节省 |
+| 2026-09-09 | TASK-0008 S0 臂补齐（owner review 后）：3 个无历史会话各看现行流程材料（runtime 全文 + 全部状态块）回答同五问 | n/a | 场景 1 全对；场景 2 closed 计数需材料未定义的推断；场景 3 把缺失文件任务的 Next Action 记录过度声称可用（1 次纠正） | 0（材料为全文输入，无后续打开） | 双臂逐字首答与评分存 `vault/details/status-blind-test-2026-09.md`；S1 差异点：open/closed 分类学内建 + fail-closed 投影抑制 |
 
 Kill criterion：状态准确率已接近 100%，checker 零有效发现，但上下文读取成本仍明显高；达到时重新评估最小 context manifest，不继续扩 checker。
 
@@ -121,3 +122,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-08 | TASK-0002 accepted 门禁（owner 元数据决定后） | 0 | 0 / 0 | 技术验收项全部 [x]；标题/notes 移入 Optional（D-0003） |
 | 2026-09-09 | Vault 2026.09.4 升级终验 | 0 | 0 / 0 | 唯一 `vault/index.md` 提案经 owner 确认后合并；106/106 tests、中英 snapshot in sync、`git diff --check` OK |
 | 2026-09-09 | TASK-0008 M5 终验（vault 更新提交前） | 0 | 0 / 0 | 代码里程碑期间 check 输出与 M0 审计基准（`55ae985`）逐字节一致；本行留档后 runtime.md 随本任务编辑更新，测量变为 bytes 11469 / 27 entries，发现保持 0 / 0；116/116 tests、snapshot in sync、`git diff --check` OK |
+| 2026-09-09 | TASK-0008 owner review round 3×P1 闭合（vault 更新提交前） | 0 | 0 / 0 | 原因码改按 finding phase 推导（owner 复现输出实际码 CLOSED_LOCAL）；补 3 项测试；golden B/C 仍逐字节一致；snapshot in sync、`git diff --check` OK |

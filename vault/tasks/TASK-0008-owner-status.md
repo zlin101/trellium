@@ -91,11 +91,13 @@ Completed:
 
 - 2026-09-09 M0 preflight：09.4 Release/Vault 已闭环；`develop==origin/develop`；工作树干净；基线 106/106 tests、check 0/0、snapshot in sync。
 - 2026-09-09 R1 盲测（实现前）：3 份手写 golden（当前仓库 / fixture-mixed / fixture-conflict-local）交 3 个无历史会话只看输出作答五问，3/3 场景全部首答正确、0 纠正、未触发 kill criterion；契约未修改即冻结。
+- 2026-09-09 S0 臂补齐（owner review round 后）：同三场景以现行流程材料（runtime 全文 + 全部状态块）盲测 3 个新无历史会话；双臂逐字首答、材料与评分存 `vault/details/status-blind-test-2026-09.md`。结果：S1 3/3 五问全对、0 纠正、零材料外推断；S0 场景 1 全对，场景 2 closed 计数只能靠材料未定义的推断（状态层不携带 open/closed 分类学），场景 3 把缺失文件任务的 Next Action 记录过度声称可用（1 次纠正）。
 - 2026-09-09 M1：S0 基线留档——`vault/runtime.md` 11039 bytes、check JSON 802 bytes（审计基准 `55ae985`，存 `/tmp/check-before.json` 用于逐字节对照）；场景 1 golden 真值 = active{0001,0008}/blocked{0004}/closed 5/focus 0008。
 - 2026-09-09 M2/M3（提交 `4604a0c`）：`status` text/JSON 实现 + 8 项聚焦测试；当前仓库 S1 文本 1149 bytes < 11039 bytes；三场景 S1 输出与手写 golden 逐字节一致（A/B exit 0，C exit 2）；`check --format json` 与变更前逐字节一致；六冻结场景全过，kill criteria 零命中。
 - 2026-09-09 M4（提交 `62c2a0e`）：VERSION 2026.09.5、MIGRATIONS 条目、双语 README status 小节、两包 protocol-model 引用、sync-skills 快照刷新且 `--check` in sync。
 - 2026-09-09 M5 review round 1：REQUEST_CHANGES（1×P1：指针未引用的不可读任务不进 unresolved；4×P3）。P1+P3-3 于提交 `7e494da` 修复并补 2 项测试；round 2 复审 APPROVE（0 open P0/P1/P2；剩余 P3-1/P3-2/P3-5 为非阻断可选，P3-4 即本次 vault 同步）。
 - 2026-09-09 M5 终验：116/116 tests、check 0/0 且与 M0 基线逐字节一致、snapshot in sync、`git diff --check` 通过、真仓库多次运行 status 后工作树无新增脏文件。
+- 2026-09-09 owner review round（3×P1）闭合：①unresolved 原因码按 check finding phase 结构化推导（task-state/runtime-projection 两相，删除手维护 code allowlist 与 `TASK_RUNTIME_UNRESOLVED` 伪造回退；owner 复现场景现输出实际诊断 `TASK_RUNTIME_CLOSED_LOCAL`）；②S0/S1 双臂消融补齐并存档；③handoff 条目同步。补 3 项测试（stale closed-local row / dangling duplicate rows 实际码 / storage findings 不进 reason）。
 
 ## Execution Record
 
@@ -163,6 +165,37 @@ Risks:
 Next action:
 
 - Owner 验收；接受后由 owner 侧打 `2026.09.5` tag 并发布 Release（本任务不代做）。
+
+### 2026-09-09 - Agent: GLM — owner review round 三项 P1 闭合
+
+Context read:
+
+- Owner review 结论（3×P1）；`scripts/trellium.py` status 段与 `VaultCheckRun`；`vault/handoff.md`；既有测试。
+
+Changes made:
+
+- P1-1 原因码：`status_unresolved_reasons` 改为按 finding phase（`task-state`/`runtime-projection`）结构化过滤，新增 `VaultCheckRun.findings_with_phase()`；删除 `STATUS_UNRESOLVED_CODES` allowlist；unresolved reason 一律来自该任务实际产生的 finding，无 finding 时用中性标记 `UNVERIFIED`（非 checker 码，不可误导修复动作），不再伪造 `TASK_RUNTIME_UNRESOLVED`。checker 新增代码时 status 原因自动跟随，不再需要同步维护清单。
+- P1-2 消融：补 S0 臂（3 场景 × 无历史会话，材料 = runtime 全文 + 全部状态块）；`vault/details/status-blind-test-2026-09.md` 存档双臂 golden/材料/提示词/逐字首答/评分/纠正数。
+- P1-3：`vault/handoff.md` TASK-0008 条目更新为 ready_for_review 与本轮修复状态，消除"无实现、等 GLM"的过期指向。
+
+Checks run:
+
+- `python3 -m unittest scripts.test_trellium ...` 全绿（新增 3 测试：owner 复现的 stale closed-local row 输出实际码 `TASK_RUNTIME_CLOSED_LOCAL`；dangling duplicate rows 输出实际码 `TASK_RUNTIME_DUPLICATE`；storage finding 携带 task_id 也不进 reason、不降级分类）。
+- owner 复现场景端到端复现：local + superseded 行 + 无文件 → unresolved reason=`TASK_RUNTIME_CLOSED_LOCAL`，exit 2。
+- golden B/C 与实现输出仍逐字节一致；`check --format json` 发现/严重级/退出码与基线一致（仅 runtime 测量随 runtime.md 编辑变化）；`sync-skills.py --check` in sync。
+
+Review and reflection:
+
+- owner 指出的结构性风险成立：allowlist 与 checker 语义漂移是真实的维护负担；phase 过滤让"storage/budget 不影响 lifecycle"成为结构事实而非清单事实。
+- S0 臂结果对消融结论是实质性补强：S1 的优势不只是 bytes——open/closed 分类学内建与 fail-closed 投影抑制在场景 2/3 产生了正确性差异；同时按 owner 要求，结论表述限定为"首答记录 + guardrail"，不声称完整用户收益。
+
+Risks:
+
+- 每格 n=1、评分者为实现方；细节与复跑指引见 details 文件局限一节。
+
+Next action:
+
+- Owner 复核本轮修复；通过后决定 accepted 与 `2026.09.5` tag/Release。
 
 ## Memory Updates
 

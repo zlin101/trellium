@@ -7,13 +7,13 @@
 
 ## TASK-0008 - 2026-09-09
 
-- Objective: 以 Codex 深度反馈与 owner 真实 status 询问为证据，在 2026.09.5 只评估并开发一个确定性只读 `status` summary。
-- Completed: Codex 完成剩余功能审计、唯一候选裁决、S0/S1 预注册和 strategy red-team R1-R5；未修改产品代码。
-- In progress: 无实现；等 GLM 执行最便宜手写输出五问测试与 M1-M5。
-- Failed Attempts: 无。
-- Blockers: 无外部 blocker；内部 kill criteria 命中时必须 No-Go，不扩 schema。
-- Next Best Action: GLM 读计划第 4–10 节和 TASK-0008；先用手写候选输出做五问盲测，通过后再改 `scripts/trellium.py`。
-- Files To Read First: `docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md`、`vault/tasks/TASK-0008-owner-status.md`、`vault/runtime.md`、`scripts/trellium.py`、`scripts/test_trellium.py`。
+- Objective: 在 2026.09.5 交付唯一功能候选：确定性只读 `trellium.py status` summary；实现、消融与独立 review 全部完成后停在 `ready_for_review`，不代 owner accepted、不创建 tag/Release。
+- Completed: Codex M0 预注册（`55ae985`）；GLM 完成实现前手写输出盲测并补齐 S0/S1 双臂消融（原始材料与逐字首答存 `vault/details/status-blind-test-2026-09.md`）；M1-M5 实现（`4604a0c`）、2026.09.5 版本/文档/快照（`62c2a0e`）；内部独立 review 两轮（round 1 P1 修复于 `7e494da`，round 2 APPROVE）。
+- In progress: owner review round 的 3 项 P1 闭合中——①unresolved 原因码改为按 check finding phase 结构化推导（不再伪造 `TASK_RUNTIME_UNRESOLVED`，closed-local/dangling-duplicate 有专项测试）；②S0/S1 消融双臂补齐并存档；③本 handoff 条目同步。代码与记录更新后需复跑全量门禁。
+- Failed Attempts: 无失败尝试；两轮 review 的 P1 均已修复或修复中（见上）。
+- Blockers: 无外部 blocker。
+- Next Best Action: 复核本轮 P1 修复提交；确认后由 owner 决定 accepted 与 `2026.09.5` tag/Release（D-0003：元数据可选）。不要重新实现——现状是修复与复验，不是从零开始。
+- Files To Read First: `vault/tasks/TASK-0008-owner-status.md`、`vault/details/status-blind-test-2026-09.md`、`docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md`、`scripts/trellium.py`（status 段）、`scripts/test_trellium.py`（StatusSummaryTest）。
 
 ## TASK-0004 - 2026-09-08
 
