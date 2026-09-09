@@ -5,6 +5,16 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
+## TASK-0008 - 2026-09-09
+
+- Objective: 以 Codex 深度反馈与 owner 真实 status 询问为证据，在 2026.09.5 只评估并开发一个确定性只读 `status` summary。
+- Completed: Codex 完成剩余功能审计、唯一候选裁决、S0/S1 预注册和 strategy red-team R1-R5；未修改产品代码。
+- In progress: 无实现；等 GLM 执行最便宜手写输出五问测试与 M1-M5。
+- Failed Attempts: 无。
+- Blockers: 无外部 blocker；内部 kill criteria 命中时必须 No-Go，不扩 schema。
+- Next Best Action: GLM 读计划第 4–10 节和 TASK-0008；先用手写候选输出做五问盲测，通过后再改 `scripts/trellium.py`。
+- Files To Read First: `docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md`、`vault/tasks/TASK-0008-owner-status.md`、`vault/runtime.md`、`scripts/trellium.py`、`scripts/test_trellium.py`。
+
 ## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。
