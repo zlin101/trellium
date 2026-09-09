@@ -115,6 +115,31 @@ Next action:
 
 - 由下一个会话/Agent 接手：按 runtime 的下一步推进，出现阻塞时记录 blocked → active 样本。
 
+### 2026-09-09 - Agent: Codex
+
+Context read:
+
+- `AGENTS.md`、`vault/index.md`、`vault/runtime.md`、`vault/governance.md`、`vault/handoff.md`、本任务文件。
+- 已安装 `trellium-zh` 的升级流程、模板指南与 2026.09.4 migration playbook。
+
+Changes made:
+
+- 使用正式安装器将 `trellium-zh 2026.09.4` 安装到 Codex 与 Claude Code，并删除旧 Codex `agent-native-init-zh` Skill。
+- 将本项目 Vault 从 2026.09.3 升级到 2026.09.4；安全刷新 `skills/agent-task/SKILL.md`，并按 owner 逐项确认合并 `vault/index.md`。
+- 保留本项目“暂不配置预算阈值”定制；仅将 local 关闭规则精确限定为 `task_storage=local`。tracked 项目无需执行 local TASK 数据迁移。
+
+Checks run:
+
+- `trellium.py diff .` → installed 2026.09.4 == available 2026.09.4；协议文件全部 in sync / absorbed。
+- `trellium.py check . --format json` → 0 error / 0 warning。
+- `python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` → 106/106 OK。
+- `python3 scripts/sync-skills.py --check` → 中英两套 snapshot in sync；`git diff --check` 通过。
+
+Review and reflection:
+
+- 升级仅触及协作层；未替换 runtime、tasks、decisions、handoff 等项目事实，未修改业务源码、依赖、测试或 CI。
+- 2026.09.4 migration 的 local 数据动作对当前 `tracked` 策略不适用，未做批量回填。
+
 ## Memory Updates
 
 - `vault/runtime.md`（每次状态变化同步投影行）

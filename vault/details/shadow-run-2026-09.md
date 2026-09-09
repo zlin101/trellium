@@ -117,3 +117,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-08 | GitHub Actions 首跑 run 34181086563（develop push，gate job） | 0 | 0 / 0 | runner 端执行与本地一致；unit tests、vault check、drift 检测全部 success |
 | 2026-09-08 | TASK-0002 Release 发布后复核与 blocked→active | 0 | 0 / 0 | latest 已解析 2026.09.3；远端 tag 正确；Release 标题和正文为空，保持 active 待补齐元数据 |
 | 2026-09-08 | TASK-0002 accepted 门禁（owner 元数据决定后） | 0 | 0 / 0 | 技术验收项全部 [x]；标题/notes 移入 Optional（D-0003） |
+| 2026-09-09 | Vault 2026.09.4 升级终验 | 0 | 0 / 0 | 唯一 `vault/index.md` 提案经 owner 确认后合并；106/106 tests、中英 snapshot in sync、`git diff --check` OK |

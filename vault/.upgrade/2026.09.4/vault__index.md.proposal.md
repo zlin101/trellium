@@ -1,3 +1,17 @@
+# Upgrade Proposal - 2026.09.4
+
+- File: `vault/index.md`
+- Role: merge
+- Reason: local and upstream both changed
+
+The upstream template and the local file both changed. Merge the upstream
+version into the local file while preserving every local customization,
+then propose the result to the user. Project data is never at risk here,
+and the previous content stays recoverable through git.
+
+## Upstream template
+
+````md
 # Vault Index
 
 本文件负责将 Agent 路由到正确项目上下文，并承载项目策略块。不要把它写成项目历史，也不要当作第二状态面。
@@ -5,11 +19,18 @@
 <!-- trellium-policy
 {
   "schema_version": 1,
-  "task_storage": "tracked"
+  "task_storage": "tracked",
+  "budgets": {
+    "runtime": {"max_lines": 120, "max_recent_entries": 10},
+    "handoff": {"max_lines": 100, "max_entries": 3},
+    "decisions": {"max_lines": 150, "max_records": 8},
+    "parked": {"max_lines": 60, "max_entries": 20},
+    "tasks": {"max_active_tasks": 40}
+  }
 }
 -->
 
-上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。本试点暂不配置预算阈值，只保留测量；协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
+上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
 
 ## 任务与授权速查表
 
@@ -81,3 +102,40 @@
 - local 任务（`task_storage=local`）关闭后删除 `runtime.md` 对应行；runtime 指向的 missing local TASK 只是线索，不授予授权（见 governance.md）。
 - 更新热文件时检查预算线；当前上限以上方 `trellium-policy` 策略块为唯一来源。
 - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。
+````
+
+## Differences (upstream -> local)
+
+````diff
+--- upstream/vault/index.md
++++ local/vault/index.md
+@@ -5,18 +5,11 @@
+ <!-- trellium-policy
+ {
+   "schema_version": 1,
+-  "task_storage": "tracked",
+-  "budgets": {
+-    "runtime": {"max_lines": 120, "max_recent_entries": 10},
+-    "handoff": {"max_lines": 100, "max_entries": 3},
+-    "decisions": {"max_lines": 150, "max_records": 8},
+-    "parked": {"max_lines": 60, "max_entries": 20},
+-    "tasks": {"max_active_tasks": 40}
+-  }
++  "task_storage": "tracked"
+ }
+ -->
+
+-上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
++上方策略块是项目预算与 TASK storage 的唯一来源。`task_storage: tracked` 表示任务文件纳入版本控制；`local` 表示任务文件、review 台账与 archive 不进 Git（Accepted 后的结论必须蒸馏进 `decisions.md` 等公开位置）。本试点暂不配置预算阈值，只保留测量；协议其他位置的预算数字是初始化默认值，不是项目当前策略。策略块缺失即 legacy 项目：如实报告，不用隐藏默认值替代。
+
+ ## 任务与授权速查表
+
+@@ -85,6 +78,6 @@
+ - 中断或交接时更新 `handoff.md`。
+ - 用户挂起任务时在 `parked.md` 记条目；重新提起时升回任务文件或 `runtime.md`。
+ - 将长细节移出 `runtime.md`。
+-- local 任务（`task_storage=local`）关闭后删除 `runtime.md` 对应行；runtime 指向的 missing local TASK 只是线索，不授予授权（见 governance.md）。
++- local 任务关闭后删除 `runtime.md` 对应行；runtime 指向的 missing local TASK 只是线索，不授予授权（见 governance.md）。
+ - 更新热文件时检查预算线；当前上限以上方 `trellium-policy` 策略块为唯一来源。
+ - 超出预算线时执行压缩：测量→分类→重组→校验→记录；语义判定（Superseded/Merged/Expired）只提案，用户确认前保持 Active。
+````

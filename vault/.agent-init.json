@@ -6,7 +6,7 @@
       "role": "merge"
     },
     "skills/agent-task/SKILL.md": {
-      "baseline": "da8c15b6d4710f30a3baf94454fae564b8b72b6bd77ef5fb6ca2507755426bcb",
+      "baseline": "bd927b6185ea52aef9164687fe58640d18cee21a7537d0a3fc41182c8d5188f1",
       "role": "template"
     },
     "vault/collaboration.md": {
@@ -26,7 +26,10 @@
       "role": "data"
     },
     "vault/index.md": {
-      "baseline": "29e46fca96fa6117eac9ff79a83c3e50335f667e7dd9042aadf94d2e50cd12c2",
+      "absorbed_upstream": "a13d4fd80e41b52a4b5eb520661e09a6eefa8bc410f480b69a9cce0e8c8aa998",
+      "baseline": "037790492c3aaecf67adecd9b7fb37ed810aa31f9f92e793cb2d6a21d6deedd8",
+      "observed": true,
+      "pending": false,
       "role": "merge"
     },
     "vault/parked.md": {
@@ -46,8 +49,8 @@
       "role": "template"
     }
   },
-  "last_upgrade": null,
-  "protocol_version": "2026.09.3",
+  "last_upgrade": "2026-09-09",
+  "protocol_version": "2026.09.4",
   "schema_version": 1,
   "trust": "versioned"
 }
