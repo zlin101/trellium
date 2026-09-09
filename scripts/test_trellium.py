@@ -941,7 +941,7 @@ class RenderedContentTest(unittest.TestCase):
         self.assertNotIn("3. `vault/governance.md`", section)
 
 
-class VaultCheckTest(TargetTestCase):
+class VaultCheckMixin:
     def make_project(
         self,
         *,
@@ -1005,6 +1005,16 @@ class VaultCheckTest(TargetTestCase):
     def codes(self, payload: dict) -> list[str]:
         return [finding["code"] for finding in payload["findings"]]
 
+    def init_git_repo(self, target: Path) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.name", "test"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=target, check=True)
+
+    def git(self, target: Path, *arguments: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", *arguments], cwd=target, check=False, capture_output=True)
+
+
+class VaultCheckTest(VaultCheckMixin, TargetTestCase):
     def test_valid_project_passes_with_zero_findings(self) -> None:
         target = self.make_project(
             files={"vault/tasks/TASK-0001-short-title.md": (
@@ -1303,14 +1313,6 @@ class VaultCheckTest(TargetTestCase):
         self.assertEqual(payload["measurements"]["tasks"]["review_ledgers"], 1)
         self.assertEqual(payload["measurements"]["tasks"]["archive_files"], 1)
         self.assertEqual(payload["measurements"]["tasks"]["current_task_files"], 0)
-
-    def init_git_repo(self, target: Path) -> None:
-        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
-        subprocess.run(["git", "config", "user.name", "test"], cwd=target, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=target, check=True)
-
-    def git(self, target: Path, *arguments: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["git", *arguments], cwd=target, check=False, capture_output=True)
 
     def test_storage_tracked_mode(self) -> None:
         files = {
@@ -1655,7 +1657,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class LocalProjectionTest(VaultCheckTest):
+class LocalProjectionTest(VaultCheckMixin, TargetTestCase):
     """Decision-table coverage for local-aware runtime projection (2026.09.4)."""
 
     def test_local_open_task_with_matching_row_passes(self) -> None:
