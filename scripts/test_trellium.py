@@ -2054,6 +2054,41 @@ class StatusSummaryTest(VaultCheckMixin, TargetTestCase):
         self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_UNRESOLVED")
         self.assertNotIn("task_path", unresolved[0])
 
+    def test_unreadable_task_file_is_unresolved_without_pointer(self) -> None:
+        # A current task file that fails before any record exists (not a
+        # regular file here) must still surface as unresolved even though no
+        # runtime row or focus pointer references it.
+        target = self.make_project()
+        (target / "vault/tasks/TASK-0009-dir.md").mkdir()
+
+        code, payload, _err = self.status_json(target)
+
+        self.assertEqual(code, 2)
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0009"])
+        self.assertEqual(unresolved[0]["reason"], "FILE_UNREADABLE")
+        self.assertNotIn("task_path", unresolved[0])
+        self.assertNotIn("lifecycle", unresolved[0])
+        self.assertEqual(payload["summary"]["unresolved"], 1)
+
+    def test_cold_history_symlinks_do_not_create_phantom_unresolved(self) -> None:
+        outside = self.root / "outside-cold"
+        outside.mkdir()
+        (outside / "old.md").write_text("OLD\n", encoding="utf-8")
+        target = self.make_project(
+            files={"vault/tasks/TASK-0001-review.md": "# TASK-0001 - Review Ledger\n"},
+        )
+        (target / "vault/tasks/TASK-0001-review.md").unlink()
+        (target / "vault/tasks/TASK-0001-review.md").symlink_to(outside / "old.md")
+        (target / "vault/tasks/archive").mkdir()
+        (target / "vault/tasks/archive/TASK-0090-old.md").symlink_to(outside / "old.md")
+
+        code, payload, _err = self.status_json(target)
+
+        self.assertEqual(code, 2)
+        self.assertEqual(payload["tasks"]["unresolved"], [])
+        self.assertEqual(payload["summary"]["unresolved"], 0)
+
     def test_status_is_read_only_and_deterministic(self) -> None:
         target = self.mixed_fixture()
         self.init_git_repo(target)

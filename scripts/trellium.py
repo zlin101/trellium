@@ -2055,8 +2055,18 @@ def status_unresolved_reasons(findings: list[dict]) -> dict[str, list[str]]:
             continue
         task_id = finding.get("task_id")
         if task_id is None:
-            match = TASK_FILE_ID_RE.match(Path(finding["path"]).name)
-            task_id = match.group(1) if match else None
+            # Path-only findings name current task files only: review ledgers
+            # and archive/ entries are cold history, never current state.
+            path = finding["path"]
+            name = Path(path).name
+            match = TASK_FILE_ID_RE.match(name)
+            if (
+                match is None
+                or REVIEW_LEDGER_RE.match(name) is not None
+                or path.startswith("vault/tasks/archive/")
+            ):
+                continue
+            task_id = match.group(1)
         if task_id is None:
             continue
         codes = reasons.setdefault(task_id, [])
@@ -2149,6 +2159,13 @@ def build_status_payload(
         unresolved_ids.add(task_id)
         unresolved.append(unresolved_entry(task_id, None))
     for task_id in focus_ids:
+        if task_id in resolved_ids or task_id in unresolved_ids:
+            continue
+        unresolved_ids.add(task_id)
+        unresolved.append(unresolved_entry(task_id, None))
+    # A current task file can also fail before any record exists (unreadable,
+    # not a regular file); its id still belongs in unresolved.
+    for task_id in sorted(reasons):
         if task_id in resolved_ids or task_id in unresolved_ids:
             continue
         unresolved_ids.add(task_id)
