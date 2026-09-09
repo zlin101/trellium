@@ -100,6 +100,7 @@ Completed:
 - 2026-09-09 owner review round（3×P1）闭合：①unresolved 原因码按 check finding phase 结构化推导（task-state/runtime-projection 两相，删除手维护 code allowlist 与 `TASK_RUNTIME_UNRESOLVED` 伪造回退；owner 复现场景现输出实际诊断 `TASK_RUNTIME_CLOSED_LOCAL`）；②S0/S1 双臂消融补齐并存档；③handoff 条目同步。补 3 项测试（stale closed-local row / dangling duplicate rows 实际码 / storage findings 不进 reason）。
 - 2026-09-09 增量复核闭合：证据原文逐字存档至 `vault/details/status-blind-test-2026-09/`（提交 `fc0cf6d`）；owner 最终审查 APPROVE（无 open P0/P1/P2），授权发布。
 - 2026-09-09 owner 验收：TASK-0008 转 accepted；按 owner 指定顺序执行推送 → develop CI 全绿 → 在 accepted 提交打 `2026.09.5` tag → Release（本环境无 gh 时 Release 对象由 owner 创建，与 09.3/09.4 先例一致）。durable CLI decision 记为 D-0007。
+- 2026-09-09 发布执行：验收提交 `5317784` 与此前 8 个提交已推送（`909d720..5317784`）；develop CI run 34333503426 全绿（unit tests、self-hosting vault check、snapshot drift 均 success，sync job 按 push 事件跳过）；tag `2026.09.5` 已推送并经 `git ls-remote` 与 API 验证指向 `5317784`。GitHub Release 对象未创建——本环境无 `gh` 亦无 API 凭据（2026-09-04 同类阻塞先例），待 owner 在 UI 从该 tag 创建；创建后 `releases/latest` 应回解析 `2026.09.5`（D-0003 gate：tag 正确、非 draft/prerelease、latest 解析正确）。
 
 ## Execution Record
 

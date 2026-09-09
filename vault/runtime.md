@@ -98,7 +98,7 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
-- Finish the 2026.09.5 release sequence: push, verify develop CI green, tag `2026.09.5` on the accepted commit, create/confirm the GitHub Release and `releases/latest` resolution.
+- Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
 - Context implementation stays closed per D-0004; any reopen requires the owner-approved Level C task first.
