@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-09（TASK-0008 ready_for_review 后刷新），审计基准 commit 7e494da**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 8 个（TASK-0001…0008；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008 均为 owner 立项的真实产品任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 16 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-09（TASK-0008 accepted 后刷新），审计基准 commit fc0cf6d**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 8 个（TASK-0001…0008；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008 均为 owner 立项的真实产品任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 17 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -67,6 +67,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-09 | ready_for_review → accepted（owner 验收，结论严格限定：E2 No-Go / E1 Inconclusive / v0 本周期不实现） | TASK-0006 | 2（状态块 + runtime 行） | 0 | 方向未证伪；其余候选等待真实证据 |
 | 2026-09-09 | ready_for_review → accepted（owner 验收通过；2026.09.4 实现闭环） | TASK-0007 | 2（状态块 + runtime 行） | 0 | tag 随验收推送；Release 对象由 owner 创建（D-0003：元数据可选） |
 | 2026-09-09 | active → ready_for_review（2026.09.5 status 实现与独立 review 闭合） | TASK-0008 | 2（状态块 + runtime 行） | 0 | 实现前手写盲测 3/3 零纠正；review round 1 唯一 P1 已修复；owner 验收前不代做 tag/Release |
+| 2026-09-09 | ready_for_review → accepted（owner 最终审查 APPROVE、无 open P0/P1/P2，正式验收并授权发布） | TASK-0008 | 2（状态块 + runtime 行） | 0 | durable decision 记为 D-0007；`2026.09.5` tag 指向 accepted 提交，Release 按授权顺序随后创建（无 gh 时由 owner 创建，D-0003 元数据可选） |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 

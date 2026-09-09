@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0008
+- TASK-0001
 
 ## Active Tasks
 
@@ -22,7 +22,7 @@ table holds pointers only.
 | TASK-0007 | Local TASK lifecycle close-out and clone-safe projection (2026.09.4). | accepted | Closed 2026-09-09; 2026.09.4 tag and Release published. |
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
-| TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | ready_for_review | Owner review; after acceptance the owner tags `2026.09.5` and publishes the Release (D-0003). |
+| TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -32,7 +32,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0008: 2026.09.5 implemented and reviewed — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only); S0/S1 blind ablation completed with raw records archived (`vault/details/status-blind-test-2026-09.md`); owner-review round closed the reason-code, ablation-archive, and handoff findings; ready_for_review pending owner acceptance.
+- TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
@@ -50,7 +50,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
-- Closed the owner-review round on TASK-0008: unresolved reasons now derive structurally from check finding phases (no fabricated codes, no hand-maintained allowlist), the S0/S1 blind ablation was completed with raw records archived in `vault/details/status-blind-test-2026-09.md`, and the stale handoff entry was rewritten; ready_for_review pending owner acceptance.
+- Owner accepted TASK-0008 (final review APPROVE, no open P0/P1/P2): status summary is durable decision D-0007; release sequence in motion — push all commits, wait for develop CI, tag `2026.09.5` on the accepted commit, then the GitHub Release (owner-created if gh stays unavailable). Focus returns to TASK-0001.
 - Re-audited the Codex deep-use feedback for 2026.09.5; selected deterministic read-only Status Summary as the sole Go-with-experiments candidate and froze TASK-0008's ablation contract before GLM implementation.
 - Installed `trellium-zh 2026.09.4` for Codex and Claude Code, removed the old `agent-native-init-zh` package, and upgraded this project's Vault stamp from 2026.09.3 to 2026.09.4; preserved the measurement-only budget policy and owner-approved the sole semantic merge.
 - TASK-0007 accepted; `2026.09.4` tag and Release published.
@@ -84,6 +84,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Known Risks
 
+- `vault/decisions.md` is past the 150-line indexing threshold (7 full records); the protocol says it should become a pure index with bodies under `vault/decisions/`. Restructuring is queued for the owner's confirmation, not silently executed here.
 - The PR-only snapshot self-heal push path has not yet been observed in a real GitHub PR run; develop push event routing and the read-only gate have been verified.
 - The checker validates the Active Tasks table and structure but cannot see natural-language counts elsewhere; stale prose numbers need manual reconciliation (observed 2026-09-08: "3 TASKs" vs `current_task_files: 4`).
 - The 2026.09.3/2026.09.4 Release titles and bodies remain empty; per D-0003 this is an optional improvement, not a risk to machine paths.
@@ -97,7 +98,7 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
-- Owner reviews TASK-0008 (`ready_for_review`); on acceptance the owner tags `2026.09.5` and publishes the Release — the task does not self-accept or create tags.
+- Finish the 2026.09.5 release sequence: push, verify develop CI green, tag `2026.09.5` on the accepted commit, create/confirm the GitHub Release and `releases/latest` resolution.
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
 - Context implementation stays closed per D-0004; any reopen requires the owner-approved Level C task first.

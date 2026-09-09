@@ -6,7 +6,7 @@
   "task_id": "TASK-0008",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -98,6 +98,8 @@ Completed:
 - 2026-09-09 M5 review round 1：REQUEST_CHANGES（1×P1：指针未引用的不可读任务不进 unresolved；4×P3）。P1+P3-3 于提交 `7e494da` 修复并补 2 项测试；round 2 复审 APPROVE（0 open P0/P1/P2；剩余 P3-1/P3-2/P3-5 为非阻断可选，P3-4 即本次 vault 同步）。
 - 2026-09-09 M5 终验：116/116 tests、check 0/0 且与 M0 基线逐字节一致、snapshot in sync、`git diff --check` 通过、真仓库多次运行 status 后工作树无新增脏文件。
 - 2026-09-09 owner review round（3×P1）闭合：①unresolved 原因码按 check finding phase 结构化推导（task-state/runtime-projection 两相，删除手维护 code allowlist 与 `TASK_RUNTIME_UNRESOLVED` 伪造回退；owner 复现场景现输出实际诊断 `TASK_RUNTIME_CLOSED_LOCAL`）；②S0/S1 双臂消融补齐并存档；③handoff 条目同步。补 3 项测试（stale closed-local row / dangling duplicate rows 实际码 / storage findings 不进 reason）。
+- 2026-09-09 增量复核闭合：证据原文逐字存档至 `vault/details/status-blind-test-2026-09/`（提交 `fc0cf6d`）；owner 最终审查 APPROVE（无 open P0/P1/P2），授权发布。
+- 2026-09-09 owner 验收：TASK-0008 转 accepted；按 owner 指定顺序执行推送 → develop CI 全绿 → 在 accepted 提交打 `2026.09.5` tag → Release（本环境无 gh 时 Release 对象由 owner 创建，与 09.3/09.4 先例一致）。durable CLI decision 记为 D-0007。
 
 ## Execution Record
 
