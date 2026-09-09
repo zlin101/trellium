@@ -1654,17 +1654,45 @@ def parse_task_state_block(text: str) -> tuple[dict | None, list[tuple[str, str]
     return state, []
 
 
-def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks: list[dict]) -> None:
+def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks: list[dict], policy: dict | None = None) -> None:
     if runtime_text is None:
         return
     by_id: dict[str, list[dict]] = {}
     for task in tasks:
         by_id.setdefault(task["task_id"], []).append(task)
 
-    def resolve(task_id: str) -> None:
+    closed_lifecycles = {"accepted", "superseded"}
+    storage = policy.get("task_storage") if isinstance(policy, dict) else None
+    local_mode = storage == "local"
+    reported_missing_local: set[str] = set()
+
+    def resolve(task_id: str, row_status: str | None = None) -> None:
         matches = by_id.get(task_id)
         if not matches:
-            run.add("runtime-projection", "TASK_RUNTIME_MISSING", "error", "vault/runtime.md", f"runtime points to a task file that does not exist: {task_id}", task_id=task_id)
+            if local_mode:
+                if task_id in reported_missing_local:
+                    return
+                reported_missing_local.add(task_id)
+                if row_status in closed_lifecycles:
+                    run.add(
+                        "runtime-projection",
+                        "TASK_RUNTIME_CLOSED_LOCAL",
+                        "error",
+                        "vault/runtime.md",
+                        f"local task {task_id} is closed ({row_status}) but its runtime row still exists; remove the stale row from runtime.md — closed local tasks stay out of the hot path, and durable conclusions belong in canonical vault files",
+                        task_id=task_id,
+                    )
+                else:
+                    run.add(
+                        "runtime-projection",
+                        "TASK_RUNTIME_LOCAL_UNRESOLVED",
+                        "warning",
+                        "vault/runtime.md",
+                        f"runtime points to local task {task_id}, but its file is not in this worktree: this is expected in a fresh clone (local task files are ignored) or the file may have been lost locally; recover the original task file or rebuild the contract with owner approval; the runtime summary is an unverified clue and grants no authority",
+                        task_id=task_id,
+                    )
+            else:
+                run.add("runtime-projection", "TASK_RUNTIME_MISSING", "error", "vault/runtime.md", f"runtime points to a task file that does not exist: {task_id}", task_id=task_id)
             return
         task = matches[0]
         if task["legacy"]:
@@ -1691,9 +1719,8 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
             )
 
     projected = set(row_counts)
-    closed = {"accepted", "superseded"}
     for task in tasks:
-        if not task["valid"] or task["lifecycle"] in closed:
+        if not task["valid"] or task["lifecycle"] in closed_lifecycles:
             continue
         if task["task_id"] not in projected:
             run.add(
@@ -1706,11 +1733,20 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
             )
 
     for task_id, status in rows:
-        resolve(task_id)
+        resolve(task_id, status)
         matches = by_id.get(task_id) or []
         task = matches[0] if matches else None
         if task is None or task["legacy"] or task.get("lifecycle") is None:
             continue
+        if local_mode and task["lifecycle"] in closed_lifecycles:
+            run.add(
+                "runtime-projection",
+                "TASK_RUNTIME_CLOSED_LOCAL",
+                "error",
+                "vault/runtime.md",
+                f"local task {task_id} is closed ({task['lifecycle']}) but its runtime row still exists; remove the stale row from runtime.md — closed local tasks stay out of the hot path, and durable conclusions belong in canonical vault files",
+                task_id=task_id,
+            )
         if status not in LIFECYCLE_VALUES:
             run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", f"Active Tasks row for {task_id} uses status {status!r} outside the lifecycle enum", task_id=task_id)
         elif status != task["lifecycle"]:
@@ -1908,7 +1944,7 @@ def run_vault_checks(target: Path) -> VaultCheckRun:
     texts = check_required_files(run)
     policy = check_policy_block(run, texts.get("vault/index.md"))
     tasks, ledgers, archive = discover_task_files(run)
-    check_runtime_projection(run, texts.get("vault/runtime.md"), tasks)
+    check_runtime_projection(run, texts.get("vault/runtime.md"), tasks, policy)
     measure_hot_files(run, texts)
     check_budgets(run, policy)
     check_task_budget(run, policy, tasks, ledgers, archive)

@@ -252,13 +252,15 @@ python3 scripts/trellium.py check /path/to/project --format json  # stable JSON
 
 - `trellium-task-state` blocks: the strict JSON block at the top of Level B/C task files, the single owner of lifecycle, authority level, current slice, and gate results;
 - the `trellium-policy` block: project policy in `vault/index.md`, the single source for budgets and TASK storage (`tracked | local`);
-- runtime projection: consistency between `runtime.md` Active Tasks rows and each task's block lifecycle;
+- runtime projection: consistency between `runtime.md` Active Tasks rows and each task's block lifecycle; in `local` projects an open row whose task file is absent raises the clone-safe warning `TASK_RUNTIME_LOCAL_UNRESOLVED` (explaining fresh clone vs local loss, recovery actions, and that the summary grants no authority), while a leftover closed local row raises the `TASK_RUNTIME_CLOSED_LOCAL` error;
 - budget measurements: hot-file lines, UTF-8 bytes, max line size, and entry counts are always reported; only explicitly configured policy thresholds raise over-budget errors;
 - TASK storage: actual Git state compared against the configured strategy (tracked/local).
 
 Exit codes: `2` when any error finding exists; `0` with warnings only, but the summary always shows them (never an unconditional PASS); `1` for operational failures such as an invalid target. `check` never auto-fixes, never writes to the target, never accesses the network, and never executes commands found in documents.
 
 Legacy projects fail closed: historical task files without a state block produce legacy warnings and their lifecycle is never guessed; a missing policy block is never replaced with hidden defaults. State blocks never grant approvals — Allowed, Requires Approval, Forbidden, and acceptance always stay owned by the task body and user instructions.
+
+For `task_storage=local` tasks, the Durable knowledge disposition line in Memory Updates must be completed by hand before `accepted` (`none — <reason>` or `distilled — <canonical destinations>`; unfilled counts as `pending` and blocks `accepted`). Wrong contracts go to `superseded` immediately — the gate never blocks that.
 
 ### Revising the protocol
 

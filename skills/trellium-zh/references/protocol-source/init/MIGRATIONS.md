@@ -7,6 +7,14 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.4 — Local TASK 生命周期闭环与 clone-safe 投影
+
+- Added: local 任务进入 `accepted` 前的人工 Durable Knowledge Disposition——任务模板 Memory Updates 新增 `Durable knowledge disposition` 行（`not_applicable | pending | none — <reason> | distilled — <canonical destinations>`）；`pending` 的 local 任务不得进入 `ready_for_review` 或 `accepted`；`none` 需写明理由；`distilled` 只列 canonical 目标文件。tracked 任务默认 `not_applicable`。载体经 W 组消融选定：W1 单行（W1 与 W2 判断等效取更小载体；W0 全对只把增量收益记为 Inconclusive，不构成流程增强 No-Go）。
+- Breaking（仅 local 热路径）：local 任务进入 `accepted`/`superseded` 后应删除 `runtime.md` 对应行；checker 对残留的 closed local 行（无论 TASK 文件是否存在）报新 error `TASK_RUNTIME_CLOSED_LOCAL`。tracked 模式关闭后仍可保留 runtime 行，行为不变。
+- Added: fresh clone 中 runtime 指向的 missing open local TASK 改报新 warning `TASK_RUNTIME_LOCAL_UNRESOLVED`（同一任务按 row+Focus 去重），文案同时说明可能是正常 fresh clone 或本地误删、恢复动作（取回原任务文件或经 owner 批准重建契约）与 runtime 摘要不授予 Authority。tracked 指针的 `TASK_RUNTIME_MISSING` error 与 policy 缺失时的严格 projection 行为保持不变（C0/C1 characterization 证明仅改协议文档无法消除 local 误报，checker 代码层必要）。
+- Agent migration: 不批量回填历史 TASK。升级既有 local 项目时，人工审查 `runtime.md` 中 closed local 行并删除（不删除 local TASK 文件、不自动修改 Git、不自动 untrack）；superseded 转换不受 disposition 阻塞，未处置事项显式转交替代任务或 owner。
+- Auto: 未定制模板刷新到 2026.09.4（runtime/tasks README 模板新增 local 语义提示行）；protected data（runtime、handoff、decisions、project、collaboration）仍不自动改写。
+
 ## 2026.09.3 — check 状态唯一性与必需文件修复
 
 - Added: `trellium.py check` 新增三类 error 发现：跨任务文件重复 `task_id`（`TASK_ID_DUPLICATE`）、runtime Active Tasks 表重复行（`TASK_RUNTIME_DUPLICATE`）、未关闭任务（draft/active/blocked/ready_for_review）在 runtime 中没有任何 Active Tasks 投影行（`TASK_PROJECTION_MISSING`）。

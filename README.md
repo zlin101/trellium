@@ -252,13 +252,15 @@ python3 scripts/trellium.py check /path/to/project --format json  # 稳定 JSON
 
 - `trellium-task-state` 状态块：Level B/C 任务文件顶部的严格 JSON 块，是 lifecycle、授权等级、当前 slice 与 Gate 结果的唯一 owner；
 - `trellium-policy` 策略块：`vault/index.md` 中的项目策略，唯一配置预算与 TASK storage（`tracked | local`）；
-- runtime 投影：`runtime.md` Active Tasks 行与状态块 lifecycle 的一致性；
+- runtime 投影：`runtime.md` Active Tasks 行与状态块 lifecycle 的一致性；`local` 项目中指向不存在任务文件的 open 行报 clone-safe warning `TASK_RUNTIME_LOCAL_UNRESOLVED`（说明可能是 fresh clone 或本地误删、恢复动作，且该摘要不授予 Authority），closed local 行残留报 `TASK_RUNTIME_CLOSED_LOCAL` error；
 - 预算测量：热文件行数、UTF-8 字节、最大单行、条目数始终报告；只有策略块显式配置的阈值会触发超限错误；
 - TASK storage：按策略对比 Git 实际状态（tracked/local）。
 
 退出码：发现 error 退出 `2`；只有 warning 退出 `0`，但 summary 必须显示 warning，不会显示无条件 PASS；目标无效等操作错误退出 `1`。`check` 不会自动修复任何文件、不写入目标项目、不访问网络、不执行文档中出现的命令。
 
 对旧项目是 fail-closed 的：没有状态块的历史 TASK 报 legacy warning，不推断状态；没有策略块时不套用隐藏默认值。状态块不授予批准——Allowed、Requires Approval、Forbidden 与验收始终由任务正文与用户指令决定。
+
+`task_storage=local` 的任务进入 `accepted` 前还需人工完成 Memory Updates 中的 Durable knowledge disposition（`none — <理由>` 或 `distilled — <canonical 目标文件>`；未填写视为 `pending` 并阻塞 `accepted`）；错误契约走 `superseded` 立即废止，不受该 gate 阻塞。
 
 ### 修订协议
 

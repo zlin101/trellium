@@ -160,6 +160,15 @@ Level B/C 任务文件在标题之后、叙事正文之前放置 `trellium-task-
 
 TASK storage 由 policy 块的 `task_storage` 决定：`tracked`（默认）时任务文件纳入版本控制；`local` 时任务文件、review 台账与 archive 不 tracked、不 staged，Accepted 后的结论必须先蒸馏进 `decisions.md` 等公开位置。storage 迁移由 owner 决定，工具不自动 untrack、不修改 `.gitignore`。
 
+local 任务的生命周期边界（Durable Knowledge Disposition，人工 gate 而非机器校验）：
+
+- local 任务进入 `accepted` 前，必须在任务文件的 Memory Updates 中显式记录处置结果：`none — <理由>`（没有会约束未来 clone 的新事实）或 `distilled — <canonical 目标文件>`（长期事实的唯一正式正文写在那些文件中，不在此复制第二份）；未记录视为 `pending`，`pending` 的 local 任务不得进入 `ready_for_review` 或 `accepted`。
+- 没有长期结论的任务允许明确记录 `none`，关闭后不留下额外项目记忆；不把 TASK 全文、review 流水或执行日志复制进 Vault。
+- `superseded` 不被该 gate 阻塞：错误、过期或不安全的任务契约可立即废止；未处置的长期事实作为显式 next action 转交替代任务或 owner。
+- local 任务进入 `accepted`/`superseded` 后删除 `runtime.md` 对应行（closed 任务不占热路径），并压缩 `handoff.md` 相关条目；稳定结论必须已落入 canonical 文件。
+- fresh clone 中被忽略的 local TASK 文件必然不存在：`runtime.md` 的 open 摘要只是未验证的工作线索，不是任务契约，不授予 Authority；继续工作必须取回原任务文件，或经 owner 批准后重建任务契约。
+- tracked 任务默认 `not_applicable`（仍可主动记录 `none`/`distilled`），其 runtime closed 行为不变；该规则只作用于新关闭或重新打开后再关闭的任务，不批量回填历史。
+
 ### details/
 
 按路由读取的长上下文：

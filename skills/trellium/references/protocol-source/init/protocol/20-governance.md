@@ -203,6 +203,8 @@ Capability Tags 只描述工作需要的能力，不授予权限。
 
 测试通过不等于任务完成。任务完成必须同时满足验收、验证和记忆更新。
 
+`task_storage=local` 的任务进入 `accepted` 前还必须完成 Durable Knowledge Disposition（定义见 `10-vault.md`）：`pending` 不得进入 `ready_for_review` 或 `accepted`；`none` 需写明理由；`distilled` 只列 canonical 目标文件，不复制正文。契约错误、过期或不安全的任务走 `superseded` 立即废止，不被该 gate 阻塞，未处置事项显式转交。local 任务关闭后删除 `runtime.md` 对应行并压缩相关 handoff 条目。tracked 任务默认 `not_applicable`，关闭后可保留 runtime 行（本条不改变 tracked 行为）。
+
 ## 升级规则
 
 出现以下情况时，必须升级任务等级或请求确认：

@@ -78,6 +78,8 @@ vault/tasks/<task-id>.md
 11. 任务中断或转交时更新 `vault/handoff.md`；
 12. 用户挂起任务时记入 `vault/parked.md`，重新提起时升回。
 
+`task_storage=local` 的项目中，`runtime.md` 指向的任务文件不在本工作区（fresh clone 中 local 任务文件被忽略，或文件意外丢失）时，该行只是未验证的工作线索：它不授予 Authority，不得据此继续实现；先向 owner 取回原任务文件，或经 owner 批准后重建任务契约。
+
 ## 禁止内容
 
 不要把以下内容写入口文件：
