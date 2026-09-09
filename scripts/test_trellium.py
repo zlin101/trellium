@@ -1653,3 +1653,172 @@ class VaultCheckTest(TargetTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LocalProjectionTest(VaultCheckTest):
+    """Decision-table coverage for local-aware runtime projection (2026.09.4)."""
+
+    def test_local_open_task_with_matching_row_passes(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-open.md": "# TASK-0001 - Open\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),), focus="TASK-0001"),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        payload = self.check_json(target)
+        self.assertNotIn("TASK_RUNTIME_MISSING", self.codes(payload))
+        self.assertNotIn("TASK_RUNTIME_LOCAL_UNRESOLVED", self.codes(payload))
+
+    def test_local_open_task_without_row_is_projection_error(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-open.md": "# TASK-0001 - Open\n\n" + state_block(valid_state()) + "\n"},
+        )
+
+        payload = self.check_json(target)
+        self.assertIn("TASK_PROJECTION_MISSING", self.codes(payload))
+
+    def test_local_missing_task_warning_covers_recovery_and_no_authority(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        payload = self.check_json(target)
+        self.assertIn("TASK_RUNTIME_LOCAL_UNRESOLVED", self.codes(payload))
+        self.assertNotIn("TASK_RUNTIME_MISSING", self.codes(payload))
+        warnings = [f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_LOCAL_UNRESOLVED"]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]["severity"], "warning")
+        self.assertEqual(warnings[0]["task_id"], "TASK-0001")
+        message = warnings[0]["message"]
+        self.assertIn("fresh clone", message)
+        self.assertIn("lost", message)
+        self.assertIn("recover", message)
+        self.assertIn("owner approval", message)
+        self.assertIn("grants no authority", message)
+
+    def test_local_missing_warning_dedupes_row_and_focus(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),), focus="TASK-0001"),
+        )
+
+        payload = self.check_json(target)
+        warnings = [f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_LOCAL_UNRESOLVED"]
+        self.assertEqual(len(warnings), 1)
+
+    def test_local_accepted_task_with_row_is_closed_local_error(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-done.md": "# TASK-0001 - Done\n\n" + state_block(valid_state(lifecycle="accepted")) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "accepted", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2, err)
+        self.assertIn("TASK_RUNTIME_CLOSED_LOCAL", out)
+        payload = self.check_json(target)
+        self.assertIn("TASK_RUNTIME_CLOSED_LOCAL", self.codes(payload))
+
+    def test_local_closed_row_without_task_file_is_closed_local_error(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "superseded", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2, err)
+        payload = self.check_json(target)
+        closed = [f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_CLOSED_LOCAL"]
+        self.assertEqual(len(closed), 1)
+        self.assertNotIn("TASK_RUNTIME_MISSING", self.codes(payload))
+
+    def test_local_closed_task_without_row_passes(self) -> None:
+        files = {
+            "vault/tasks/TASK-0001-done.md": "# TASK-0001 - Done\n\n" + state_block(valid_state(lifecycle="accepted")) + "\n",
+            "vault/tasks/TASK-0002-old.md": "# TASK-0002 - Old\n\n" + state_block(valid_state(task_id="TASK-0002", lifecycle="superseded")) + "\n",
+        }
+        target = self.make_project(policy=local_policy(), files=files)
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        payload = self.check_json(target)
+        self.assertNotIn("TASK_RUNTIME_CLOSED_LOCAL", self.codes(payload))
+
+    def test_local_tracked_task_files_still_storage_error(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-quiet.md": "# TASK-0001 - Quiet\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
+        )
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2, err)
+        self.assertIn("TASK_STORAGE_MISMATCH", out)
+
+    def test_tracked_missing_task_still_error(self) -> None:
+        target = self.make_project(
+            policy=tracked_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2, err)
+        payload = self.check_json(target)
+        missing = [f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_MISSING"]
+        self.assertTrue(missing)
+        self.assertEqual(missing[0]["severity"], "error")
+
+    def test_missing_policy_keeps_strict_projection(self) -> None:
+        target = self.make_project(policy="", runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)))
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 2, err)
+        payload = self.check_json(target)
+        codes = self.codes(payload)
+        self.assertIn("POLICY_MISSING", codes)
+        self.assertIn("TASK_RUNTIME_MISSING", codes)
+        self.assertNotIn("TASK_RUNTIME_LOCAL_UNRESOLVED", codes)
+
+    def test_local_invalid_status_duplicate_and_drift_unchanged(self) -> None:
+        drift_target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(valid_state(lifecycle="accepted")) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)),
+        )
+        self.assertIn("TASK_RUNTIME_DRIFT", self.codes(self.check_json(drift_target)))
+
+        invalid_target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-x.md": "# TASK-0001 - X\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "onfire", "obj"),)),
+        )
+        self.assertIn("TASK_RUNTIME_INVALID", self.codes(self.check_json(invalid_target)))
+
+        duplicate_target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"), ("TASK-0001", "active", "obj2"))),
+        )
+        self.assertIn("TASK_RUNTIME_DUPLICATE", self.codes(self.check_json(duplicate_target)))
+
+    def test_text_and_json_render_new_codes(self) -> None:
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0001", "active", "obj"),)),
+        )
+
+        code, out, err = self.check(target)
+        self.assertEqual(code, 0, err)
+        self.assertIn("TASK_RUNTIME_LOCAL_UNRESOLVED", out)
+        self.assertIn("WARNING", out)
+        payload = self.check_json(target)
+        finding = next(f for f in payload["findings"] if f["code"] == "TASK_RUNTIME_LOCAL_UNRESOLVED")
+        self.assertEqual(finding["severity"], "warning")
+        self.assertEqual(finding["task_id"], "TASK-0001")
