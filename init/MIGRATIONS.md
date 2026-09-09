@@ -7,6 +7,12 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.5 — 只读 status 状态摘要
+
+- Added: `trellium.py status <target>`（`--format json` 可选）：完全只读、确定性的 owner 状态摘要，只编译 `check` 已校验的同一状态层，不新增事实源。输出：Focus（逐个标注 resolved/unresolved）；开放任务按 `draft/active/blocked/ready_for_review` 分类（含 `authority_level`、`task_path` 与可选 `current_slice`/`gates` 原值，runtime 行贡献 `runtime_projection` 的 `objective`/`next_action`）；`accepted`/`superseded` 只进 closed 计数，不进行动清单；无法解析的任务显式列入 `unresolved` 并附阻塞发现码（如 `TASK_RUNTIME_DRIFT`、`TASK_RUNTIME_LOCAL_UNRESOLVED`、`TASK_ID_DUPLICATE`），不声称 lifecycle/authority；runtime 行与状态块冲突（drift）时任务进 unresolved，不裁决哪边为真；重复行或行状态非法的行不产出投影。文本与 JSON v1 从同一份结果渲染，JSON 恒含 `schema_version/target/focus/summary/tasks/findings` 键。退出码与 `check` 一致：error → `2`，仅 warning → `0`，目标/参数错误 → `1`。
+- Agent migration: 无。`status` 是新增只读子命令：不新增 schema、依赖、网络或持久状态文件，不推断 owner approval（blocked/pending gate 只显示原值，不是完整 approval inbox），`check` 的发现、严重级与退出码零变化。
+- Auto: 无模板变更；`upgrade --apply` 仅刷新版本指针。
+
 ## 2026.09.4 — Local TASK 生命周期闭环与 clone-safe 投影
 
 - Added: local 任务进入 `accepted` 前的人工 Durable Knowledge Disposition——任务模板 Memory Updates 新增 `Durable knowledge disposition` 行（`not_applicable | pending | none — <reason> | distilled — <canonical destinations>`）；`pending` 的 local 任务不得进入 `ready_for_review` 或 `accepted`；`none` 需写明理由；`distilled` 只列 canonical 目标文件。tracked 任务默认 `not_applicable`。载体经 W 组消融选定：W1 单行（W1 与 W2 判断等效取更小载体；W0 全对只把增量收益记为 Inconclusive，不构成流程增强 No-Go）。

@@ -48,6 +48,8 @@ vault/
 
 预算线：runtime ≤ 120 行（Recent Changes ≤ 10 条）；handoff ≤ 3 条交接或 100 行；decisions ≤ 150 行或 8 条记录；parked ≤ 60 行或 20 条；tasks ≤ 40 个当前任务文件（不含 archive 与 review 台账）。以上是初始化默认值；项目当前预算与 TASK storage 只配置在 `vault/index.md` 的 `trellium-policy` 策略块中。`trellium.py check <target>` 始终测量热文件，只对显式配置的阈值报超限；策略块缺失按 legacy 报告，不用隐藏默认值替代。
 
+只读状态摘要：`trellium.py status <target>`（2026.09.5）把 check 校验的同一状态层编译成 owner 视图——Focus、开放任务分类（draft/active/blocked/ready_for_review，含 authority/slice/gates 原值与 runtime 投影）、closed 只进计数、unresolved 显式列出并附发现码；不推断 lifecycle/authority，不冒充 approval inbox，退出码与 `check` 一致（error `2` / 仅 warning `0` / 操作错误 `1`）。
+
 压缩五阶段：测量→分类→重组→校验→记录。非语义操作（搬运、索引、标注 Active、暂停任务降级为 parked 条目）Agent 自主执行；语义判定（Superseded by D-xxxx / Merged into D-xxxx / Expired、parked 清理）只提案，用户批量确认，未确认保持 Active。压缩是只含 `vault/` 变更的独立提交。
 
 决策索引化：decisions.md 变纯索引，正文入 `vault/decisions/D-xxxx-slug.md`。索引原则：增长进目录，读取走索引。

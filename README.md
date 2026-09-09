@@ -262,6 +262,23 @@ python3 scripts/trellium.py check /path/to/project --format json  # 稳定 JSON
 
 `task_storage=local` 的任务进入 `accepted` 前还需人工完成 Memory Updates 中的 Durable knowledge disposition（`none — <理由>` 或 `distilled — <canonical 目标文件>`；未填写视为 `pending` 并阻塞 `accepted`）；错误契约走 `superseded` 立即废止，不受该 gate 阻塞。
 
+### 查看所有者状态摘要（status，2026.09.5）
+
+```bash
+python3 scripts/trellium.py status /path/to/project                # 文本摘要
+python3 scripts/trellium.py status /path/to/project --format json  # 稳定 JSON v1
+```
+
+`status` 是完全只读、确定性的 owner 状态摘要命令（2026.09.5 引入），解决"想知道当前进展，还得让 Agent 重读 runtime/TASK 手工汇总"的重复成本。它只编译 `check` 已校验的同一状态层，不新增事实源：
+
+- Focus 行逐个标注 resolved/unresolved；
+- 开放任务按 `draft / active / blocked / ready_for_review` 分类，每项给出 `authority_level`、任务文件路径与可选的 `current_slice`/`gates` 原值；runtime 行贡献 `objective`/`next` 投影，重复行或行状态非法时不产出投影；
+- `accepted`/`superseded` 只进 closed 计数，不进入行动清单；
+- 无法解析的任务显式列入 `unresolved`（附阻塞发现码如 `TASK_RUNTIME_DRIFT`、`TASK_RUNTIME_LOCAL_UNRESOLVED`），绝不推断 lifecycle 或 authority；runtime 与状态块冲突（drift）时任务进入 unresolved，不裁决哪边为真；
+- 退出码与 `check` 一致（error → `2`，仅 warning → `0`，操作错误 → `1`）。
+
+它是状态摘要，不是完整 owner approval inbox：blocked 与 pending gate 只显示原值，不会被翻译成"owner 必须批准"。文本与 JSON 从同一份结果渲染，JSON v1 恒含 `schema_version/target/focus/summary/tasks/findings` 键。`status` 不写目标、不访网、不执行文档命令。
+
 ### 修订协议
 
 如果要改 Trellium 本身，只修改：

@@ -48,6 +48,8 @@ vault/
 
 Budgets: runtime ≤ 120 lines (Recent Changes ≤ 10 entries); handoff ≤ 3 entries or 100 lines; decisions ≤ 150 lines or 8 full records; parked ≤ 60 lines or 20 entries; tasks ≤ 40 current task files (excluding archive and review ledgers). These are initialization defaults; the project's current budgets and TASK storage live once in the `trellium-policy` block in `vault/index.md`. `trellium.py check <target>` measures hot files and only enforces explicitly configured thresholds; a missing policy block is reported as legacy, never substituted with hidden defaults.
 
+Read-only status summary: `trellium.py status <target>` (2026.09.5) compiles the state layer checked by `check` into an owner view — focus, open-task classification (draft/active/blocked/ready_for_review with authority/slice/gates verbatim and the runtime projection), closed tasks as counts only, and explicit unresolved entries with finding codes; lifecycle and authority are never inferred, it is not an approval inbox, and exit codes match `check` (`2` errors / `0` warnings-only / `1` operational).
+
 Compaction runs five phases: measure → classify → restructure → verify → record. Non-semantic moves (relocating bodies, indexing, marking Active, demoting paused tasks to parked entries) run autonomously; semantic judgments (`Superseded by D-xxxx` / `Merged into D-xxxx` / `Expired`, parked cleanup) are proposal-only, confirmed by the user in batch, and stay `Active` until confirmed. Compaction is a dedicated commit containing only `vault/` changes.
 
 Decision indexing: decisions.md becomes a pure index and bodies move to `vault/decisions/D-xxxx-slug.md`. Index principle: growth goes to directories, reading goes through indexes.

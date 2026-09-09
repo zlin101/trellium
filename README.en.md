@@ -262,6 +262,23 @@ Legacy projects fail closed: historical task files without a state block produce
 
 For `task_storage=local` tasks, the Durable knowledge disposition line in Memory Updates must be completed by hand before `accepted` (`none — <reason>` or `distilled — <canonical destinations>`; unfilled counts as `pending` and blocks `accepted`). Wrong contracts go to `superseded` immediately — the gate never blocks that.
 
+### Viewing the owner status summary (status, 2026.09.5)
+
+```bash
+python3 scripts/trellium.py status /path/to/project                # text summary
+python3 scripts/trellium.py status /path/to/project --format json  # stable JSON v1
+```
+
+`status` is a fully read-only, deterministic owner status summary (introduced in 2026.09.5) that removes the repeated cost of having an agent re-read runtime and task files by hand just to report progress. It only compiles the same state layer `check` already validates and adds no new fact source:
+
+- the Focus line marks each pointer resolved/unresolved;
+- open tasks are classified as `draft / active / blocked / ready_for_review`, each with its `authority_level`, task file path, and optional `current_slice`/`gates` verbatim; runtime rows contribute the `objective`/`next` projection — duplicated or enum-invalid rows contribute none;
+- `accepted`/`superseded` tasks appear only in the closed count, never in action lists;
+- tasks whose state cannot be determined are listed explicitly under `unresolved` with the blocking finding codes (such as `TASK_RUNTIME_DRIFT` or `TASK_RUNTIME_LOCAL_UNRESOLVED`); lifecycle and authority are never inferred, and a runtime row that conflicts with its state block demotes the task to unresolved instead of picking a side;
+- exit codes match `check` (`2` for errors, `0` with warnings only, `1` for operational failures).
+
+It is a status summary, not a full owner approval inbox: blocked tasks and pending gates are shown verbatim, never translated into "the owner must approve". Text and JSON render from one result; JSON v1 always carries the `schema_version/target/focus/summary/tasks/findings` keys. `status` never writes to the target, never accesses the network, and never executes commands found in documents.
+
 ### Revising the protocol
 
 To change Trellium itself, modify only:
