@@ -5,16 +5,6 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0006 - 2026-09-08
-
-- Objective: 执行 `docs/superpowers/plans/2026-09-08-non-context-vault-optimization-glm-plan.md`——六候选消融实验与逐项 Go/No-Go/Blocked 结论；仅 M2 可条件生产化。
-- Completed: M0-M2 全部落地。预注册先于结果冻结；M1 基线矩阵（bytes 实测：默认路径 14.3 KB、最大 TASK 14.2 KB vs 深度现场 43-52/50-80 KB；事件审计多为 none observed）；M2 消融完毕——确定性矩阵 1 个设计内假阳性，判断 cell（E2→E1→E0，GLM 子代理封闭书投放，协议修订 1）：E0 4/4、E1 4/4、E2 3/4（场景 C 盲从假阳性判错）→ **M2 = No-Go**，v0 零代码；M3/M5-slice Blocked for evidence；M4 迁移规则草案；M5-decision D1 草案（未应用）；M6 延后。自查 review ledger 无 open finding。
-- In progress: 无。
-- Failed attempts: E2 自动 freshness 被 kill criterion 删除（假阳性误导）；E1 无已证明收益。
-- Blockers: 无实现待办；M3/M5 解锁需第二 local 项目与真实复合任务（owner 侧）。
-- Next best action: owner 验收 TASK-0006 各候选结论（可分别接受）；若不认可 M2 exploratory 强度，可亲手重跑采集 bytes/耗时（协议修订流程就位）。
-- Files to read first: `docs/evals/non-context-optimization-2026-09/results.md`、`vault/tasks/TASK-0006-review.md`、`vault/tasks/TASK-0006-non-context-optimization.md`、`vault/runtime.md`。
-
 ## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。

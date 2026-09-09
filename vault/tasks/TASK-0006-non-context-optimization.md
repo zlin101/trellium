@@ -6,7 +6,7 @@
   "task_id": "TASK-0006",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -206,6 +206,32 @@ Risks:
 Next action:
 
 - owner 按修正口径验收 TASK-0005 与 TASK-0006。
+
+### 2026-09-09 - Agent: GLM (ZCode) — owner 正式验收，accepted（结论范围严格限定）
+
+Context read:
+
+- Owner 验收指令：复核 6a2043e 通过，授权 lifecycle 更新；accepted 结论严格限定。
+
+Changes made:
+
+- 状态块 ready_for_review → accepted；runtime 投影、shadow ledger 转换行、handoff（本条目并入任务文件）同步。
+
+Checks run:
+
+- 提交前门禁复跑（check / sync / 87 tests / git diff --check）。
+
+Review and reflection:
+
+- **accepted 的结论范围严格限定为**：E2 No-Go；E1 Inconclusive；v0 本周期不实现、方向未被证伪；其余候选（M3/M5-slice/M6）继续等待真实证据。D-0004 保持不变，不新增 Evidence Receipt 决策，M3-M6 不重开。
+
+Risks:
+
+- 无新增；重开路径见 results.md 与 D-0004。
+
+Next action:
+
+- 无（accepted）。
 
 ## Memory Updates
 

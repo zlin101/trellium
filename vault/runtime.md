@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0006
+- TASK-0001
 
 ## Active Tasks
 
@@ -19,8 +19,8 @@ table holds pointers only.
 | TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | accepted | Closed 2026-09-08: release is live and latest resolves; title/notes demoted to optional by owner decision (D-0003). |
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
 | TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | blocked | M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode. |
-| TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | ready_for_review | Final gate closed (owner round-2 review); awaiting owner acceptance. |
-| TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | ready_for_review | Round-2 findings fixed; precise conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle. |
+| TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
+| TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -34,7 +34,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
 - TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
-- TASK-0006: M0-M2 complete — preregistration frozen before results; E0/E1/E2 ablation run (E0 4/4, E1 4/4, E2 3/4 with the designed false-positive causing the only error). Conclusions at owner-reviewed precise scope: E2 No-Go, E1 Inconclusive (cost unmeasured), v0 not implemented this cycle; M3 Blocked, M4 rules draft (no numeric threshold), M5 Blocked + D0-sufficient, M6 deferred. Round-2 findings all fixed; awaiting owner acceptance.
+- TASK-0005: coverage counts single-sourced into the shadow ledger (D-0005); cold-start Protocol v2 isolated under `docs/evals/cold-start-v2/`. Accepted 2026-09-09 after owner review round 2 (final gate closed, six findings fixed).
+- TASK-0006: M0-M2 complete — preregistration frozen before results; E0/E1/E2 ablation run (E0 4/4, E1 4/4, E2 3/4 with the designed false-positive causing the only error). Accepted 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified); M3 Blocked, M4 rules draft (no numeric threshold), M5 Blocked + D0-sufficient, M6 deferred.
 
 ## Constraints
 
@@ -45,6 +46,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Owner formally accepted TASK-0005 and TASK-0006 (2026-09-09); TASK-0006 conclusions strictly scoped: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle, direction not falsified; D-0004 unchanged, no Evidence Receipt decision added, M3-M6 not reopened. Focus back to TASK-0001.
 - Owner review round 2 (REQUEST_CHANGES) on TASK-0005/0006: six findings fixed — TASK-0005 final gate closed; 12 raw first answers archived; M2 conclusions narrowed (E2 No-Go, E1 Inconclusive, v0 not implemented this cycle, direction not falsified); unsafe untracked golden split; 20 KB threshold removed; D-0004 reconsider_when draft rejected (D0 sufficient).
 
 - TASK-0006 M2 ablation concluded (E1 Inconclusive — cost unmeasured; E2 No-Go — false-positive misled; 0 fresh-mislabels) — Evidence Receipt v0 not implemented this cycle, zero code changes, direction not falsified; M3-M6 conclusions delivered; task ready_for_review.

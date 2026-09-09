@@ -6,7 +6,7 @@
   "task_id": "TASK-0005",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -149,6 +149,28 @@ Risks:
 Next action:
 
 - owner review（最终 accepted 与否由 owner 决定）；期间本轮修复即冻结，不追加范围。
+
+### 2026-09-09 - Agent: GLM (ZCode) — owner 正式验收，accepted
+
+Context read:
+
+- Owner 验收指令（复核 6a2043e，六项 finding 全部关闭，正式验收通过；授权 lifecycle 更新）。
+
+Changes made:
+
+- 状态块 ready_for_review → accepted；runtime 投影、shadow ledger 转换行同步。
+
+Checks run:
+
+- 提交前门禁复跑（check / sync / 87 tests / git diff --check）。
+
+Review and reflection:
+
+- 无。
+
+Next action:
+
+- 无（accepted）。
 
 ## Memory Updates
 
