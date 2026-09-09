@@ -2051,7 +2051,7 @@ class StatusSummaryTest(VaultCheckMixin, TargetTestCase):
         self.assertEqual(code, 2)
         unresolved = payload["tasks"]["unresolved"]
         self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0042"])
-        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_UNRESOLVED")
+        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_DUPLICATE")
         self.assertNotIn("task_path", unresolved[0])
 
     def test_unreadable_task_file_is_unresolved_without_pointer(self) -> None:
@@ -2088,6 +2088,47 @@ class StatusSummaryTest(VaultCheckMixin, TargetTestCase):
         self.assertEqual(code, 2)
         self.assertEqual(payload["tasks"]["unresolved"], [])
         self.assertEqual(payload["summary"]["unresolved"], 0)
+
+    def test_stale_closed_local_row_reports_the_actual_finding(self) -> None:
+        # Owner review repro: a runtime row naming a closed task whose file is
+        # absent (local mode) must surface the checker's own diagnosis — the
+        # fix is removing the stale row, not recovering a task.
+        target = self.make_project(
+            policy=local_policy(),
+            runtime=build_runtime(rows=(("TASK-0042", "superseded", "obj"),)),
+        )
+
+        code, payload, _err = self.status_json(target)
+
+        self.assertEqual(code, 2)
+        unresolved = payload["tasks"]["unresolved"]
+        self.assertEqual([item["task_id"] for item in unresolved], ["TASK-0042"])
+        self.assertEqual(unresolved[0]["reason"], "TASK_RUNTIME_CLOSED_LOCAL")
+        self.assertNotIn("task_path", unresolved[0])
+        self.assertNotIn("lifecycle", unresolved[0])
+        code, out, _err = self.status(target)
+        self.assertIn("reason=TASK_RUNTIME_CLOSED_LOCAL", out)
+        self.assertNotIn("TASK_RUNTIME_UNRESOLVED", out)
+
+    def test_storage_findings_never_become_lifecycle_reasons(self) -> None:
+        # The reason vocabulary is derived from lifecycle phases, not a code
+        # allowlist: storage mismatches keep the task classified and never
+        # leak into any reason string.
+        target = self.make_project(
+            policy=local_policy(),
+            files={"vault/tasks/TASK-0001-quiet.md": "# TASK-0001 - Quiet\n\n" + state_block(valid_state()) + "\n"},
+            runtime=build_runtime(rows=(("TASK-0001", "draft", "obj"),)),
+        )
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+
+        code, payload, _err = self.status_json(target)
+
+        self.assertEqual(code, 2)
+        self.assertIn("TASK_STORAGE_MISMATCH", self.codes({"findings": payload["findings"]}))
+        self.assertEqual([item["task_id"] for item in payload["tasks"]["draft"]], ["TASK-0001"])
+        self.assertEqual(payload["tasks"]["unresolved"], [])
+        self.assertNotIn("reason", payload["tasks"]["draft"][0])
 
     def test_status_is_read_only_and_deterministic(self) -> None:
         target = self.mixed_fixture()

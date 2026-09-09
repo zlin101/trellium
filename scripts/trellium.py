@@ -1477,6 +1477,11 @@ class VaultCheckRun:
         ordered = sorted(self.findings, key=lambda item: (item[0], item[2], item[1]["code"], item[1]["message"]))
         return [finding for _phase, finding, _path in ordered]
 
+    def findings_with_phase(self) -> list[tuple[str, dict]]:
+        """Findings in report order, paired with their check phase name."""
+        ordered = sorted(self.findings, key=lambda item: (item[0], item[2], item[1]["code"], item[1]["message"]))
+        return [(FINDING_PHASES[phase], finding) for phase, finding, _path in ordered]
+
     @property
     def errors(self) -> list[dict]:
         return [finding for finding in self.sorted_findings() if finding["severity"] == "error"]
@@ -2027,32 +2032,22 @@ def check_project(args: argparse.Namespace) -> int:
 STATUS_OPEN_LIFECYCLES = ("draft", "active", "blocked", "ready_for_review")
 CLOSED_LIFECYCLES = frozenset({"accepted", "superseded"})
 
-# Finding codes that make a task's lifecycle undeterminable. Runtime rows are
-# projections: a drifted row demotes the task to unresolved instead of letting
-# either side win, while storage and budget findings never demote a lifecycle
-# that the state block owns.
-STATUS_UNRESOLVED_CODES = frozenset({
-    "FILE_UNREADABLE",
-    "SYMLINK_INPUT",
-    "TASK_ID_DUPLICATE",
-    "TASK_ID_MISMATCH",
-    "TASK_RUNTIME_DRIFT",
-    "TASK_RUNTIME_LOCAL_UNRESOLVED",
-    "TASK_RUNTIME_MISSING",
-    "TASK_RUNTIME_UNRESOLVED",
-    "TASK_STATE_DUPLICATE",
-    "TASK_STATE_INVALID",
-    "TASK_STATE_MISSING",
-})
+# Unresolved reasons come straight from the check phases that speak about
+# lifecycle: the task-state side (the block) and the runtime-projection side
+# (the pointer). There is no hand-maintained list of finding codes to drift
+# out of sync when check grows: storage and budget findings never demote or
+# mis-describe a lifecycle that the state block owns, simply because their
+# phases are excluded here.
+STATUS_REASON_PHASES = frozenset({"task-state", "runtime-projection"})
 
 
-def status_unresolved_reasons(findings: list[dict]) -> dict[str, list[str]]:
-    """Map task ids to ordered unique finding codes that block classification."""
+def status_unresolved_reasons(phase_findings: list[tuple[str, dict]]) -> dict[str, list[str]]:
+    """Map task ids to ordered unique finding codes from lifecycle phases."""
     reasons: dict[str, list[str]] = {}
-    for finding in findings:
-        code = finding["code"]
-        if code not in STATUS_UNRESOLVED_CODES:
+    for phase, finding in phase_findings:
+        if phase not in STATUS_REASON_PHASES:
             continue
+        code = finding["code"]
         task_id = finding.get("task_id")
         if task_id is None:
             # Path-only findings name current task files only: review ledgers
@@ -2067,8 +2062,6 @@ def status_unresolved_reasons(findings: list[dict]) -> dict[str, list[str]]:
             ):
                 continue
             task_id = match.group(1)
-        if task_id is None:
-            continue
         codes = reasons.setdefault(task_id, [])
         if code not in codes:
             codes.append(code)
@@ -2081,7 +2074,8 @@ def build_status_payload(
     texts: dict[str, str],
     tasks: list[dict],
 ) -> dict:
-    findings = run.sorted_findings()
+    phase_findings = run.findings_with_phase()
+    findings = [finding for _phase, finding in phase_findings]
     runtime_text = texts.get("vault/runtime.md")
     rows: list[tuple[str, str, str, str]] = []
     focus_ids: list[str] = []
@@ -2105,7 +2099,7 @@ def build_status_payload(
         elif task_id in projections:
             del projections[task_id]
 
-    reasons = status_unresolved_reasons(findings)
+    reasons = status_unresolved_reasons(phase_findings)
     open_buckets: dict[str, list[dict]] = {lifecycle: [] for lifecycle in STATUS_OPEN_LIFECYCLES}
     unresolved: list[dict] = []
     unresolved_ids: set[str] = set()
@@ -2113,9 +2107,13 @@ def build_status_payload(
     closed = 0
 
     def unresolved_entry(task_id: str, path: str | None) -> dict:
+        # Every unresolved source (invalid records, drift, dangling rows or
+        # focus pointers, unreadable files) emits a lifecycle-phase finding,
+        # so the reason below is the actual check diagnosis. "UNVERIFIED" is a
+        # neutral last resort, never a fabricated checker code.
         entry: dict = {
             "task_id": task_id,
-            "reason": ",".join(reasons.get(task_id) or ["TASK_RUNTIME_UNRESOLVED"]),
+            "reason": ",".join(reasons.get(task_id) or ["UNVERIFIED"]),
         }
         if path is not None:
             entry["task_path"] = path
