@@ -1,6 +1,6 @@
-# Review Pack R0/R1 消融实验协议（预注册 v1）
+# Review Pack R0/R1 消融实验协议（预注册 v1.1）
 
-- 日期：2026-09-11（冻结于任何 Pack 制作与 reviewer 会话之前）
+- 日期：2026-09-11（v1 冻结于任何 Pack 制作与 reviewer 会话之前；v1.1 修订于 M2 提交之后、M3 首个会话之前，见文末修订记录）
 - 上位计划：`docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md`（§5-§11）
 - 任务：`vault/tasks/TASK-0009-review-pack-ablation.md`
 - 本文件与 `prompts.md`、`scoring.md`、空 `results.md` 构成 M1 预注册四件套；提交后不静默改写，修订追加版本号与原因。
@@ -117,3 +117,15 @@ docs/evals/review-pack-2026-09/
 3. 正样本场景中不匹配任何 golden 的 blocker 主张逐条归类：`false_positive`（无可定位证据/误读快照/重复已关闭 finding 当 blocker/将 P3 升级为 blocker）或 `unlisted_real`（有明确契约违反且可独立复现，owner 未记录；不参与 Gate，但必须在 results.md 中如实列出供 owner 裁决）。
 4. 成本指标按 arm 汇总中位数并保留每会话原值；每场景单会话召回率单独列出。
 5. 结论由 §8 Gate 从原始记录机械推导；推导过程写入 results.md，可被第三方重算。
+
+## 修订记录
+
+- v1.1（2026-09-11，M2 提交 `6e1b1bf` 之后、M3 首个会话之前）：冻结投放机制。理由：R1 prompt 含 110-212KB 内嵌 Pack，经由编排 agent 读入上下文再转写会有静默漂移风险，违反"逐字投放"。修订内容：
+  1. 每个实验会话 = 一个 headless `claude -p` 全新进程（无历史、无共享上下文）；prompt 文件经 stdin 逐字节投放（`claude -p "$(cat prompt.md)" < /dev/null`），不经过编排 agent 转写；
+  2. 进程 cwd 为中性目录 `/tmp/claude-headless-neutral`（无 CLAUDE.md/AGENTS.md/vault），避免向 reviewer 注入项目级指令；平台级默认（用户 settings、插件前导）对 R0/R1 对称存在，如实记录；
+  3. 工具面固定：`--allowedTools Read Grep Glob Bash`，`--disallowedTools Write Edit NotebookEdit WebFetch WebSearch Task TodoWrite`；写操作由 prompt 禁止 + transcript 事后审计执行（与 v1 的"默认工具集 + 审计"执行姿态等价）；
+  4. `--max-turns 128`（12 会话相同已知上限；触发上限的会话如实记录并按 §8 Inconclusive 评估）；
+  5. 模型：继承宿主配置（harness 报告 `glm-5.3-flash[1m]`；CLI result JSON 的 model 字段为 null、stderr 有 `unrecognized_model` 警告——该警告对全部会话相同，如实记录，model_id 记为 `glm-5.3-flash[1m] (inherited; client-side unrecognized_model warning)`；
+  6. `wall_clock_first_answer_s` 改为进程级 wall-clock（宿主在 claude 进程前后的 epoch 差），比 v1 的"完成通知返回"更精确；`session_id` = CLI 返回的 session uuid；transcript 位于 `~/.claude/projects/<cwd-slug>/<session_id>.jsonl`，原样拷贝进 `runs/<sid>/transcript.jsonl`；
+  7. `platform_proxy` 记录 result JSON 的 usage（input/output/cache tokens）、duration_ms、num_turns、total_cost_usd、is_error。
+- 其余条款（会话矩阵、顺序、快照、计量算法、污染、tie-breaker、Gate、评分程序）v1.1 不变。无 cell 已运行，无受影响 cell 需要重跑。
