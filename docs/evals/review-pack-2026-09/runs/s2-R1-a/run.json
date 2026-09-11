@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "session_id": "s2-R1-a",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 116217,
+  "tool_calls": 27,
+  "visible_output_bytes": 36621,
+  "file_opens_task_vault": 2,
+  "wall_clock_first_answer_s": 919.168,
+  "host_dispatch_epoch": 1789115288.9620802,
+  "host_return_epoch": 1789116208.1295855,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 918.723,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 28,
+    "duration_api_ms": 842421,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 150659,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1065664,
+      "output_tokens": 22035,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [],
+    "hit_count": 0,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /tmp/rp-s2-verify/base-trellium.py (scratch)",
+      "Bash redirect -> /tmp/rp-s2-verify/head-script.json (scratch)",
+      "Bash redirect -> /tmp/rp-s2-verify/base-script.json (scratch)",
+      "Bash redirect -> /dev/null; (system)"
+    ],
+    "scratch_write_count": 5
+  },
+  "transcript_first_ts": "2026-09-11T08:28:09.292Z",
+  "transcript_last_ts": "2026-09-11T08:43:28.015Z"
+}
