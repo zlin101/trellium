@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-09（TASK-0008 accepted 后刷新），审计基准 commit fc0cf6d**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 8 个（TASK-0001…0008；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008 均为 owner 立项的真实产品任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 17 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-11（TASK-0009 owner 立项、M0 尚未提交），审计基准 `ee4f223` + 当前 M0 change set**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 9 个（TASK-0001…0009；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 均为 owner 立项的真实任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 17 次（历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**；TASK-0009 的交接条目仅是待 GLM 接手指针，接手前不提前计数。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -124,3 +124,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-09 | Vault 2026.09.4 升级终验 | 0 | 0 / 0 | 唯一 `vault/index.md` 提案经 owner 确认后合并；106/106 tests、中英 snapshot in sync、`git diff --check` OK |
 | 2026-09-09 | TASK-0008 M5 终验（vault 更新提交前） | 0 | 0 / 0 | 代码里程碑期间 check 输出与 M0 审计基准（`55ae985`）逐字节一致；本行留档后 runtime.md 随本任务编辑更新，测量变为 bytes 11469 / 27 entries，发现保持 0 / 0；116/116 tests、snapshot in sync、`git diff --check` OK |
 | 2026-09-09 | TASK-0008 owner review round 3×P1 闭合（vault 更新提交前） | 0 | 0 / 0 | 原因码改按 finding phase 推导（owner 复现输出实际码 CLOSED_LOCAL）；补 3 项测试；golden B/C 仍逐字节一致；snapshot in sync、`git diff --check` OK |
+| 2026-09-11 | TASK-0009 M0 方案与交接（提交前） | 0 | 0 / 1 | 唯一 warning 为新 tracked TASK 的预期 `TASK_STORAGE_PENDING`；五个历史 commit 存在、snapshot in sync、`git diff --check` OK。GLM 提交 M0 后必须重跑并消除此 warning |

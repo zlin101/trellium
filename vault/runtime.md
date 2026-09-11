@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0001
+- TASK-0009
 
 ## Active Tasks
 
@@ -23,6 +23,7 @@ table holds pointers only.
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
+| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | active | GLM reviews and commits M0, then makes the independent R0/R1 preregistration commit; R2 remains unauthorized. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -32,6 +33,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
+- TASK-0009: Level B R0/R1 experiment opened from the Codex deep-use review-pack feedback. Two real returned-review snapshots plus one accepted negative control, hard safety metrics, cost metrics, contamination rules and kill criteria are frozen in the GLM plan; no R2 code is authorized.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
@@ -50,6 +52,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Opened TASK-0009 and drafted the Review Pack R0/R1 ablation plan for GLM; R2 public CLI is gated behind a separate owner-approved Level C task.
 - Owner accepted TASK-0008 (final review APPROVE, no open P0/P1/P2): status summary is durable decision D-0007; release sequence in motion — push all commits, wait for develop CI, tag `2026.09.5` on the accepted commit, then the GitHub Release (owner-created if gh stays unavailable). Focus returns to TASK-0001.
 - Re-audited the Codex deep-use feedback for 2026.09.5; selected deterministic read-only Status Summary as the sole Go-with-experiments candidate and froze TASK-0008's ablation contract before GLM implementation.
 - Installed `trellium-zh 2026.09.4` for Codex and Claude Code, removed the old `agent-native-init-zh` package, and upgraded this project's Vault stamp from 2026.09.3 to 2026.09.4; preserved the measurement-only budget policy and owner-approved the sole semantic merge.
@@ -98,6 +101,7 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
+- GLM first reviews and commits TASK-0009 M0, then independently commits the frozen R0/R1 protocol/prompts/scoring/empty-results set before building any Pack or collecting results; do not implement R2.
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
