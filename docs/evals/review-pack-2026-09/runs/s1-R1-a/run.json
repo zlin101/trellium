@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "session_id": "s1-R1-a",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 112099,
+  "tool_calls": 34,
+  "visible_output_bytes": 69051,
+  "file_opens_task_vault": 8,
+  "wall_clock_first_answer_s": 1198.718,
+  "host_dispatch_epoch": 1789112972.8686435,
+  "host_return_epoch": 1789114171.586584,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 1198.307,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 35,
+    "duration_api_ms": 1098587,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 100750,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 2075008,
+      "output_tokens": 36554,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [],
+    "hit_count": 0,
+    "scratch_writes": [
+      "Bash redirect -> /tmp/base_names.txt; (scratch)",
+      "Bash redirect -> /tmp/head_names.txt; (scratch)",
+      "Bash redirect -> /tmp/rp-base-mQiQde/c0_repro.py (scratch)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null (system)"
+    ],
+    "scratch_write_count": 6
+  },
+  "transcript_first_ts": "2026-09-11T07:49:33.151Z",
+  "transcript_last_ts": "2026-09-11T08:09:31.458Z"
+}

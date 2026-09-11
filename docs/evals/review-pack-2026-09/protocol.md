@@ -1,6 +1,6 @@
-# Review Pack R0/R1 消融实验协议（预注册 v1.1）
+# Review Pack R0/R1 消融实验协议（预注册 v1.2）
 
-- 日期：2026-09-11（v1 冻结于任何 Pack 制作与 reviewer 会话之前；v1.1 修订于 M2 提交之后、M3 首个会话之前，见文末修订记录）
+- 日期：2026-09-11（v1 冻结于任何 Pack 制作与 reviewer 会话之前；v1.1/v1.2 修订见文末修订记录，均发生在任何评分结果存在之前）
 - 上位计划：`docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md`（§5-§11）
 - 任务：`vault/tasks/TASK-0009-review-pack-ablation.md`
 - 本文件与 `prompts.md`、`scoring.md`、空 `results.md` 构成 M1 预注册四件套；提交后不静默改写，修订追加版本号与原因。
@@ -120,6 +120,7 @@ docs/evals/review-pack-2026-09/
 
 ## 修订记录
 
+- v1.2（2026-09-11，S1-R1-a 完成后、任何评分之前）：污染定义精确化。v1 §6 将"任何写操作"列为污染；首个会话显示 reviewer 会出于比对需要在 /tmp 创建纯 scratch（如 `git archive <base>` 到临时目录再 diff）——这是只读约束的合理解释边界问题，不是证据完整性问题。v1.2 将污染判据收窄为**受保护区写入/读取**：被分配快照本体、其他场景快照、真实仓库（`<host-path>/git/trellium`）、本 eval 目录与任何评分/实验材料、`~/.claude`、其他用户主目录；网络访问仍为污染。reviewer 在 /tmp 自建 scratch（内容仅派生自其快照内数据）记为 `scratch_write`（计入 tool_calls，逐条留痕），不构成污染。快照本体完整性以 `git status --porcelain` + fsck 验证。适用：统一适用于 R0/R1 全部（含已完成会话的重新审计）；修订时点无任何评分结果存在，无结果受到影响。
 - v1.1（2026-09-11，M2 提交 `6e1b1bf` 之后、M3 首个会话之前）：冻结投放机制。理由：R1 prompt 含 110-212KB 内嵌 Pack，经由编排 agent 读入上下文再转写会有静默漂移风险，违反"逐字投放"。修订内容：
   1. 每个实验会话 = 一个 headless `claude -p` 全新进程（无历史、无共享上下文）；prompt 文件经 stdin 逐字节投放（`claude -p "$(cat prompt.md)" < /dev/null`），不经过编排 agent 转写；
   2. 进程 cwd 为中性目录 `/tmp/claude-headless-neutral`（无 CLAUDE.md/AGENTS.md/vault），避免向 reviewer 注入项目级指令；平台级默认（用户 settings、插件前导）对 R0/R1 对称存在，如实记录；
@@ -128,4 +129,4 @@ docs/evals/review-pack-2026-09/
   5. 模型：继承宿主配置（harness 报告 `glm-5.3-flash[1m]`；CLI result JSON 的 model 字段为 null、stderr 有 `unrecognized_model` 警告——该警告对全部会话相同，如实记录，model_id 记为 `glm-5.3-flash[1m] (inherited; client-side unrecognized_model warning)`；
   6. `wall_clock_first_answer_s` 改为进程级 wall-clock（宿主在 claude 进程前后的 epoch 差），比 v1 的"完成通知返回"更精确；`session_id` = CLI 返回的 session uuid；transcript 位于 `~/.claude/projects/<cwd-slug>/<session_id>.jsonl`，原样拷贝进 `runs/<sid>/transcript.jsonl`；
   7. `platform_proxy` 记录 result JSON 的 usage（input/output/cache tokens）、duration_ms、num_turns、total_cost_usd、is_error。
-- 其余条款（会话矩阵、顺序、快照、计量算法、污染、tie-breaker、Gate、评分程序）v1.1 不变。无 cell 已运行，无受影响 cell 需要重跑。
+- 其余条款（会话矩阵、顺序、快照、计量算法、tie-breaker、Gate、评分程序）自 v1 冻结。宿主编排备注（非协议变量）：前两次投放尝试被宿主 harness 的后台任务内存守护击杀（系统无内核 OOM），改用 setsid 脱离任务树执行同一冻结命令；两次尝试均无首答产生，归档于 `runs/s1-R1-a/infra-attempts/`。
