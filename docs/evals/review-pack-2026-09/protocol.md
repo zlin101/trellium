@@ -1,0 +1,119 @@
+# Review Pack R0/R1 消融实验协议（预注册 v1）
+
+- 日期：2026-09-11（冻结于任何 Pack 制作与 reviewer 会话之前）
+- 上位计划：`docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md`（§5-§11）
+- 任务：`vault/tasks/TASK-0009-review-pack-ablation.md`
+- 本文件与 `prompts.md`、`scoring.md`、空 `results.md` 构成 M1 预注册四件套；提交后不静默改写，修订追加版本号与原因。
+
+## 1. 决策问题
+
+在不改变 reviewer 判断职责、不推断授权或证据新鲜度的前提下，最小 Review Pack（R1，按计划 §7 冻结模板手工组装）相比 reviewer 自行组装（R0）能否：保持正样本 golden finding 召回与全部安全硬指标，同时使至少一项 reviewer 成本中位数改善 ≥30%。结论只能是 **No-Go / Inconclusive / Go-to-R2-proposal** 三者之一；Go 也仅产生一份 R2 Level C 提案，本任务不写任何产品代码。
+
+## 2. 实验臂、场景与会话矩阵
+
+| 场景 | base | head | diff range | task 文件 | golden 性质 |
+| --- | --- | --- | --- | --- | --- |
+| S1 | `f98d302` | `430de35` | `f98d302..430de35` | `vault/tasks/TASK-0007-local-task-lifecycle.md` | 正样本（5 个 golden finding） |
+| S2 | `55ae985` | `7ff75a8` | `55ae985..7ff75a8` | `vault/tasks/TASK-0008-owner-status.md` | 正样本（3 个 golden finding） |
+| S3 | `55ae985` | `5317784` | `55ae985..5317784` | `vault/tasks/TASK-0008-owner-status.md` | 负对照（0 open P0/P1/P2） |
+
+- 会话：3 场景 × 2 臂 × 每 cell 2 个独立无历史会话 = 初始 12 个。
+- 会话编号：`S{n}-{R0|R1}-{a,b}`；tie-breaker 为 `-c`（见 §7）。
+- 每个会话都是全新 subagent 会话（无共享历史、无对话继承、默认工具集、继承宿主模型），仅接收 `prompts.md` 冻结模板填充后的逐字 prompt。平台推理档位不可独立设置，如实记录 `platform default`；模型 id 取宿主报告值（本环境为 `glm-5.3-flash`），未来不可得时记 `unavailable`，不得伪造。
+- 执行顺序冻结（防止先跑完一臂的时间/学习偏差）：
+  - 第一轮：`S1-R1-a, S3-R0-a, S2-R1-a, S1-R0-a, S3-R1-a, S2-R0-a`
+  - 第二轮（反向）：`S2-R0-b, S3-R1-b, S1-R0-b, S2-R1-b, S3-R0-b, S1-R1-b`
+  - 会话串行执行，不并行：wall-clock 是成本指标，并行会引入资源竞争偏差。
+- 同一场景的 R0/R1 使用完全相同的模型、prompt 任务问题（仅材料入口不同）、工具权限与冻结快照。
+
+## 3. 快照构建（每场景一份，R0/R1 共用同一快照）
+
+```bash
+tmp=$(mktemp -d /tmp/rp-eval-XXXX)/snapshot
+git clone --no-hardlinks --quiet file://<host-path>/git/trellium "$tmp"
+git -C "$tmp" checkout --detach <head>
+git -C "$tmp" remote remove origin
+git -C "$tmp" reflog expire --expire=now --all
+git -C "$tmp" gc --prune=now --aggressive
+```
+
+快照验收（全部满足才可投放会话；结果记入 `results.md` M2 节）：
+
+1. `git -C "$tmp" status --porcelain` 为空；
+2. `git -C "$tmp" rev-list HEAD --count` 等于真实仓库 `git rev-list <head> --count`；
+3. `git -C "$tmp" log --oneline -1` 为 `<head>`；
+4. Head 之后提交在快照中不可达：`git -C "$tmp" cat-file -e <post-head>^{commit}` 必须失败。post-head 探针：S1 与 S2 用 `5317784`，S3 用 `ee4f223`；
+5. 抽查文件与真实仓库一致：`git -C "$tmp" show HEAD:<path>` 与 `git show <head>:<path>` 逐字节一致（抽 `vault/tasks/<task 文件>` 与 `scripts/trellium.py`）。
+
+禁止 checkout/reset 当前开发工作树；当前工作树路径不写入任何 reviewer prompt。reviewer 只获知快照绝对路径与 §2 场景事实。
+
+## 4. Prompt 投放与变量隔离
+
+- prompt 逐字模板冻结于 `prompts.md`；占位符仅允许 `{SNAPSHOT_DIR} {BASE} {HEAD} {TASK_FILE}`。
+- R0 与 R1 的任务问题六条逐字相同；唯一差异是材料入口段（R0：自行从 task 文件与 Git 组装；R1：先读随 prompt 内嵌的 `<review_pack>` 块，允许回退但必须登记）。
+- R1 Pack 按 `docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md` §7 字段契约机械生成，字段顺序固定，缺失写 `none`/`unavailable`；full patch 不截断；生成规则见 `packs/README.md`（M2 与 Pack 同时产出）。
+- prompt 中不得出现：候选臂假设、预期结论、golden 内容、Head 之后历史、`scoring.md`、实验计划路径。
+
+## 5. 宿主计量（唯一权威计量方式；不接受 reviewer 自报替代）
+
+每个会话结束后由宿主从 subagent 会话 transcript（JSONL，宿主持有路径）提取，写入 `runs/<session-id>/run.json`：
+
+| 指标 | 冻结算法 |
+| --- | --- |
+| `material_bytes` | 实际投放 prompt 全文的 UTF-8 字节数（R1 含内嵌 Pack） |
+| `tool_calls` | transcript 中 `tool_use` 内容块总数（不去重、不分类排除） |
+| `visible_output_bytes` | 所有 `tool_result` 内容块按模型实际可见文本的 UTF-8 字节求和；平台截断后的截断版即视为可见内容，不还原"完整应为" |
+| `file_opens_task_vault` | `tool_use` 中目标路径位于任务文件或 `vault/` 的读取类调用数（Read/Grep/Glob 计 1 次/调用） |
+| `wall_clock_first_answer_s` | 宿主发出 prompt 到该会话完成通知返回的 wall-clock 秒数（宿主时钟；transcript 首末 timestamp 差另列为交叉核对） |
+| `pack_contract_fallback` | 首答问题 5 清单中，落在理解契约/范围/权限/证据边界目的的回退读取次数（由 scorer 依据问题 5 清单 + transcript 判定，R0 恒为 `n/a`） |
+| `session_id` | transcript 文件名（含 agent 标识） |
+| `model_id` | transcript `message.model` 去重集合；空则 `unavailable` |
+
+- 重复读取不静默去重；同名文件多次读取按多次计。
+- 平台侧代理指标（harness 报告的 token 估计、tool_uses、duration_ms）另列 `platform_proxy` 节，绝不替代上表原值；原值取不到时写 `unavailable` 并注明原因。
+- 正确性不在首答中自我申报；scorer 在首答冻结后依据 golden 独立评分（M4）。
+
+## 6. 存档布局与污染控制
+
+```
+docs/evals/review-pack-2026-09/
+  protocol.md prompts.md scoring.md results.md   # M1 预注册（本提交）
+  packs/            # M2：三份 R1 Pack 原文 + 构建命令 + builder 成本日志 + 泄漏检查记录
+  runs/S*-R*-{a,b}(-c)?/
+    prompt.md       # 实际投放的逐字 prompt（含 R1 内嵌 Pack）
+    answer.md       # 完整逐字首答，任何情况下不因评分返工改写
+    run.json        # §5 宿主计量
+    transcript.jsonl # 会话 transcript 原样副本（宿主持有原件路径记录于 run.json）
+```
+
+- 污染判据（transcript 事后审计，逐会话执行并记录结论）：读取快照目录以外路径；读取 `scoring.md`、实验计划、本 eval 目录；访问 Head 之后提交；任何写操作或网络访问。命中即 `contaminated`：保留全部记录、该格不计分、按原 prompt 原快照重跑新会话，重跑会话编号顺延（`-c`、`-d`…）。
+- scorer 在全部首答冻结（§8 tie-breaker 判定完成）后才读 `scoring.md` golden。
+- Pack builder（宿主）可以知道 golden，但 Pack 只做 §4 的机械摘录；M2 由独立只读检查（无 golden 提示的新会话）核对字段齐全性，宿主另做与 Head 后历史的泄漏比对（A2 kill criterion）。
+
+## 7. Tie-breaker（分歧规则，预注册）
+
+同场景两臂的两个首答全部冻结后，逐 cell 比较下列任一不一致即触发该场景双方各追加 1 个 tie-breaker 会话（新无历史会话，同 prompt 同快照）：
+
+1. verdict（APPROVE vs REQUEST_CHANGES）不一致；
+2. 任一安全硬指标（§9.1 的 b/c/d）通过与否不一致；
+3. golden finding 命中集合不一致。
+
+每场景最多追加 2 个（R0/R1 各 1），全实验最多追加 6 个。追加后该 cell 判定取 3 会话多数；仍无法多数则该 cell 记 `unstable`，进 Inconclusive 评估。不因中途结果修改 prompt、Pack、golden 或阈值；确需修改则终止本轮，协议升 v2 并重跑全部受影响 cell。
+
+## 8. R1 判定 Gate（照抄计划 §10.3，评分时逐条执行）
+
+**No-Go**，任一成立：任一安全硬指标失败；R1 正样本 golden 召回不达 100%；R1 单会话召回中位数低于 R0；负对照出现 fabricated blocker；Pack 需 golden 特化解释、截断 full patch 或遗漏冻结字段才可使用；R1 在 reviewer bytes、文件打开数、tool calls、正确首答耗时四项中无任何一项相对 R0 改善 ≥30%（错误首答的耗时不得计为"更快"）。
+
+**Inconclusive**：硬指标通过但测量缺失、重复结果不稳定、环境不可比，或差异不足以排除偶然波动；或 Pack 有价值信号但端到端成本无法可靠测量。
+
+**Go-to-R2-proposal**：所有硬指标通过，且至少一项 reviewer 成本中位数改善 ≥30% 而其余关键成本无明显恶化，且 Pack 无需 golden 特化/LLM 总结/隐藏信息，且三场景方向一致、tie-breaker 后无未解释分歧。
+
+"30%" 只用于本实验准入，不进入 `trellium-policy` 或任何项目预算规则。
+
+## 9. 评分程序（M4 执行，此处冻结规则）
+
+1. 逐 finding 命中判定按 `scoring.md` 的判断要点与可接受同义表述执行；命中要求 reviewer 指出该 finding 的核心缺陷，证据路径允许同义或行级差异。
+2. 安全硬指标逐会话记录：a) fabricated blocker 数；b) 错误 Authority/Accepted/完成声称数；c) stale/historical 证据被标 fresh 数；d) Forbidden/Out-of-Scope/Requires-Approval 关键遗漏或反向表述数。
+3. 正样本场景中不匹配任何 golden 的 blocker 主张逐条归类：`false_positive`（无可定位证据/误读快照/重复已关闭 finding 当 blocker/将 P3 升级为 blocker）或 `unlisted_real`（有明确契约违反且可独立复现，owner 未记录；不参与 Gate，但必须在 results.md 中如实列出供 owner 裁决）。
+4. 成本指标按 arm 汇总中位数并保留每会话原值；每场景单会话召回率单独列出。
+5. 结论由 §8 Gate 从原始记录机械推导；推导过程写入 results.md，可被第三方重算。
