@@ -46,12 +46,10 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "contaminated",
+    "verdict": "clean",
     "rules": "protocol v1.2",
-    "hits": [
-      "PROTECTED ref in Read: <host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>/tool-results/bwm3ous9v.txt (protected-repo-or-home)"
-    ],
-    "hit_count": 1,
+    "hits": [],
+    "hit_count": 0,
     "scratch_writes": [
       "Bash redirect -> /dev/null; (system)",
       "Bash redirect -> /dev/null (system)",
