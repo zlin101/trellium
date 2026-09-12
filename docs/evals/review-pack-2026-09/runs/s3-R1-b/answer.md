@@ -1,0 +1,62 @@
+All verification complete; snapshot confirmed still pristine at `5317784`. Here is the review.
+
+---
+
+# 1. Verdict
+
+**REQUEST_CHANGES** — for two narrow P2 defects in the new `status` output contract. No P0/P1 found. Everything else in the diff verified sound: the implementation reproduces all three archived blind-test goldens byte-for-byte, `check` is provably unchanged, the suite is green (118/118, re-run here), the skill snapshots are in sync, the command is read-only, and no scope or authority boundary is crossed. The two findings are small, localized to the new code, and fixable without touching `check` or the frozen JSON v1 shape.
+
+I did **not** weight TASK-0008's `accepted` state in this verdict; it is treated as an unverifiable historical claim (see Q3/Q6).
+
+# 2. Findings (P0/P1/P2 only)
+
+**P2-1 — Escaped/raw pipe in a Next Action cell silently truncates the owner-facing projection (exit 0, no finding).**
+- Evidence: `scripts/trellium.py:1377` (`cells = [cell.strip() for cell in stripped[1:-1].split("|")]`), consumed at `:1388` (`rows.append((cells[0], cells[2], cells[1], cells[3]))`), quoted at `:2095-2098`, rendered at `:2231-2234`. Reproduced fresh: runtime row `| TASK-0001 | objective here | active | run A \| B then stop |` → projection `next: run A \` ; `check_runtime_projection` emits **zero** findings, so `status` exits 0.
+- Violates: acceptance criterion "status text/JSON 同源 … runtime 行贡献 objective/next 投影" as documented in `README.md:270` / `README.en.md:270` ("optional `current_slice`/`gates` verbatim", projection quoted as-is) and the preregistered plan §4 ("不复制一套宽松 parser"); any `|` in the last cell — the standard Markdown way to write a literal pipe — loses everything after it, silently. (Pre-existing split, but the diff newly exposes cells 1/3 to owners; before, a trailing pipe was harmless to `check`.)
+- Minimal fix: in the status layer only (keep `check` byte-stable), detect an over-split row (>4 cells) and suppress `runtime_projection` for that task, surfacing it like the existing duplicated/enum-invalid suppression (`scripts/trellium.py:2088-2100`), instead of quoting a truncated cell. Mirrors the already-shipped fail-closed projection rule.
+
+**P2-2 — A current task file that fails to read is dropped from `unresolved` when its id collides with a valid record, so `summary.unresolved` reports 0 and the id is presented with a lifecycle/authority while an error finding exists.**
+- Evidence: `scripts/trellium.py:2052-2064` derives a task id from path-only `task-state` findings; `:2166-2170` skips any id already in `resolved_ids`. Reproduced fresh: valid `vault/tasks/TASK-0001-a.md` (active) + unreadable `vault/tasks/TASK-0001.md` → `FILE_UNREADABLE` (error) fires, but payload is `summary.unresolved = 0`, `tasks.active = [TASK-0001 authority=2]`, `tasks.unresolved = []`. Note `discover_task_files:1580-1584` creates no record for unreadable files, so `TASK_ID_DUPLICATE` (`:1628-1641`) never fires either — the symlink twin of this case *is* caught (`:1566-1571` creates a record).
+- Violates: acceptance criterion "malformed/duplicate/drift/local missing/symlink 全部 fail-closed；不声称未解析的 Authority/lifecycle" and README/MIGRATIONS "无法解析的任务显式列入 `unresolved`". Mitigations keeping this at P2 rather than P1: the error is still printed in the same output's `findings` block and the exit code is 2; the in-range review already reported the sibling case (round-1 P1, fixed in `7e494da`) and dispositioned this residue as non-blocking P3-5. I still rate it P2 because `unresolved: 0` is an affirmative fail-closed claim that is false in this state.
+- Minimal fix: in `build_status_payload`, do not let the `resolved_ids` guard swallow lifecycle-phase findings whose path is a *different* current task file than the resolved record's (`task["path"]`); materialize that id in `unresolved` (pathless or with the offending path), keeping `check` untouched.
+
+Not reported (below the P0/P1/P2 bar, listed only for completeness of the record): duplicate `## Focus` lines are echoed twice (`:2159-2163`); `open_buckets[task["lifecycle"]]` (`:2150`) and `CLOSED_LIFECYCLES` vs the local sets at `:1675`/`:1830` are hand-duplicated enum copies; `build_status_payload` re-parses runtime and recomputes `row_counts`; `findings_with_phase` duplicates the `sorted_findings` key.
+
+# 3. Scope, authority, public API/schema
+
+- **Out-of-scope changes: none found.** Changed files map 1:1 to plan §6 (implementation上限): `scripts/trellium.py` (+`status`), `scripts/test_trellium.py`, `init/VERSION`, `init/MIGRATIONS.md`, bilingual READMEs, both skill references/assets/snapshots, and the self-hosting vault (TASK-0008, runtime, handoff, decisions, blind-test evidence). No Context/Evidence/slice work, no inbox file, no runtime generator, no second 09.5 feature, **no tag and no Release object** (`git tag` is empty at head; release steps stay owner-side as the contract requires).
+- **Authority violations: none confirmed; one item is unverifiable rather than violated.** The only authority-sensitive acts in the diff are TASK-0008 `active → accepted` (`vault/tasks/TASK-0008-owner-status.md:9`), the D-0007 record (`vault/decisions.md`), and the accompanying vault writes — all "Requires Approval" items. The diff records owner approval (task Verification lines 101-102, two K1 rows in `vault/details/shadow-run-2026-09.md`, `vault/runtime.md` Recent Changes), but that record was written by the implementing agent, so approval itself cannot be confirmed from inside the snapshot. The pattern matches repo precedent (`0fc2056 "accept TASK-0007 (owner sign-off)"`) and the forbidden "自动 accepted"/"不代 owner accepted" lines are not contradicted by anything in the material. Two minor notes, both documented in-range rather than hidden: `vault/handoff.md` and `vault/decisions.md` are not in plan §6's allowed-sync list (covered instead by the owner-directed P1-3 and the task's own Memory Updates rule at `TASK-0008-owner-status.md:232`); the S0 ablation *arm* ran after owner review, while only the *preregistration* preceded code — plan committed at base `55ae985`, first code at `4604a0c` (verified in git history).
+- **Unapproved public API/schema changes: none.** `status`/`--format json` is a new public CLI surface, but it is precisely the owner-approved deliverable. JSON v1 matches the preregistered frozen shape key-for-key (`plan.md:79-96` vs `scripts/trellium.py:2173-2196`; fresh-verified key set). Internal shape changes (4-tuple rows, `"state"` record key, `collect_vault_state`) are private. `check` findings/severity/exit verified unchanged (Q4).
+
+# 4. Verification claims relied on, classified
+
+| Claim | Class | How established |
+|---|---|---|
+| 118/118 tests pass (`TASK-0008:216`) | **fresh** | `python3 -B -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` → OK, 118 tests |
+| `check` finding/severity/exit unchanged vs base (`:96`, `:152`) | **fresh** | base-code vs head-code `check --format json` on a reconstructed `55ae985` copy: byte-identical, 0 errors/0 warnings, exit 0 |
+| S1 output byte-identical to all three hand-written goldens; 1149 bytes < 11039 bytes (`:96`, `:153`) | **fresh** | Scenarios 2 and 3 rebuilt from archived materials; scenario 1 against a `git archive 55ae985` copy — all three byte-identical, 1149 < 11039 |
+| Archived S0 material is base `runtime.md` verbatim (11039 bytes) | **fresh** | `cmp` of `git show 55ae985:vault/runtime.md` vs `vault/details/status-blind-test-2026-09/s0-material-scenario1-runtime.md` |
+| `status` is read-only and deterministic | **fresh** | 3 repeated runs + snapshot diff before/after all my runs: `git status --porcelain` empty throughout |
+| JSON v1 carries the six documented keys; exit codes 2/0/1 | **fresh** | ran `status .`, `--format json`, error paths; probes |
+| Snapshots in sync, `source_sha256` correct, asset copies identical | **fresh** | `sync-skills.py --check` (recomputes digest), `cmp` of both `assets/trellium.py`, MIGRATIONS, VERSION |
+| No new imports/dependencies, no writes/network/exec in added code | **fresh** | grep of added diff lines |
+| Head self-check green (0/0), `check` exit 0; `git diff --check` clean | **fresh** | re-run |
+| Owner review rounds, final owner APPROVE, `accepted`, authorization to tag/Release | **historical** | task file lines 98-102, K1 rows, runtime/handoff — self-recorded; not verifiable here |
+| Blind-test execution facts (6 sessions, `tool_uses: 0`, token counts, independence, scoring) | **historical** | `run-log.md`, `answer-*.md`, `status-blind-test-2026-09.md` — the archive is verbatim-faithful (goldens/materials check out), but the sessions themselves cannot be re-run |
+| M0 preflight, per-milestone check-JSON byte comparisons against `/tmp/check-before.json`, CI green, `develop==origin/develop` | **historical/unverified** | claims only; the referenced temp artifact does not exist in the snapshot |
+| Derived-snapshot counts (`观测到 lifecycle 转换 17 次` vs 16 K1 rows; same +1 at base: 15 vs 14) | **historical/unverified** | counting rule is owner-owned (D-0005); consistent across base→head, not a defect introduced here |
+
+# 5. Files read and commands run
+
+Snapshot root `/tmp/rp-eval-20260911/s3`; all writes confined to `/tmp` (fixtures), snapshot verified unchanged after every step (`--no-optional-locks` used to avoid index writes).
+
+Read (tool or shell): `vault/tasks/TASK-0008-owner-status.md` (full); `scripts/trellium.py` lines 118-147, 898-927, 1125-1244, 1354-1473, 1547-1686, 1668-1867, 1862-1953, 2020-2284; `scripts/sync-skills.py:1-75`; `docs/superpowers/plans/2026-09-09-2026-09-5-codex-feedback-audit-and-status-plan.md:75-200`; `vault/index.md` (policy block); `vault/details/status-blind-test-2026-09/golden-scenario{1,2,3}.txt` (via comparison scripts); `/tmp/rp-s3-fix2/vault/index.md` (my fixture). Review pack supplied the rest.
+
+Commands: `git --no-optional-locks status --porcelain`; `log --oneline -12`; `tag`; `diff --name-status 55ae985..5317784`; `diff --check 55ae985..5317784`; `diff` (scripts/trellium.py, shadow-run) with grep filters; `show 55ae985:vault/runtime.md | wc -c`; `archive 55ae985 | tar -x -C /tmp/rp-s3-base`; `rev-parse HEAD`. Greps: finding phases and `FINDING_PHASES`; callers of `parse_runtime_task_pointers`/`run_vault_checks`/`collect_vault_state`; `tempfile/TemporaryDirectory`; `sha256|hashlib`; added-line `^\+(import|from)` and write/network/exec tokens; shadow-ledger headings and K1 row counts at base and head. Executions: `python3 -B -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh`; `python3 -B scripts/trellium.py status . [--format json]`; `python3 -B scripts/trellium.py check . --format json`; `python3 -B scripts/sync-skills.py --check`; `cmp` of asset/MIGRATIONS/VERSION copies and of base-vs-head check JSON; in-memory probes via `python3 -B -` heredocs (`parse_runtime_task_pointers` escaped-pipe, `build_status_payload` same-id unreadable, duplicate focus); fixture rebuild + golden diff for scenarios 2, 3, 1; `wc -c` byte counts.
+
+# 6. Not answerable from this material
+
+- **Whether the owner actually approved acceptance.** The diff asserts it in four places, but every assertion originates from the implementing agent; nothing in the snapshot independently corroborates it. My verdict therefore does not certify the `accepted` transition — only that the diff does not contradict the approval requirements.
+- **Whether the blind-test sessions were genuinely independent and unaided** (`tool_uses: 0`, token/duration figures, scoring fidelity). The archived prompts/answers/goldens are internally consistent and the goldens reproduce exactly, but the sessions are outside the snapshot; the run-log itself flags that subagent model identity was never returned.
+- **The M0/M2 byte-for-byte check-JSON comparisons against `/tmp/check-before.json`** — the referenced artifact is not in the snapshot. I substituted an equivalent fresh test (base code vs head code on a reconstructed base copy), which is not the same artifact.
+- **Whether `观测到 lifecycle 转换 17 次` is correct** — the +1 offset from the K1 row count exists identically at base and head, so the counting rule cannot be reconstructed from this snapshot.

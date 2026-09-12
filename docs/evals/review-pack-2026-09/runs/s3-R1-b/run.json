@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "session_id": "s3-R1-b",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 212334,
+  "tool_calls": 39,
+  "visible_output_bytes": 109678,
+  "file_opens_task_vault": 14,
+  "wall_clock_first_answer_s": 2164.894,
+  "host_dispatch_epoch": 1789205451.8108966,
+  "host_return_epoch": 1789207616.704429,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 2160.901,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 40,
+    "duration_api_ms": 1945764,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 219960,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 3360384,
+      "output_tokens": 41488,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "contaminated",
+    "rules": "protocol v1.2",
+    "hits": [
+      "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
+    ],
+    "hit_count": 1,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /tmp/rp-s3-before.txt; (scratch)",
+      "Bash redirect -> /tmp/rp-s3-after.txt; (scratch)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /tmp/rp-s3-check-base.json; (scratch)",
+      "Bash redirect -> /tmp/rp-s3-check-head.json; (scratch)",
+      "Bash redirect -> /tmp/rp-s3-status1.txt; (scratch)"
+    ],
+    "scratch_write_count": 7
+  },
+  "transcript_first_ts": "2026-09-12T09:30:55.689Z",
+  "transcript_last_ts": "2026-09-12T10:06:56.590Z"
+}
