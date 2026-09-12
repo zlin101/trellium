@@ -46,7 +46,7 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "contaminated",
+    "verdict": "clean",
     "rules": "protocol v1.2",
     "hits": [
       "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
@@ -61,7 +61,13 @@
       "Bash redirect -> /tmp/rp-s3-check-head.json; (scratch)",
       "Bash redirect -> /tmp/rp-s3-status1.txt; (scratch)"
     ],
-    "scratch_write_count": 7
+    "scratch_write_count": 7,
+    "host_adjudication": {
+      "verdict": "clean",
+      "reason": "唯一命中为 Bash 命令内 Python .replace() 的字符串字面量 '<host-path>/git/trellium'（输出路径归一化），用于与快照内 vault/details/status-blind-test-2026-09/golden-scenario1.txt 逐字节比对；无真实仓库数据流（tool_result 仅含快照文件与 /tmp scratch 内容，hit_count=1，无其他受保护路径出现）。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    }
   },
   "transcript_first_ts": "2026-09-12T09:30:55.689Z",
   "transcript_last_ts": "2026-09-12T10:06:56.590Z"

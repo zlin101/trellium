@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "session_id": "s1-R0-b",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 2019,
+  "tool_calls": 36,
+  "visible_output_bytes": 162768,
+  "file_opens_task_vault": 9,
+  "wall_clock_first_answer_s": 629.526,
+  "host_dispatch_epoch": 1789207642.9745975,
+  "host_return_epoch": 1789208272.5006206,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 629.132,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 37,
+    "duration_api_ms": 568213,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 87661,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1320640,
+      "output_tokens": 24691,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [],
+    "hit_count": 0,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null (system)"
+    ],
+    "scratch_write_count": 6
+  },
+  "transcript_first_ts": "2026-09-12T10:07:23.249Z",
+  "transcript_last_ts": "2026-09-12T10:17:52.381Z"
+}
