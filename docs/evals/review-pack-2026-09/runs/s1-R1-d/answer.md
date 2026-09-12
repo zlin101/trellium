@@ -1,0 +1,51 @@
+## Q1 — Verdict
+
+**REQUEST_CHANGES** for `f98d302..430de35`.
+
+The code is correct: I re-ran every gate the task and CI define, and I behaviorally verified all ten frozen decision-table rows plus the zero-regression claims directly against the base commit. No P0/P1. What blocks approval are three P2 evidence/distribution-integrity items — in a governance repo whose deliverable *is* the record and the distribution surface, two records over-claim and one review-mandated distribution item was not delivered. All three are one-line, non-code fixes.
+
+## Q2 — Findings (P0/P1/P2 only)
+
+**F-A · P2 — Distribution-surface gap: governance/index templates did not receive the semantics their own self-hosted instance received.**
+- Evidence: `vault/governance.md:76` and `vault/index.md:81` add the disposition-gate / closed-row-cleanup rules. `diff skills/trellium-zh/assets/templates/vault/governance.md vault/governance.md` → `75a76,77` and `diff .../templates/vault/index.md vault/index.md` → `87a81`: the self-hosted files differ from their templates by *exactly* these added lines, i.e. the templates are their direct source and were not updated. The anchors exist in the templates: `skills/trellium-zh/assets/templates/vault/governance.md:74` (“测试通过不等于完成。”) and `.../templates/vault/index.md:79` (“## 更新规则”). Same for the English set.
+- Violates: plan `docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md:212` (§6.3 surface) and `:326` (§12 acceptance “runtime/governance/index/handoff/task 模板 … 同步”)； §0 `:21` (R4) shows this surface was explicitly added by the prior plan review. A new/merged local project gets `governance.md`/`index.md` without the gate; the next upgrade merge will classify this repo's lines as local customization instead of distributed protocol.
+- Fix direction: add the parallel paragraph/bullet to `skills/trellium{,-zh}/assets/templates/vault/governance.md` and `.../templates/vault/index.md` (EN+ZH wording). No re-sync needed (templates are not `protocol-source` artifacts). If `handoff` is deliberately skipped (its template has no anchor), record that decision explicitly in the M4/M1 record.
+
+**F-B · P2 — Review ledger F3 records an unreproducible test count/commit pair.**
+- Evidence: `vault/tasks/TASK-0007-review.md:15` — “reviewer 实测 bf3f84b 为 124” and “124 是继承重跑后的虚增值”. Fresh measurement: at `bf3f84b` the discoverable total is **87** (test_trellium 76 = 37+16+13+4+5+1, +5, +6). The inheritance duplication exists only at `1b55ace`/`c09cab2`, where `LocalProjectionTest(VaultCheckTest)` makes the total **136** (125 in `test_trellium` = 37 duplicated + 12 new + 76). 124 appears at no commit; 124 = 136 − 12.
+- Violates: plan §11 `:305` (“必须记录真实结果，不预写测试数量”) and the task's own evidence standard (M0/C0 “记录真实 code/severity/exit”); D-0005's single-source count discipline. The F3 *root cause* is right and the final 99 is right — only the attribution/number is wrong, and it is the artifact the owner reads at acceptance.
+- Fix direction: correct F3 to name the real inflated value (136 total / 125 for the module) and the commits where it occurs (`1b55ace`–`c09cab2`), dropping the `bf3f84b` attribution.
+
+**F-C · P2 — M6 acceptance box marked `[x]` on a CI result that has no record.**
+- Evidence: `vault/tasks/TASK-0007-local-task-lifecycle.md:90` — “`[x]` M6 终验与 push 后 CI 全绿…（CI 结果见提交后核验记录）”. No run id or CI result exists anywhere in the snapshot (grep over `vault/`, `docs/`; the only run id in the repo is TASK-0003's `34181086563` in `vault/runtime.md`).
+- Violates: plan §11 `:308` (“push develop 后观察既有 CI，记录 run id 与真实结果”).
+- Mitigation: substantively corroborated — I re-ran the exact three CI steps (`.github/workflows/skill-sync.yml`: `unittest discover -s scripts -p 'test_*.py'`, `trellium.py check . --format json`, `sync-skills.py --check`) and all pass fresh. Fix direction: record the real run id, or reword the box to `[ ]`/"CI pending" until it exists.
+
+Below-threshold observations (P3, informational — not counted as findings): a closed local task named only in the Focus line (no Active Tasks row) yields no finding, though plan §6.2 `:193` asks Focus to be redirected/cleared; a missing local task with a non-enum row status yields warning-only in local mode vs `TASK_RUNTIME_MISSING` error in tracked (pre-existing `task is None → continue` path); the top-level README disposition sentence omits the `ready_for_review` block and the `not_applicable` value that MIGRATIONS/protocol state.
+
+## Q3 — Scope, authority, public API/schema
+
+- **Out-of-scope changes: none.** 41 files (`git diff --name-status`) all fall inside the allowed Level C surface: protocol docs, templates/Skill/references, checker, focused tests, VERSION, MIGRATIONS, bilingual READMEs, sync snapshots, self-hosted vault small diff, plus the two new vault files (`TASK-0007-review.md` required by M5; `vault/details/task-0007-w-group-records.md` = F1 fix, not a new long-term eval directory).
+- **Authority violations: none.** No `.gitignore` change, no untrack/`git rm --cached`, no tag/Release, no CI/dependency/permission change (`.github/` untouched), no schema v1 change (state-block fields and validators untouched), no new CLI subcommand, no global downgrade of `TASK_RUNTIME_MISSING` (tracked still errors — verified), no skipping of projection on missing `vault/tasks/`, no policy guessing from `.gitignore`. The self-hosted repo is `task_storage: tracked` (`vault/index.md:6-10`), so committing TASK-0007 files is legal and the disposition gate correctly does not bind it.
+- **Unapproved public API/schema changes: none.** The only signature change is internal (`check_runtime_projection(..., policy=None)`, called once). The two new finding codes in the JSON/text output are the approved, MIGRATIONS-documented local-mode Breaking change.
+
+## Q4 — Verification claims I relied on, classified
+
+**Fresh (re-run by me in this snapshot):** `trellium.py check . --format json` → 0 error / 0 warning, exit 0 · `unittest` 3 modules → 99 OK (88+5+6; each module separately 88/5/6, no skips) · `sync-skills.py --check` → both snapshot trees in sync · `git diff --check` and `git diff HEAD --check` clean · clean tree, HEAD `430de35` · 12 `LocalProjectionTest` methods; 88 vs 76 test defs base→head; no pre-existing test removed · three `trellium.py` copies byte-identical; `init/` identical to both `protocol-source/init` trees (17 files = manifest count) · all ten decision-table rows + Focus dedupe exercised against head · base(`f98d302`) vs head behavioral comparison: tracked 10/10 identical, `policy=None` identical on every case, local-mode deltas confined to the six intended cases · base-blob reproduction of C0 rows S1/S2/S5/S6 (corroborates the recorded characterization) · static per-commit test counts (87 / 87 / 136 / 99) · templates-vs-instance diffs behind F-A.
+
+**Historical (recorded in the snapshot, not re-runnable):** the preflight line (baseline 0/0, 87 tests, in sync at `2026.09.3`) · W-group 9 first answers, byte counts, correction counts · C1 layer results · the independent reviewer's ten-question conclusions and F1/F2 dispositions · D-0006 content · TASK-0003's CI run id.
+
+**Unverified:** M6 “push 后 CI 全绿” (no run id in the snapshot; see F-C) · F2 "preregistration preceded implementation" (no commit-level proof — the ledger says so itself) · “被测会话未申报读取评分材料，无 contaminated” (self-report) · the W-group material byte counts (source fragments absent) · F3's “124 at bf3f84b” (contradicted by fresh measurement, F-B).
+
+## Q5 — Files read and commands run
+
+Read: `vault/tasks/TASK-0007-local-task-lifecycle.md`; `vault/tasks/TASK-0007-review.md`. Range reads via `sed -n`/`grep -n`: `scripts/trellium.py` (1354-1420, 1456-1485, 1511-1535, 1560-1830, 36-100), `vault/index.md`, `vault/governance.md`, `docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md` (14-45, 46-148, 165-275, 274-340), `vault/decisions.md` (D-0006), `.github/workflows/skill-sync.yml`, `scripts/sync-skills.py`, `scripts/test_trellium.py` (helpers + new class), templates under `skills/trellium{,-zh}/assets/templates/`, `vault/handoff.md`, `vault/runtime.md`, `init/MIGRATIONS.md`, `README.md`/`README.en.md` (via the pack patch), `vault/details/task-0007-w-group-records.md` (via pack).
+
+Commands (all inside `/tmp/rp-eval-20260911/s1`, read-only; Python run with `PYTHONDONTWRITEBYTECODE=1` via stdin heredocs so nothing was written): `git status --porcelain`, `git log --oneline`, `git rev-parse HEAD`, `git diff --name-status f98d302..430de35`, `git log --oneline f98d302..430de35`, `git diff --check`, `git diff HEAD --check`, `git show <rev>:<file>` (test_trellium, trellium.py at `f98d302`/`bf3f84b`/…), `diff` (3 checker copies; `init` vs both `protocol-source/init`; templates vs `vault/governance.md`/`index.md`), `comm` of base vs head test-method names, `grep`/`find`/`ls`/`wc` for codes, anchors, templates, CI, `def check_runtime_projection`; fresh runs of `python3 scripts/trellium.py check . --format json`, `python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` (plus each module separately), `python3 scripts/sync-skills.py --check`; three in-memory Python harnesses (AST test-count audit over `git show` blobs; decision-table matrix against head; base-vs-head behavioral comparison).
+
+## Q6 — What cannot be answered from this material
+
+- Whether post-push CI actually ran green — no run id or CI artifact exists in the snapshot (F-C); I can only corroborate the equivalent commands locally.
+- Whether the W-group reviewer sessions were truly uncontaminated, and whether the recorded material byte counts are accurate — the presented fragments are not in the snapshot.
+- Whether the C0 characterization was recorded *before* implementation — no commit-level proof exists (the ledger's F2 concedes this); I could only confirm the recorded C0 rows match the real base code's behavior.
+- Nothing else was unanswerable; the diff, base blobs, and all four commits in range were fully available.

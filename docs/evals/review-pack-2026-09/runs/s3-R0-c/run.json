@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "session_id": "s3-R0-c",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 2011,
+  "tool_calls": 47,
+  "visible_output_bytes": 162163,
+  "file_opens_task_vault": 16,
+  "wall_clock_first_answer_s": 745.846,
+  "host_dispatch_epoch": 1789218490.9184713,
+  "host_return_epoch": 1789219236.764024,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 745.452,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 48,
+    "duration_api_ms": 670168,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 103883,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1808448,
+      "output_tokens": 29146,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [
+      "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)",
+      "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
+    ],
+    "hit_count": 2,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null\", (system)",
+      "Bash redirect -> /tmp/pre_status.txt; (scratch)",
+      "Bash redirect -> /tmp/check_after.json; (scratch)"
+    ],
+    "scratch_write_count": 3,
+    "host_adjudication": {
+      "verdict": "clean",
+      "reason": "两处命中均为 reviewer 自建 Python 重建 harness 中 payload 的路径字面量（target=Path('<host-path>/git/trellium')，镜像快照内归档 golden 的 target 字段格式）；VaultCheckRun/build_status_payload 为纯内存构造（findings/texts 均为注入值），无真实仓库文件系统访问；命令输出（GOLDEN MATCH 重构）全部派生自快照 git blob。与 s3-R0-b、s3-R1-b 同类裁决。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    }
+  },
+  "transcript_first_ts": "2026-09-12T13:08:11.198Z",
+  "transcript_last_ts": "2026-09-12T13:20:36.650Z"
+}
