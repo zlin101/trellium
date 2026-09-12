@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "session_id": "s1-R1-c",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 112099,
+  "tool_calls": 29,
+  "visible_output_bytes": 56407,
+  "file_opens_task_vault": 7,
+  "wall_clock_first_answer_s": 1511.073,
+  "host_dispatch_epoch": 1789215413.7604554,
+  "host_return_epoch": 1789216924.832986,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 1510.678,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 30,
+    "duration_api_ms": 1360102,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 85701,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1176384,
+      "output_tokens": 24843,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "contaminated",
+    "rules": "protocol v1.4 (whitelist audit)",
+    "hits": [
+      "Skill tool_use: {\"skill\": \"code-review\"} — skill internally reviewed <host-path>/git/trellium (real repo, contains scoring materials); sub-session not auditable from parent transcript; answer self-discloses the review targeted the real repo. Exposure confirmed regardless of claimed non-use."
+    ],
+    "hit_count": 1,
+    "scratch_write_count": 5,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null (system)"
+    ],
+    "host_adjudication": {
+      "verdict": "contaminated",
+      "reason": "Skill 子调用触碰真实仓库（含 golden 材料）；按 §6 留档不计分，重跑 -d。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    }
+  },
+  "transcript_first_ts": "2026-09-12T12:16:54.044Z",
+  "transcript_last_ts": "2026-09-12T12:42:04.722Z"
+}
