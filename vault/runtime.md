@@ -23,7 +23,8 @@ table holds pointers only.
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
-| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | ready_for_review | Closed 2026-09-12 pending owner review: R0/R1 ablation executed per preregistration, verdict No-Go with double control_invalidated registration; independent review APPROVE after one fix round. |
+| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | ready_for_review | Owner review round 1 (2026-09-13) corrections applied: verdict Inconclusive, 12 valid sessions, P0/P1 recall denominator; awaiting owner re-review. R2 stays unimplemented. |
+| TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | active | Owner-instructed 2026-09-13, separated from TASK-0009; severity P1/P1/P2 per owner adjudication. Not started. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -52,7 +53,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
-- TASK-0009 R0/R1 ablation complete and ready_for_review: preregistration→snapshots→19 blind sessions→scoring all DAG-provable; verdict No-Go (fabricated blocker, recall 20%/67%, wall-clock +29.6%; control_invalidated ×2 reproduced). Independent review APPROVE after one fix round. Focus returns to TASK-0001.
+- TASK-0009 owner review round (2026-09-13, REQUEST_CHANGES → fixes applied): formal verdict corrected to **Inconclusive** per plan §10.1 cap; v1.4 whitelist strictly applied (4 more Skill sessions voided, 12 valid); recall recomputed on the frozen known-P0/P1 denominator (S1 25% FAIL, S2 100%); privacy/history plan for the unpushed eval transcripts drafted for owner authorization. R2 stays unimplemented this cycle.
 - Opened TASK-0009 and drafted the Review Pack R0/R1 ablation plan for GLM; R2 public CLI is gated behind a separate owner-approved Level C task.
 - Owner accepted TASK-0008 (final review APPROVE, no open P0/P1/P2): status summary is durable decision D-0007; release sequence in motion — push all commits, wait for develop CI, tag `2026.09.5` on the accepted commit, then the GitHub Release (owner-created if gh stays unavailable). Focus returns to TASK-0001.
 - Re-audited the Codex deep-use feedback for 2026.09.5; selected deterministic read-only Status Summary as the sole Go-with-experiments candidate and froze TASK-0008's ablation contract before GLM implementation.
@@ -98,11 +99,16 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ```bash
 python3 scripts/trellium.py check . --format json
+# 范围级 whitespace 检查（owner 裁定 2026-09-13：逐字证据文件豁免，不清理证据本身）：
+git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/packs/pack-*.md' ':(exclude)docs/evals/review-pack-2026-09/runs/*/prompt.md' ':(exclude)docs/evals/review-pack-2026-09/runs/*/answer.md'
 ```
+
+豁免说明：`packs/pack-*.md`、`runs/*/prompt.md`、`runs/*/answer.md` 为逐字保存的实验证据（内嵌原始 patch/首答，含原始尾随空格）；清理它们会破坏"逐字存档"的证据承诺。
 
 ## Next Steps
 
-- Owner reviews TASK-0009 (ready_for_review): verdict No-Go, no R2 proposal; owner adjudication list (four items incl. two reproduced `status` defects) lives in `docs/evals/review-pack-2026-09/results.md` §附带缺陷清单.
+- Owner re-reviews TASK-0009 after the 2026-09-13 corrections (verdict now Inconclusive; 12 valid sessions; P0/P1 recall denominator). Do not push `docs/evals/review-pack-2026-09/runs/` transcripts until the owner picks a privacy/history option (A push as-is / B filter-repo sanitize / C strip transcripts) — see results.md §push 前隐私与历史处理方案.
+- Owner adjudication list (short-row P1, refused-vault P1, pipe-truncation P2; same-id stays P3) is contracted as TASK-0010 (product fix task, separate from TASK-0009).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.

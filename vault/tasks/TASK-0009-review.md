@@ -44,3 +44,22 @@ REQUEST_CHANGES（4×P1 + 5×P2；全部为记录准确性问题，数据与裁�
 
 - Round-2 遗留三项已在 finalize 提交修正：s1-R0-a reaudit_note 描述更正为"自身会话 tool-results 分页文件（v1.3 放行）"；两处历史引用去掉误加的 `^`；19 个 run.json 的 model_id 补齐 v1.1 规定的 `[1m] inherited + unrecognized_model warning` 注记；稳健性注措辞精确化（S3 剔除后由条件 2 单独支撑）。
 - 任务按计划停在 `ready_for_review`，等 owner 验收；R2 未实现、未提案。
+
+## Round 3（owner review，REQUEST_CHANGES，2026-09-13）
+
+owner 亲审（六项发现），全部采纳并修复：
+
+- P1-1 · fixed · 正式结论违反冻结封顶规则（control_invalidated 后"本轮结论最多 Inconclusive"，初版却发布 No-Go）· 判定改为 **R1 = Inconclusive；R2 本周期不实现**；No-Go 的支撑发现降级为记录性依据
+- P1-2 · fixed · 污染规则未完整执行：实际 6 个会话调用 Skill（漏检 s2-R0-c），审计脚本未实现白名单，白名单扫描时点早于三个会话完成 · 严格按 v1.4 字面规则新作废 4 个会话（s2-R0-c、s2-R1-a、s3-R1-a、s3-R1-b），有效会话 16→12，全部聚合重算；`tools/audit_session.py` 补实现白名单
+- P1-3 · fixed · raw transcript/run.json 含宿主路径、UUID、成本字段与无关仓库名枚举 · 整理三选一隐私/历史处理方案（A 原样 push / B filter-repo 脱敏 / C 剥离 transcript）写入 results.md 待 owner 授权；**不 push、不重写历史**
+- P1-4 · fixed · 召回率分母误含 P2 floor golden（冻结口径为 known P0/P1）· S1 1/4=25%（FAIL，单独阻断 Go）、S2 2/2=100%（PASS）
+- P2-5 · fixed · runtime "Focus returns to TASK-0001" 与 Focus=TASK-0009 矛盾、shadow ledger "待 GLM 接手"过期、审计基准无 hash、汇报提交数不准 · 全部更正
+- P2-6 · fixed · `git diff --check` 全绿表述不准（全范围含逐字证据文件尾随空格）· runtime Required Checks 改为范围级检查并记录逐字证据豁免（不清理证据）
+
+### owner 附带裁决
+
+status 缺陷严重度：短行 unresolved 缺口 = 真实 P1；refused-vault unresolved:0 = 真实 P1；管道截断 = 真实 P2；同 id 不可读副本维持既有 P3。三项真实缺陷已按 owner 指示另立 `vault/tasks/TASK-0010-status-defects.md`（Level C，不夹带进本任务）。
+
+### 结论（Round 3）
+
+修正已全部落盘（results.md M4.1 修订节、12 有效会话重算、TASK-0010 立项、vault 同步、隐私方案待授权）。任务保持 `ready_for_review`，等 owner 复核修正；R2 本周期不实现。

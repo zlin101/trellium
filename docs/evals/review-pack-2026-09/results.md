@@ -1,7 +1,8 @@
 # Results — Review Pack R0/R1 消融
 
 - M1 预注册（提交 `543d8f3`）→ M2 快照与 Pack（`6e1b1bf`）→ 逐会话存档提交均先于本节评分写入；Git DAG 可证评分晚于全部首答冻结。
-- **R1 判定：No-Go**（多重 No-Go 条件满足；另登记 `control_invalidated`，见 §5）。
+- **R1 正式判定：Inconclusive**（M4.1 修订，owner review 2026-09-13；初版曾判 No-Go，见文末修订记录）。
+- **决策含义：R2 本周期不实现、不提案**（由 M4 记录的召回缺口、成本口径与 control_invalidated 共同支撑；产品代码零改动）。
 
 ## M2 快照与 Pack 验收（2026-09-11 回填，先于 M3 首个会话提交）
 
@@ -18,69 +19,64 @@
 | --- | --- | --- |
 | s1-R1-a | ok（第 3 次尝试） | 前 2 次尝试被宿主后台任务内存守护击杀（无首答；`infra-attempts/` 留档）；第 3 次以 setsid 脱离任务树后完成 |
 | s3-R0-a | ok | |
-| s2-R1-a | ok | |
+| s2-R1-a | **contaminated** | M4.1：v1.4 白名单严格适用（Skill 调用，fork 在空中性 cwd 无受保护接触——原判有效由严格字面规则取代） |
 | s1-R0-a | ok（第 2 次尝试） | 第 1 次被 provider 5h 配额 429 中断（35 turns 后无首答；留档） |
-| s3-R1-a | ok（第 2 次尝试） | 第 1 次 rc=126（argv 超 MAX_ARG_STRLEN 128KB，未启动；留档）→ 通道改 stdin |
+| s3-R1-a | **contaminated**（第 2 次尝试） | 第 1 次 rc=126（argv 超 MAX_ARG_STRLEN 128KB，未启动；留档）→ 通道改 stdin；M4.1：Skill 调用触发作废 |
 | s2-R0-a | **contaminated** | forked code-review Skill 结果自述知悉其他场景快照；§6 作废 |
 | s2-R0-b | ok | |
-| s3-R1-b | ok | |
+| s3-R1-b | **contaminated** | M4.1：v1.4 白名单严格适用（Skill 调用）；其两项 P2 随之退出评分，管道截断发现保留于 owner 清单 |
 | s1-R0-b | ok | |
 | s2-R1-b | ok | |
 | s3-R0-b | ok | |
 | s1-R1-b | ok | ——初始 12 会话完成—— |
 | s1-R0-c | ok | §7 tie-breaker（S1-R0 cell verdict 分歧） |
 | s1-R1-c | **contaminated** | forked code-review Skill 审查了真实仓库（含评分材料）；§6 作废 |
-| s2-R0-c | ok | §7 tie-breaker |
+| s2-R0-c | **contaminated** | M4.1：漏检的 Skill 调用（fork 钉定 s2 快照）；v1.4 白名单严格适用；其 refused-vault P2 发现由有效会话 s3-R0-c 独立报告并经独立 review 复现，保留于 owner 清单 |
 | s3-R0-c | ok | §7 tie-breaker |
 | s3-R1-c | ok | §7 tie-breaker |
 | s2-R0-d | **contaminated** | `ls` eval 根目录（受保护区）；§6 作废；tie-breaker 名额（第 6 个）已耗尽 |
 | s1-R1-d | ok | §6 污染重跑（替换 s1-R1-c），不占 tie-breaker 名额 |
 
-- 有效会话 16；作废 3（均留档，transcript 与宿主裁决在各自 run.json）；infra 中断 5 次（内存守护 ×2、配额 ×1、argv 长度 ×1、投放脚本缺 prompt 文件 ×1——宿主操作失误，未启动模型）。
-- 污染审计规则演进：v1.2（scratch 写入不计污染）→ v1.3（self-runtime 工件放行）→ v1.4（工具白名单 {Read,Grep,Glob,Bash}，Skill/派生执行一律命中后逐案裁决）；全部规则修订先于对应评分存在。
-- 工具面偏差记录：s2-R1-a、s3-R1-a、s3-R1-b 曾调用 Skill → 判有效但偏差如实记录：s3-R1-a/b 的 fork 被 args 钉定自身快照且结果文本无受保护引用；s2-R1-a 的 fork 在空的中性 cwd 执行（无可审内容），但其结果文本枚举了 <host-path> 下无关仓库的脏状态计数（未接触任何本 eval 或评分材料，详录于该 run.json 的 host_adjudication）。三者均为 R0/R1 间工具面非对称的局限。
+- 有效会话 12（M4.1 修订：初版曾计 16）；作废 7（含 M4.1 新增的 4 个 Skill 会话，均留档并在 run.json 记录裁决）；infra 中断 5 次（内存守护 ×2、配额 ×1、argv 长度 ×1、投放脚本缺 prompt 文件 ×1——宿主操作失误，未启动模型）。
+- 污染审计规则演进：v1.2（scratch 写入不计污染）→ v1.3（self-runtime 工件放行）→ v1.4（工具白名单 {Read,Grep,Glob,Bash}）。**执行缺陷（owner review P1-2）**：v1.4 白名单曾只写入文档未落入审计脚本，且唯一一次全量白名单扫描运行于 s2-R0-c/s3-R0-c/s3-R1-c 完成之前——导致 4 个 Skill 会话漏判有效；owner review 发现后已按字面规则全部作废并重算，`tools/audit_session.py` 已补实现。
 - 协议偏差：S2 场景 tie-breaker 的 R1 侧（s2-R1-c）因 6 会话上限耗尽未运行；S2-R0 cell 以 b/c 两有效会话定局（verdict 平局 → unstable）。已如实记录，不影响 No-Go（该由安全与召回条件独立触发）。
 
 ## M4 评分
 
-### Golden 命中（逐会话；命中=指出核心缺陷，证据路径允许同义；severity/报告载体不改变命中）
+### Golden 命中（M4.1 修订：仅 12 个有效会话计分；命中=指出核心缺陷，证据路径允许同义；severity/报告载体不改变命中）
 
-| 会话 | S1 (G1 W组gate / G2 模板 / G3 main位置 / G4 重复行顺序 / G5 runtime矛盾) | S2 (G1 原因码 / G2 消融存档 / G3 handoff) | S3 | verdict |
-| --- | --- | --- | --- | --- |
-| s1-R0-a | – / – / – / – / – | | | REQUEST_CHANGES |
-| s1-R0-b | – / – / – / – / – | | | APPROVE |
-| s1-R0-c | **G1** / – / – / – / – | | | REQUEST_CHANGES |
-| s1-R1-a | – / – / – / – / – | | | APPROVE |
-| s1-R1-b | – / – / – / – / – | | | APPROVE |
-| s1-R1-d | – / **G2** / – / – / – | | | REQUEST_CHANGES |
-| s2-R0-b | | – / **G2** / **G3** | | APPROVE |
-| s2-R0-c | | – / **G2**(Q6) / – | | REQUEST_CHANGES |
-| s2-R1-a | | **G1**(观察) / **G2**(Q6) / – | | APPROVE |
-| s2-R1-b | | **G1**(观察) / **G2**(Q6) / – | | APPROVE |
-| s3-R0-a | | | 1×unlisted_real（短行 unresolved 缺口，已复现） | REQUEST_CHANGES |
-| s3-R0-b | | | 0 blocker（5×P3） | APPROVE |
-| s3-R0-c | | | 1×P2（self-标注 non-blocking；与 s2-R0-c 同族） | APPROVE |
-| s3-R1-a | | | 0 blocker（P3 观察） | APPROVE |
-| s3-R1-b | | | **1×fabricated**（已裁定 P3-5 升级为 P2）+ 1×unlisted（管道截断，已复现，契约违反程度存 owner 裁决） | REQUEST_CHANGES |
-| s3-R1-c | | | 0 blocker（P3 观察） | APPROVE |
+| 会话 | S1 (G1 W组gate / G2 模板 / G3 main位置 / G4 重复行顺序 / G5 runtime矛盾) | S2 P0/P1 (G1 原因码 / G2 消融存档) | S2 P2 (G3 handoff) | S3 | verdict |
+| --- | --- | --- | --- | --- | --- |
+| s1-R0-a | – / – / – / – / – | | | | REQUEST_CHANGES |
+| s1-R0-b | – / – / – / – / – | | | | APPROVE |
+| s1-R0-c | **G1** / – / – / – / – | | | | REQUEST_CHANGES |
+| s1-R1-a | – / – / – / – / – | | | | APPROVE |
+| s1-R1-b | – / – / – / – / – | | | | APPROVE |
+| s1-R1-d | – / **G2** / – / – / – | | | | REQUEST_CHANGES |
+| s2-R0-b | | – / **G2** | **G3** | | APPROVE |
+| s2-R1-b | | **G1**(观察) / **G2**(Q6) | – | | APPROVE |
+| s3-R0-a | | | | 1×unlisted_real（短行 unresolved 缺口，已复现；owner 裁定真实 P1） | REQUEST_CHANGES |
+| s3-R0-b | | | | 0 blocker（5×P3） | APPROVE |
+| s3-R0-c | | | | 1×P2（refused-vault unresolved:0 同族；self-标注 non-blocking；独立 review 已复现；owner 裁定真实 P1） | APPROVE |
+| s3-R1-c | | | | 0 blocker（P3 观察） | APPROVE |
 
-（s1-R1-c、s2-R0-a、s2-R0-d 作废不计分。s2-R0-c 曾在初版评分被计 G1 命中并附引证，独立 review 指出该引证张冠李戴——其答案明确"investigated and **rejected**"该缺陷（以任务内已裁定 P3-2 为由列为不可上报），不存在所指的 fix direction；按 scoring.md 评分者纪律翻判为 miss。G1 在 S2 的 R0 有效会话中由 s2-R0-a 观察到，但该会话已作废，故 R0 臂 S2 的 G1 命中随作废消失。）
+作废会话（7 个，不计分，裁决见各自 run.json 与 M3 台账）：s1-R1-c（Skill 审查真实仓库）、s2-R0-a（跨快照知悉）、s2-R0-c（Skill，其 refused-vault P2 由 s3-R0-c 独立覆盖）、s2-R0-d（`ls` eval 根目录）、s2-R1-a / s3-R1-a / s3-R1-b（Skill，M4.1 严格适用）。作废会话的观察仅供 owner 参考：s2-R0-a 曾观察到 G-S2-1 核心缺陷并给出与 owner 修复同向的 fix direction；s3-R1-b 曾把已裁定 P3-5 升级为 blocker（若计分将构成 fabricated）并独立发现管道截断（owner 裁定真实 P2）。
 
-### 硬指标（§8 Gate 逐条）
+### 硬指标（M4.1 修订：冻结口径重算，12 有效会话）
 
 | # | 条件 | 结果 |
 | --- | --- | --- |
-| 1 | 安全硬指标全过（fabricated=0、Authority/Accepted 错误=0、fresh 误标=0、Forbidden/OOS 反向=0） | **FAIL**：fabricated blocker=1（s3-R1-b，P3-5 升级）；其余三项全部会话 =0 |
-| 2 | R1 正样本 golden 并集召回 =100% | **FAIL**：S1 1/5=20%（仅 G-S1-2）；S2 2/3=67%（G-S2-3 全臂遗漏，仅 R0-b 发现） |
-| 3 | R1 单会话召回中位数 ≥ R0 | PASS：S1 0 vs 0；S2 2 vs 1.5（S3 不适用） |
-| 4 | 负对照 fabricated=0 | **FAIL**：=1 |
+| 1 | 安全硬指标全过（fabricated=0、Authority/Accepted 错误=0、fresh 误标=0、Forbidden/OOS 反向=0） | PASS（有效会话内）：fabricated=0（s3-R1-b 的升级行为随会话作废退出评分，作为观察记录）；其余三项全部有效会话 =0 |
+| 2 | R1 正样本 **known P0/P1** golden 并集召回 =100%（计划 §10.1 冻结分母；owner review P1-4 更正——初版误将 P2 floor 的 golden 计入分母） | **FAIL**：S1 1/4=25%（仅 G-S1-2；G1/G3/G4 遗漏）；S2 2/2=100%。S1 单场景即阻断任何 Go |
+| 3 | R1 单会话召回中位数 ≥ R0 | PASS：S1 0 vs 0（P0/P1 口径）；S2 2 vs 1（R1 仅 1 个有效会话） |
+| 4 | 负对照可解释性 | **失效**：负对照本身被 control_invalidated（其上测得的 fabricated 等指标不支撑任何方向的终局结论） |
 | 5 | Pack 无 golden 特化/截断/字段遗漏 | PASS（M2 独立审计 10/10） |
-| 6 | ≥1 项成本中位数改善 ≥30% 且其余关键成本无明显恶化 | 前半满足：visible_output_bytes −61.6% ✓、vault 文件打开 −52.0% ✓（tool_calls −14.1% ✗）；后半不满足：wall-clock +29.6% 恶化 → **Go 不成立**（注意：按冻结 §8，成本项恶化只阻断 Go，不构成独立 No-Go 触发——No-Go 由条件 1、2 独立成立） |
-| — | control_invalidated | **成立，两处独立登记**（短行 id 缺口 + refused-vault unresolved:0，见 §5）→ 结论封顶 Inconclusive |
+| 6 | ≥1 项成本中位数改善 ≥30% 且其余关键成本无明显恶化 | 前半满足：visible −57.6% ✓、vault −46.2% ✓（tools −12.8% ✗）；后半不满足：wall +24.4% 恶化 → **Go 阻断**（按冻结 §8，成本恶化只阻断 Go，非独立 No-Go 触发） |
+| — | control_invalidated | **成立，两处独立登记**（短行 id 缺口 + refused-vault unresolved:0；均有有效会话来源并经独立 review 在 `5317784` 复现；owner 已裁定前者真实 P1、后者真实 P1）→ **按计划 §10.1，本轮结论封顶 Inconclusive** |
 
-**No-Go 由条件 1（fabricated blocker）与条件 2（召回未达 100%）独立过定**；条件 6 进一步阻断任何 Go 读法；control_invalidated 封顶兜底。稳健性：独立 review 复核确认，即使把 S3 臂整体剔除（条件 1 的触发项在 S3）或把全部 Skill 有效会话作废，条件 2（S1/S2 召回缺口）单独触发的 No-Go 仍成立。
+**正式判定：R1 = Inconclusive。** 依据计划 §10.1（"本轮结论最多 Inconclusive"）：负对照被真实缺陷失效后，实验不能输出任何方向的终局结论——包括初版发布的 No-Go。M4 的记录性发现（S1 召回 25%、wall-clock 恶化、作废会话中的 P3-5 升级行为）如实保留，作为"R2 本周期不实现"的决策依据，但不构成本实验的正式结论。owner 裁定同轮确认：R2 本周期不开发是合理决策。
 
-### 成本原值与聚合（有效会话；单位：字节/次/秒）
+### 成本原值与聚合（M4.1：12 个有效会话；单位：字节/次/秒）
 
 | 会话 | material | tool_calls | visible_output | vault_opens | wall_s |
 | --- | --- | --- | --- | --- | --- |
@@ -88,44 +84,43 @@
 | s1-R0-b | 2019 | 36 | 162768 | 9 | 629.5 |
 | s1-R0-c | 2019 | 39 | 178876 | 12 | 879.8 |
 | s2-R0-b | 2011 | 39 | 174482 | 14 | 710.8 |
-| s2-R0-c | 2011 | 37 | 143885 | 9 | 1418.3 |
 | s3-R0-a | 2011 | 34 | 128123 | 13 | 952.1 |
 | s3-R0-b | 2011 | 53 | 185546 | 20 | 774.4 |
 | s3-R0-c | 2011 | 47 | 162163 | 16 | 745.8 |
 | s1-R1-a | 112099 | 34 | 69051 | 8 | 1198.7 |
 | s1-R1-b | 112099 | 30 | 53618 | 7 | 759.8 |
 | s1-R1-d | 112099 | 44 | 108765 | 15 | 928.2 |
-| s2-R1-a | 116217 | 27 | 36621 | 2 | 919.2 |
 | s2-R1-b | 116217 | 39 | 117745 | 5 | 1041.3 |
-| s3-R1-a | 212334 | 25 | 53575 | 3 | 1754.9 |
-| s3-R1-b | 212334 | 39 | 109678 | 14 | 2164.9 |
 | s3-R1-c | 212334 | 33 | 55667 | 5 | 682.0 |
 
-| arm 中位数 | R0 (n=8) | R1 (n=8) | Δ |
+| arm 中位数 | R0 (n=7) | R1 (n=5) | Δ |
 | --- | --- | --- | --- |
-| material_bytes | 2,011 | 116,217 | +5,679%（Pack 内嵌，设计使然） |
-| tool_calls | 39 | 33.5 | −14.1% |
-| visible_output_bytes | 162,465.5 | 62,359 | **−61.6% ✓** |
-| vault_opens | 12.5 | 6 | **−52.0% ✓** |
-| wall_clock_first_answer_s | 760.1 | 984.8 | **+29.6% 恶化 ✗** |
+| material_bytes | 2,011 | 112,099 | +5,474%（Pack 内嵌，设计使然） |
+| tool_calls | 39 | 34 | −12.8% |
+| visible_output_bytes | 162,768 | 69,051 | **−57.6% ✓** |
+| vault_opens | 13 | 7 | **−46.2% ✓** |
+| wall_clock_first_answer_s | 745.8 | 928.2 | **+24.4% 恶化 ✗** |
+
+（初版 16 有效口径的聚合（visible −61.6%、vault −52.0%、tools −14.1%、wall +29.6%）保留于 Git 历史 `493f8dc`/`10647bd`，作对照。）
 
 - R1 builder 成本（端到端）：构建 compute ≈0.06s/份；会话级端到端（含规则修订与快照返工）≈25 分钟（`packs/builder-log.md`）。稳态自动化下 builder 成本可忽略，但 R2 的准入论证前提（R1 达 Go）未满足。
 - 计量口径注（独立 review P2-3）：`visible_output_bytes`、`tool_calls`、`material_bytes`、wall-clock 均可由 `runs/*/transcript.jsonl` 机械重算；`file_opens_task_vault` 含按调用目的对 Bash 读取的归类判断，非纯机械量——按纯 Read/Grep/Glob 机械口径复算为 −37.0%，两种口径下 ≥30% 改善的结论一致。宿主投放与计量脚本已存档于 `tools/` 供复算。
-- Tie-breaker 多数决：S1-R0 = RC（2/3）；S1-R1 = A（2/3，a,b vs d）；S3-R0 = A（2/3）；S3-R1 = A（2/3）；S2-R0 = **unstable**（1-1，名额耗尽）；S2-R1 = A（2/2）。
+- Tie-breaker 多数决（M4.1 后的 cell 口径）：S1-R0 = RC（2/3 有效）；S1-R1 = A（2/3 有效，a,b vs d）；S3-R0 = A（2/3）；S2-R0 / S2-R1 / S3-R1 = 每 cell 仅 1 个有效会话（M4.1 作废后不再构成多数决；S2-R0 在初版口径下曾 1-1 unstable）。
 
 ## 结论
 
-- **R1 判定：No-Go。**
-- Gate 逐条推导见上表，可由 `runs/*/answer.md`、`runs/*/run.json` 与 `scoring.md` 完全重算。
-- **不实现 R2，不提交 R2 Level C 提案。** Review Pack（固定信息集合）在本样本上：显著降低 reviewer 的可见读取量与 vault 文件打开数（上下文组装效率真实改善），但未提高 golden finding 召回（S1 双臂均只命中 1/5，且命中项互不相同），引入 1 个 fabricated blocker，并使首答 wall-clock 恶化约 30%（中位数 +29.6%）。
+- **R1 正式判定：Inconclusive**（M4.1 修订；初版 No-Go 违反计划 §10.1 的封顶规则，owner review 2026-09-13 更正）。
+- Gate 逐条推导见上表，可由 `runs/*/answer.md`、`runs/*/run.json` 与 `scoring.md` 完全重算（独立 review 已机械复核一轮；M4.1 重算待下轮复核抽查）。
+- **R2 本周期不实现、不提交提案。** 支撑该决策的记录性发现（非正式结论）：Review Pack 显著降低 reviewer 的可见读取量与 vault 文件打开数（上下文组装效率真实改善），但 S1 场景 known-P0/P1 召回仅 25%（G1/G3/G4 遗漏，且命中项与 R0 互不相同），wall-clock 中位数恶化 24.4%，作废会话中还观察到 P3-5 升级为 blocker 的过报行为；负对照被两处真实缺陷失效（control_invalidated 双登记），实验无法给出任何方向的终局结论。
 - 实验附带产出（供 owner 裁决，均不经 Gate）：见 §5。
 
 ## 实验附带缺陷清单（owner 裁决项）
 
-1. **`status` 短行 id 缺口**（s3-R0-a 发现，scorer 独立复现；独立 review 复核确认）：malformed 短行引用的缺失任务不进 `unresolved`（`TASK_RUNTIME_INVALID` 无 task_id），违反 AC"malformed…全部 fail-closed"与 MIGRATIONS/README"无法解析的任务显式列入 unresolved"。→ **control_invalidated 登记（第一处）**。
-2. **refused-vault `unresolved: 0`**（s2-R0-c 以 P2 发现，s3-R0-c 独立以 P2 报告同一缺陷族；独立 review 在 `5317784` 现场复现）：`vault/` 或 `vault/tasks` 被符号链接拒绝枚举时，`summary.unresolved` 输出 0（全零摘要），仅 `SYMLINK_INPUT` 错误可见——"unresolved: 0" 是对从未读取内容的机器可读"无未解决项"断言，违反 AC"全部 fail-closed"与 plan §5.4 kill criterion"对 closed/unresolved 任务产生任何 fail-open 表述"；缓解项：exit 2 仍发出。→ **control_invalidated 登记（第二处）**。
-3. **管道截断**（s3-R1-b 发现，scorer 复现；s2-R0-c 作为 P3 独立观察到同一现象）：Next Action 含 `|` 时投影静默截断且 exit 0 无 finding；契约违反程度需 owner 裁定。
-4. **同 id 不可读副本**（s3-R1-b 以 P2 重报）：即任务内已记录的 P3-5（owner 裁量项）；升级为 blocker 按 A5 计 fabricated，但该缺陷本身仍待 owner 裁量。
+1. **`status` 短行 id 缺口**（s3-R0-a 发现，scorer 独立复现；独立 review 复核确认）：malformed 短行引用的缺失任务不进 `unresolved`（`TASK_RUNTIME_INVALID` 无 task_id），违反 AC"malformed…全部 fail-closed"与 MIGRATIONS/README"无法解析的任务显式列入 unresolved"。→ **control_invalidated 登记（第一处）**。**owner 裁定（2026-09-13）：真实 P1。**
+2. **refused-vault `unresolved: 0`**（s2-R0-c 以 P2 发现，s3-R0-c 独立以 P2 报告同一缺陷族；独立 review 在 `5317784` 现场复现）：`vault/` 或 `vault/tasks` 被符号链接拒绝枚举时，`summary.unresolved` 输出 0（全零摘要），仅 `SYMLINK_INPUT` 错误可见——"unresolved: 0" 是对从未读取内容的机器可读"无未解决项"断言，违反 AC"全部 fail-closed"与 plan §5.4 kill criterion"对 closed/unresolved 任务产生任何 fail-open 表述"；缓解项：exit 2 仍发出。→ **control_invalidated 登记（第二处）**。**owner 裁定（2026-09-13）：真实 P1。**
+3. **管道截断**（s3-R1-b 发现，scorer 复现；s2-R0-c 作为 P3 独立观察到同一现象）：Next Action 含 `|` 时投影静默截断且 exit 0 无 finding。**owner 裁定（2026-09-13）：真实 P2。**
+4. **同 id 不可读副本**（s3-R1-b 以 P2 重报）：即任务内已记录的 P3-5。**owner 裁定（2026-09-13）：维持既有 P3，不作为本轮 blocker**（本会话已作废，升级行为不再计入 Gate）。
+5. **S1 场景 five 项 owner findings 中 4 项（G1/G3/G4/G5）双臂有效会话仅 1 次命中**（G1，R0-c）；G3（unittest.main 位置）、G4（重复行顺序依赖）、G5（runtime 矛盾行）双臂全部遗漏——review 输入形状不是该样本上 review 深度的约束瓶颈。
 5. **S1 场景 five 项 owner findings 中 4 项（G1/G3/G4/G5）双臂 7 个有效会话仅 1 次命中**（G1，R0-c）；G3（unittest.main 位置）、G4（重复行顺序依赖）、G5（runtime 矛盾行）双臂全部遗漏——review 输入形状不是该样本上 review 深度的约束瓶颈。
 
 ### 正样本场景非 golden blocker 主张分类（协议 §9.3，独立 review P1-3 补全）
@@ -136,5 +131,21 @@
 ## 偏差与协议修订记录
 
 - 协议 v1.1（投放机制）、v1.2（scratch 写入）、v1.3（self-runtime 工件 + stdin 通道）、v1.4（Skill 白名单）——全部先于受影响评分存在，理由与影响见 protocol.md 修订记录。
-- 宿主操作失误一次：s2-R0-d 首次投放前未装配 prompt 文件（脚本瞬时失败，无模型调用）；修正流程后重投（即后来被判污染的会话）。如实记录。
-- 局限：n=2（+tie-breaker）仍属探索性证据；单仓库三个场景；R0/R1 工具面存在 Skill 偏差（3 个有效会话）；S2-R0 cell unstable；wall-clock 受 Pack 内嵌体积影响显著，R2 若存在需将 Pack 改为文件传递另行实验。
+- **M4.1 修订（owner review 2026-09-13；本节即为预注册修订说明）**：
+  1. 正式判定 No-Go → **Inconclusive**（初版违反计划 §10.1"control_invalidated 后本轮结论最多 Inconclusive"的封顶规则）；
+  2. 召回率改用冻结的 known P0/P1 分母（S1 1/4=25%，S2 2/2=100%；初版 20%/67% 误含 P2 floor golden）；
+  3. 按 v1.4 字面规则新作废 4 个 Skill 会话（s2-R0-c、s2-R1-a、s3-R1-a、s3-R1-b——初版白名单扫描先于这些会话完成，审计脚本未实现白名单），有效会话 16 → 12，全部聚合重算；
+  4. 负对照相关指标（含 fabricated 计数）标注为不可解释，不再作为任何方向的终局依据；
+  5. owner 对四项 status 缺陷的 severity 裁定（P1/P1/P2/维持 P3）写入清单。
+  修订原因：owner 对冻结规则的解释权与执行完整性要求；修订不触碰任何 transcript/answer/prompt/pack 原始材料。
+- 宿主操作失误两次：s2-R0-d 首次投放前未装配 prompt 文件（脚本瞬时失败，无模型调用）；v1.4 白名单只写文档未落入审计脚本且全量扫描时点过早（即 M4.1 起因）。如实记录。
+- 局限：有效会话 n=7/5（作废后）属探索性证据；单仓库三个场景；S2 两 cell 与 S3-R1 cell 仅剩 1 个有效会话、S1-R0/R1 各 3/3-1；wall-clock 受 Pack 内嵌体积影响显著；`visible_output_bytes` 的 R1 优势部分来自 Pack 替代了原本必要的自行读取，其对判断质量的净效应在本实验中无法与召回缺口分离。
+
+## push 前隐私与历史处理方案（待 owner 授权，未执行）
+
+- 现状（owner review P1-3，已核实）：本 eval 目录的 19 份 transcript.jsonl 与 run.json 含宿主绝对路径、session UUID、`total_cost_usd` 等本机元数据；s2-R1-a 的 fork 输出枚举了 <host-path> 下无关仓库名；未发现任何凭据/Token。
+- 方案选项（供 owner 择一）：
+  - A. 原样 push（内容仅含本机路径与成本数字，无密钥；仓库为私有/受控前提下风险最低、历史最忠实）；
+  - B. 以 `git filter-repo` 重写未推送的 23 个本地提交，将 `runs/*/transcript.jsonl` 与 `runs/*/run.json` 中的宿主路径/UUID/成本字段脱敏（成本与时长聚合计算不受影响，但逐字节重算性下降，需在 README 声明脱敏映射）；
+  - C. 重写并剥离 transcript（仅保留 prompt/answer/run.json 聚合字段），transcript 另行本地归档不入库——损失 tool log 可审计性。
+- 在 owner 明确授权前：**不 push、不重写历史**；本仓库当前所有实验提交均仅在本地。

@@ -46,10 +46,12 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "clean",
-    "rules": "protocol v1.2",
-    "hits": [],
-    "hit_count": 0,
+    "verdict": "contaminated",
+    "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
+    "hits": [
+      "Skill tool_use（无 args）：fork 在空中性 cwd 执行、未触及受保护区（原判有效的依据）——v1.4 字面规则下仍作废。"
+    ],
+    "hit_count": 1,
     "scratch_writes": [
       "Bash redirect -> /dev/null; (system)",
       "Bash redirect -> /tmp/rp-s2-verify/base-trellium.py (scratch)",
@@ -59,12 +61,15 @@
     ],
     "scratch_write_count": 5,
     "host_adjudication": {
-      "verdict": "clean",
-      "reason": "Forked Skill（code-review，无 args）在空的中性 cwd 执行：确认 'No reviewable diff exists'，未进入任何 git 仓库；fork 结果文本另枚举了 <host-path> 下无关仓库的脏状态计数（无本 eval 与评分材料接触）。fork 未产生可用输出且未影响首答（答案未提及）。判有效；Skill 使用作为工具面偏差记录。",
+      "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
       "adjudicated_by": "host orchestrator (GLM)",
-      "date": "2026-09-12"
+      "date": "2026-09-13",
+      "verdict": "contaminated",
+      "reason": "owner review 裁定严格应用 v1.4 白名单：fork 内部不可审计，字面规则不设例外。本会话原判有效（fork 无受保护接触）的裁决由本块取代；其 G1/G2 命中不再计入 S2-R1 评分。"
     },
-    "scratch_write_note": "scratch_writes 计数含一条被权限层拒绝而未执行的命令的重定向；实际执行的 scratch 写入少于计数。"
+    "scratch_write_note": "scratch_writes 计数含一条被权限层拒绝而未执行的命令的重定向；实际执行的 scratch 写入少于计数。",
+    "adjudicated_by": "host orchestrator (GLM)",
+    "date": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-11T08:28:09.292Z",
   "transcript_last_ts": "2026-09-11T08:43:28.015Z"

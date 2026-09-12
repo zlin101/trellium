@@ -11,9 +11,9 @@
 - Completed: M0-M5 全部完成。预注册→快照→19 会话（16 有效/3 污染作废）→评分全链路 DAG 可证；**R1 判定 No-Go**（负对照 fabricated blocker=1；S1/S2 golden 并集召回 20%/67%；wall-clock +29.6% 恶化；control_invalidated 双登记——两处 `status` 真实缺陷均经 scorer 与独立 review 双重复现）。独立 review Round 1 REQUEST_CHANGES（4×P1 记录修正）→ Round 2 APPROVE。
 - In progress: 无。
 - Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
-- Blockers: none。
-- Next best action: owner 验收任务并裁决 `docs/evals/review-pack-2026-09/results.md` §附带缺陷清单（4 项，其中 2 项为已复现的 `status` 真实缺陷）；R2 未实现、未提案，无需 Level C 立项。
-- Files to read first: `docs/evals/review-pack-2026-09/results.md`、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0009-review-pack-ablation.md`。
+- Blockers: push 前须 owner 就 raw transcript 隐私/历史处理授权（方案 A 原样 push / B filter-repo 脱敏 / C 剥离 transcript，见 results.md §push 前隐私与历史处理方案；当前全部实验提交仅在本地）。
+- Next best action: owner 复核 2026-09-13 修正后的 results.md（判定已按裁定改为 Inconclusive、12 有效会话、P0/P1 召回口径）；status 三项缺陷已另立 TASK-0010（不在本任务夹带）。
+- Files to read first: `docs/evals/review-pack-2026-09/results.md`（含 M4.1 修订记录）、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0010-status-defects.md`。
 
 ## TASK-0004 - 2026-09-08
 

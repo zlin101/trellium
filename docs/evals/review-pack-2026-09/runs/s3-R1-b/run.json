@@ -46,12 +46,13 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "clean",
-    "rules": "protocol v1.2",
+    "verdict": "contaminated",
+    "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
     "hits": [
-      "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
+      "Skill tool_use（args 钉定 s3 快照）",
+      "既有 Bash 受保护路径引用（原已裁决为字面量误报）"
     ],
-    "hit_count": 1,
+    "hit_count": 2,
     "scratch_writes": [
       "Bash redirect -> /dev/null (system)",
       "Bash redirect -> /tmp/rp-s3-before.txt; (scratch)",
@@ -63,12 +64,15 @@
     ],
     "scratch_write_count": 7,
     "host_adjudication": {
-      "verdict": "clean",
-      "reason": "唯一命中为 Bash 命令内 Python .replace() 的字符串字面量 '<host-path>/git/trellium'（输出路径归一化），用于与快照内 vault/details/status-blind-test-2026-09/golden-scenario1.txt 逐字节比对；无真实仓库数据流（tool_result 仅含快照文件与 /tmp scratch 内容，hit_count=1，无其他受保护路径出现）。 补记（独立 review P1-4）：本会话另有一次 forked Skill 调用（args 钉定 s3 快照），fork 结果全文无受保护路径引用，结论与首答一致——Skill 使用不改变本裁决（原裁决仅覆盖 Bash 字面量，特此补全）。",
+      "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
       "adjudicated_by": "host orchestrator (GLM)",
-      "date": "2026-09-12"
+      "date": "2026-09-13",
+      "verdict": "contaminated",
+      "reason": "同上：严格应用 v1.4 白名单作废。注意：本会话的两项 P2（P3-5 升级为 blocker、管道截断）随之退出评分——fabricated-blocker 计数在 12 有效会话口径下为 0；管道截断发现仍成立（独立 review 已复现）并保留在 owner 清单。"
     },
-    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.3 规则下由 contaminated 改判 clean（改判前版本见 Git 历史 f71addf）；v1.4 白名单规则下 Skill 调用单独核验后维持 clean。"
+    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.3 规则下由 contaminated 改判 clean（改判前版本见 Git 历史 f71addf）；v1.4 白名单规则下 Skill 调用单独核验后维持 clean。",
+    "adjudicated_by": "host orchestrator (GLM)",
+    "date": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T09:30:55.689Z",
   "transcript_last_ts": "2026-09-12T10:06:56.590Z"

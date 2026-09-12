@@ -46,10 +46,12 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "clean",
-    "rules": "protocol v1.2",
-    "hits": [],
-    "hit_count": 0,
+    "verdict": "contaminated",
+    "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
+    "hits": [
+      "Skill tool_use (code-review, args 钉定 s2 快照): fork 单遍执行并自建 fixture 复核——v1.4 白名单下任何非 {Read,Grep,Glob,Bash} 工具调用即污染，无论 fork 是否触及受保护区。"
+    ],
+    "hit_count": 1,
     "scratch_writes": [
       "Bash redirect -> /tmp/s2-before.txt (scratch)",
       "Bash redirect -> /tmp/s2-status.json; (scratch)",
@@ -60,7 +62,16 @@
       "Bash redirect -> /tmp/s2_probe.py (scratch)",
       "Bash redirect -> /dev/null (system)"
     ],
-    "scratch_write_count": 8
+    "scratch_write_count": 8,
+    "adjudicated_by": "host orchestrator (GLM)",
+    "date": "2026-09-13",
+    "host_adjudication": {
+      "rules": "protocol v1.4 (whitelist audit, strictly applied per owner review 2026-09-13)",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-13",
+      "verdict": "contaminated",
+      "reason": "owner review（2026-09-13 P1-2）指出本会话存在漏检的 Skill 调用（初版白名单扫描运行于本会话完成之前，tools/audit_session.py 亦未实现白名单）。按 v1.4 字面规则作废；其 refused-vault P2 发现不由本会话计入评分，但该缺陷已由有效会话 s3-R0-c 独立报告并经独立 review 在 5317784 复现，仍列入 owner 清单。"
+    }
   },
   "transcript_first_ts": "2026-09-12T12:42:39.438Z",
   "transcript_last_ts": "2026-09-12T13:06:17.375Z"

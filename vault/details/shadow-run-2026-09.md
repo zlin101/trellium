@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-12（TASK-0009 转 ready_for_review），审计基准 finalize 提交**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 9 个（TASK-0001…0009；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 均为 owner 立项的真实任务，且创建时直接为 active，不伪造 draft→active 转换。观测到 lifecycle 转换 18 次（历史明细保留在下方 K1 append-only 事件行；TASK-0009 active→ready_for_review 为第 18 次），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**；TASK-0009 的交接条目仅是待 GLM 接手指针，接手前不提前计数。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-13（owner review TASK-0009 修正 + TASK-0010 立项），审计基准 `f4498c3` + 本次修正变更集**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 10 个（TASK-0001…0010；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0010 均为 owner 立项的真实任务（0007/0008/0009 创建时直接为 active，0010 由 owner 2026-09-13 指示另立，创建时直接为 active，不伪造 draft→active 转换）。观测到 lifecycle 转换 18 次（历史明细保留在下方 K1 append-only 事件行；TASK-0009 active→ready_for_review 为第 18 次；其 owner review 修正期间按 TASK-0008 先例保持 ready_for_review 不回退），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**；TASK-0009 的 GLM 接手（M1-M5）已完成，现处 owner 复核态。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
