@@ -46,7 +46,7 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "contaminated",
+    "verdict": "clean",
     "rules": "protocol v1.2",
     "hits": [
       "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
@@ -60,7 +60,13 @@
       "Bash redirect -> /tmp/rp-s3-ca.norm; (scratch)",
       "Bash redirect -> /dev/null (system)"
     ],
-    "scratch_write_count": 6
+    "scratch_write_count": 6,
+    "host_adjudication": {
+      "verdict": "clean",
+      "reason": "唯一命中为 reviewer 自建 Python heredoc 中 JSON payload 的字符串字面量（\"target\": \"<host-path>/git/trellium\"），镜像快照内归档 golden 文件的格式；命令整体 cd 于自身快照内运行注入式 status 比对（结果 SCENARIO MATCH），无真实仓库数据流（全会话 hit_count=1，无其他受保护路径）。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    }
   },
   "transcript_first_ts": "2026-09-12T10:35:58.591Z",
   "transcript_last_ts": "2026-09-12T10:48:52.592Z"
