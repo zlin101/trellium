@@ -5,15 +5,15 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0009 - 2026-09-11
+## TASK-0009 - 2026-09-12
 
 - Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
-- Completed: M0 正式计划、Level B 任务契约、三个冻结场景、R1 Pack 字段、12 会话起步规则、污染控制、成本指标、kill criteria 和 strategy red-team 已写入；五个历史 commit 已现场确认存在。
-- In progress: 无实验结果；当前只完成方案和授权边界，R2 公共 CLI 未获准。
-- Failed attempts: 初次文档补丁因 handoff 上下文不匹配整体失败，已拆分补丁重试，无半套文件或内容丢失。
-- Blockers: none；实验如果触发 No-Go/Inconclusive，属于有效结论而非 blocker。
-- Next best action: GLM 先审阅并独立提交当前 M0 change set，再创建并独立提交 `docs/evals/review-pack-2026-09/` 的 protocol/prompts/scoring/空 results 四件套；之后才生成 Pack 或运行 reviewer，不得修改产品代码。
-- Files to read first: `docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md`、`vault/tasks/TASK-0009-review-pack-ablation.md`、`vault/runtime.md`、Codex 反馈 §14.6/§16。
+- Completed: M0-M5 全部完成。预注册→快照→19 会话（16 有效/3 污染作废）→评分全链路 DAG 可证；**R1 判定 No-Go**（负对照 fabricated blocker=1；S1/S2 golden 并集召回 20%/67%；wall-clock +29.6% 恶化；control_invalidated 双登记——两处 `status` 真实缺陷均经 scorer 与独立 review 双重复现）。独立 review Round 1 REQUEST_CHANGES（4×P1 记录修正）→ Round 2 APPROVE。
+- In progress: 无。
+- Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
+- Blockers: none。
+- Next best action: owner 验收任务并裁决 `docs/evals/review-pack-2026-09/results.md` §附带缺陷清单（4 项，其中 2 项为已复现的 `status` 真实缺陷）；R2 未实现、未提案，无需 Level C 立项。
+- Files to read first: `docs/evals/review-pack-2026-09/results.md`、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0009-review-pack-ablation.md`。
 
 ## TASK-0004 - 2026-09-08
 

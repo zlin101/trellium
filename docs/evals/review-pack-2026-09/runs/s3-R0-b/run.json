@@ -3,7 +3,7 @@
   "session_id": "s3-R0-b",
   "cli_session_id": "<session-uuid>",
   "model_id": [
-    "glm-5.3-flash"
+    "glm-5.3-flash[1m] (inherited from host config; client-side unrecognized_model warning, identical across sessions — see platform_proxy.stderr_head)"
   ],
   "material_bytes": 2011,
   "tool_calls": 53,
@@ -67,7 +67,7 @@
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
     },
-    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.2 前的初始规则下判 contaminated（Bash 字符串字面量误报），重审改判 clean；原版见 Git 历史 b824b25^。"
+    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.2 前的初始规则下判 contaminated（Bash 字符串字面量误报），重审改判 clean；contaminated 原版见 Git 历史 b824b25。"
   },
   "transcript_first_ts": "2026-09-12T10:35:58.591Z",
   "transcript_last_ts": "2026-09-12T10:48:52.592Z"

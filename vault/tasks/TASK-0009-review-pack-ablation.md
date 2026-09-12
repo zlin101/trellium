@@ -6,7 +6,7 @@
   "task_id": "TASK-0009",
   "level": "B",
   "authority_level": 2,
-  "lifecycle": "active"
+  "lifecycle": "ready_for_review"
 }
 -->
 
@@ -72,12 +72,12 @@ Forbidden:
 ## Acceptance Criteria
 
 - [x] M0 正式计划包含真实问题证据、R0/R1/R2 边界、历史正负场景、盲法、指标、停止条件和 red-team。
-- [ ] M1 预注册四件套的提交严格早于 Pack 和结果。
-- [ ] 三个历史场景可重放，golden 来自 Head 后 owner review，reviewer 无泄漏。
-- [ ] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。
-- [ ] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。
-- [ ] R2 未实现；Go 时只交 owner 审批的 Level C 提案。
-- [ ] 独立 review 无 open/needs-discussion，Vault 门禁通过，任务停在 ready_for_review。
+- [x] M1 预注册四件套的提交严格早于 Pack 和结果。（独立 review：DAG "airtight"，`543d8f3` 先于 `6e1b1bf` 与全部会话存档）
+- [x] 三个历史场景可重放，golden 来自 Head 后 owner review，reviewer 无泄漏。（三快照五点验收；泄漏 grep 全净；独立 review 10 项审计 PASS）
+- [x] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。（16 有效 + 3 污染作废 + 5 infra 中断，全部逐字留档；工具存档 `tools/`）
+- [x] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。（独立 review 逐项机械重算确认；No-Go 由条件 1/2 独立过定）
+- [x] R2 未实现；Go 时只交 owner 审批的 Level C 提案。（No-Go，无提案，产品代码零改动）
+- [x] 独立 review 无 open/needs-discussion，Vault 门禁通过，任务停在 ready_for_review。（Round 1 REQUEST_CHANGES 4×P1+5×P2 → Round 2 APPROVE；残留三项字符串修正已入 finalize 提交）
 
 ## Verification
 
@@ -95,6 +95,11 @@ Required:
 Completed:
 
 - 2026-09-11 M0 现场：五个冻结 commit 均存在；TASK-0007/0008 的 Head 后 owner findings 与 accepted 控制可追溯；未修改产品代码。
+- 2026-09-11 M1（`543d8f3`）：预注册四件套独立提交，先于全部 Pack 与会话；scoring golden 锚点逐条在对应 Head 验证。
+- 2026-09-11 M2（`6e1b1bf`）：三快照五点验收（首建因 refs 未清判 FAIL 后重建）；v1.2 冻结规则机械生成三份 Pack；独立只读检查 10/10 PASS；宿主泄漏 grep 全净；12 份 prompt 预装配。
+- 2026-09-11/12 M3：19 个会话串行投放（16 有效 + 3 污染作废），5 次 infra 中断留档；协议 v1.1–v1.4 演进全部先于受影响评分；逐会话存档提交。
+- 2026-09-12 M4（`493f8dc`）：首答全部冻结后评分。R1 判定 **No-Go**：负对照 fabricated blocker=1（P3-5 升级）；S1/S2 golden 并集召回 20%/67%（要求 100%）；wall-clock 中位数 +29.6% 恶化阻断 Go；control_invalidated 双登记（短行 unresolved 缺口、refused-vault unresolved:0，均经 scorer 与独立 review 双重复现）。S2-R0 cell unstable（tie-breaker 名额耗尽）。
+- 2026-09-12 M5：独立 review Round 1 REQUEST_CHANGES（4×P1+5×P2，全部记录准确性问题；No-Go 被确认 over-determined）→ 修复 `10647bd` → Round 2 **APPROVE**（三项字符串残留并入 finalize）；全门禁绿（check 0/0、snapshot in sync、diff-check、M1 后 protected 路径零改动）。
 
 ## Execution Record
 

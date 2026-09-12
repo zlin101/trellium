@@ -78,7 +78,7 @@
 | 6 | ≥1 项成本中位数改善 ≥30% 且其余关键成本无明显恶化 | 前半满足：visible_output_bytes −61.6% ✓、vault 文件打开 −52.0% ✓（tool_calls −14.1% ✗）；后半不满足：wall-clock +29.6% 恶化 → **Go 不成立**（注意：按冻结 §8，成本项恶化只阻断 Go，不构成独立 No-Go 触发——No-Go 由条件 1、2 独立成立） |
 | — | control_invalidated | **成立，两处独立登记**（短行 id 缺口 + refused-vault unresolved:0，见 §5）→ 结论封顶 Inconclusive |
 
-**No-Go 由条件 1（fabricated blocker）与条件 2（召回未达 100%）独立过定**；条件 6 进一步阻断任何 Go 读法；control_invalidated 封顶兜底。稳健性：独立 review 复核确认，即使把 S3 臂整体剔除、或把全部 Skill 有效会话作废，条件 1/2 触发的 No-Go 仍成立（触发项均在 S1/S2）。
+**No-Go 由条件 1（fabricated blocker）与条件 2（召回未达 100%）独立过定**；条件 6 进一步阻断任何 Go 读法；control_invalidated 封顶兜底。稳健性：独立 review 复核确认，即使把 S3 臂整体剔除（条件 1 的触发项在 S3）或把全部 Skill 有效会话作废，条件 2（S1/S2 召回缺口）单独触发的 No-Go 仍成立。
 
 ### 成本原值与聚合（有效会话；单位：字节/次/秒）
 

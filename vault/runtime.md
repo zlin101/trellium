@@ -23,7 +23,7 @@ table holds pointers only.
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
-| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | active | GLM reviews and commits M0, then makes the independent R0/R1 preregistration commit; R2 remains unauthorized. |
+| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | ready_for_review | Closed 2026-09-12 pending owner review: R0/R1 ablation executed per preregistration, verdict No-Go with double control_invalidated registration; independent review APPROVE after one fix round. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -33,7 +33,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0009: Level B R0/R1 experiment opened from the Codex deep-use review-pack feedback. Two real returned-review snapshots plus one accepted negative control, hard safety metrics, cost metrics, contamination rules and kill criteria are frozen in the GLM plan; no R2 code is authorized.
+- TASK-0009: ready_for_review 2026-09-12 — preregistered R0/R1 ablation executed (19 sessions: 16 valid, 3 contamination-voided, 5 infra aborts archived). Verdict **No-Go**: negative-control fabricated blocker (1), golden recall 20%/67% vs required 100%, wall-clock +29.6% median; context-efficiency gains were real (visible bytes −61.6%, vault opens −52%) but detection did not improve. control_invalidated double-registered (short-row unresolved gap, refused-vault unresolved:0 — both reproduced, owner adjudication list in results.md). Independent review REQUEST_CHANGES → fixes → APPROVE. No R2.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
@@ -52,6 +52,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- TASK-0009 R0/R1 ablation complete and ready_for_review: preregistration→snapshots→19 blind sessions→scoring all DAG-provable; verdict No-Go (fabricated blocker, recall 20%/67%, wall-clock +29.6%; control_invalidated ×2 reproduced). Independent review APPROVE after one fix round. Focus returns to TASK-0001.
 - Opened TASK-0009 and drafted the Review Pack R0/R1 ablation plan for GLM; R2 public CLI is gated behind a separate owner-approved Level C task.
 - Owner accepted TASK-0008 (final review APPROVE, no open P0/P1/P2): status summary is durable decision D-0007; release sequence in motion — push all commits, wait for develop CI, tag `2026.09.5` on the accepted commit, then the GitHub Release (owner-created if gh stays unavailable). Focus returns to TASK-0001.
 - Re-audited the Codex deep-use feedback for 2026.09.5; selected deterministic read-only Status Summary as the sole Go-with-experiments candidate and froze TASK-0008's ablation contract before GLM implementation.
@@ -101,7 +102,7 @@ python3 scripts/trellium.py check . --format json
 
 ## Next Steps
 
-- GLM first reviews and commits TASK-0009 M0, then independently commits the frozen R0/R1 protocol/prompts/scoring/empty-results set before building any Pack or collecting results; do not implement R2.
+- Owner reviews TASK-0009 (ready_for_review): verdict No-Go, no R2 proposal; owner adjudication list (four items incl. two reproduced `status` defects) lives in `docs/evals/review-pack-2026-09/results.md` §附带缺陷清单.
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.

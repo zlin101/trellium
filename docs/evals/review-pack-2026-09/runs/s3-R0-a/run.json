@@ -3,7 +3,7 @@
   "session_id": "s3-R0-a",
   "cli_session_id": "<session-uuid>",
   "model_id": [
-    "glm-5.3-flash"
+    "glm-5.3-flash[1m] (inherited from host config; client-side unrecognized_model warning, identical across sessions — see platform_proxy.stderr_head)"
   ],
   "material_bytes": 2011,
   "tool_calls": 34,
