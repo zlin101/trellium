@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "session_id": "s2-R0-a",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 2011,
+  "tool_calls": 46,
+  "visible_output_bytes": 124606,
+  "file_opens_task_vault": 8,
+  "wall_clock_first_answer_s": 1899.506,
+  "host_dispatch_epoch": 1789201022.103035,
+  "host_return_epoch": 1789202921.6091025,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 1899.08,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 47,
+    "duration_api_ms": 1709113,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 165905,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1648064,
+      "output_tokens": 28742,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [],
+    "hit_count": 0,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null\", (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /tmp/rp-probe-s2/probe.py (scratch)",
+      "Bash redirect -> /dev/null); (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)"
+    ],
+    "scratch_write_count": 8
+  },
+  "transcript_first_ts": "2026-09-12T08:17:02.417Z",
+  "transcript_last_ts": "2026-09-12T08:48:41.497Z"
+}
