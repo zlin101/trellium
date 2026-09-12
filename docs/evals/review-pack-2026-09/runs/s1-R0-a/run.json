@@ -58,7 +58,8 @@
       "Bash redirect -> /dev/null (system)",
       "Bash redirect -> /dev/null; (system)"
     ],
-    "scratch_write_count": 6
+    "scratch_write_count": 6,
+    "reaudit_note": "本 run.json 的 contamination_audit 曾按 v1.1 原始规则判 contaminated（误报：把快照内 plans 目录列表当外部引用），后在 v1.2 规则下重审改判 clean；原版见 Git 历史 eaddf87^。"
   },
   "transcript_first_ts": "2026-09-12T08:04:55.353Z",
   "transcript_last_ts": "2026-09-12T08:15:09.990Z"

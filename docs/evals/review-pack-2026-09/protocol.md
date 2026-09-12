@@ -1,6 +1,6 @@
-# Review Pack R0/R1 消融实验协议（预注册 v1.2）
+# Review Pack R0/R1 消融实验协议（预注册 v1.4）
 
-- 日期：2026-09-11（v1 冻结于任何 Pack 制作与 reviewer 会话之前；v1.1/v1.2 修订见文末修订记录，均发生在任何评分结果存在之前）
+- 日期：2026-09-11（v1 冻结于任何 Pack 制作与 reviewer 会话之前；v1.1–v1.4 修订见文末修订记录，均发生在受影响评分结果存在之前）
 - 上位计划：`docs/superpowers/plans/2026-09-11-review-pack-ablation-glm-plan.md`（§5-§11）
 - 任务：`vault/tasks/TASK-0009-review-pack-ablation.md`
 - 本文件与 `prompts.md`、`scoring.md`、空 `results.md` 构成 M1 预注册四件套；提交后不静默改写，修订追加版本号与原因。

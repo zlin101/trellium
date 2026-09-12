@@ -57,7 +57,14 @@
       "Bash redirect -> /tmp/rp-s2-verify/base-script.json (scratch)",
       "Bash redirect -> /dev/null; (system)"
     ],
-    "scratch_write_count": 5
+    "scratch_write_count": 5,
+    "host_adjudication": {
+      "verdict": "clean",
+      "reason": "Forked Skill（code-review，无 args）在空的中性 cwd 执行：确认 'No reviewable diff exists'，未进入任何 git 仓库；fork 结果文本另枚举了 <host-path> 下无关仓库的脏状态计数（无本 eval 与评分材料接触）。fork 未产生可用输出且未影响首答（答案未提及）。判有效；Skill 使用作为工具面偏差记录。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    },
+    "scratch_write_note": "scratch_writes 计数含一条被权限层拒绝而未执行的命令的重定向；实际执行的 scratch 写入少于计数。"
   },
   "transcript_first_ts": "2026-09-11T08:28:09.292Z",
   "transcript_last_ts": "2026-09-11T08:43:28.015Z"

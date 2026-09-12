@@ -66,7 +66,7 @@
     "scratch_write_count": 9,
     "host_adjudication": {
       "verdict": "contaminated",
-      "reason": "一条 Bash 命令 `ls -la /tmp/rp-eval-20260911/` 列出 eval 根目录（受保护区：协议 §6『本 eval 目录』；prompt 明令禁止读取快照根之外内容），暴露实验场景结构元信息。与 s2-R0-a 跨快照知悉同类，判污染作废；其余全部引用均在自身快照内。",
+      "reason": "多条 Bash/Read 引用位于自身快照内（合法）；其中一条 `ls -la /tmp/rp-eval-20260911/` 列出 eval 根目录（受保护区：协议 §6『本 eval 目录』；prompt 明令禁止读取快照根之外内容），暴露实验结构元信息：场景快照清单、宿主脚本（run_session.sh 等）与 expected-s*.patch 答案工件均在可见范围。与 s2-R0-a 跨快照知悉同类，判污染作废。",
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
     }

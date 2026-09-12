@@ -46,21 +46,18 @@
   },
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
-    "verdict": "clean",
-    "rules": "protocol v1.2",
-    "hits": [],
-    "hit_count": 0,
-    "scratch_writes": [
-      "Bash redirect -> /dev/null (system)",
-      "Bash redirect -> /dev/null\", (system)",
-      "Bash redirect -> /dev/null (system)",
-      "Bash redirect -> /dev/null (system)",
-      "Bash redirect -> /tmp/rp-probe-s2/probe.py (scratch)",
-      "Bash redirect -> /dev/null); (system)",
-      "Bash redirect -> /dev/null (system)",
-      "Bash redirect -> /dev/null (system)"
+    "verdict": "contaminated",
+    "rules": "protocol v1.4 (whitelist audit)",
+    "hits": [
+      "Skill tool_use fork (code-review, args='55ae985..7ff75a8'): fork result self-reports awareness of the other scenario snapshot ('the byte-identical diff also exists in /tmp/rp-eval-20260911/s3') — cross-snapshot reference per §6."
     ],
-    "scratch_write_count": 8
+    "hit_count": 1,
+    "host_adjudication": {
+      "verdict": "contaminated",
+      "reason": "Forked Skill 执行自述知悉其他场景快照（s3）的存在与内容同一性；§6 受保护（其他场景快照）。作废不计分。注：本 run.json 的 verdict 曾短暂保持 clean（作废决定最初仅记录于 results.md 与提交说明），后按独立 review P1-4 补记本裁决块；原始 clean 版本见 Git 历史。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-12"
+    }
   },
   "transcript_first_ts": "2026-09-12T08:17:02.417Z",
   "transcript_last_ts": "2026-09-12T08:48:41.497Z"
