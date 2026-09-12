@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "session_id": "s2-R0-b",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 2011,
+  "tool_calls": 39,
+  "visible_output_bytes": 174482,
+  "file_opens_task_vault": 14,
+  "wall_clock_first_answer_s": 710.784,
+  "host_dispatch_epoch": 1789204719.5389678,
+  "host_return_epoch": 1789205430.3232403,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 710.389,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 40,
+    "duration_api_ms": 638742,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 93114,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1279488,
+      "output_tokens": 27203,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "clean",
+    "rules": "protocol v1.2",
+    "hits": [],
+    "hit_count": 0,
+    "scratch_writes": [
+      "Bash redirect -> /tmp/rev_check.json; (scratch)"
+    ],
+    "scratch_write_count": 1
+  },
+  "transcript_first_ts": "2026-09-12T09:18:39.816Z",
+  "transcript_last_ts": "2026-09-12T09:30:30.205Z"
+}
