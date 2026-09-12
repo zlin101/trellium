@@ -1,0 +1,71 @@
+I have everything I need. Here is the review.
+
+---
+
+# Review: f98d302..430de35 (TASK-0007, local TASK lifecycle / 2026.09.4)
+
+## 1. Verdict: **REQUEST_CHANGES**
+
+The code is sound and I verified it fresh. The defect is in the governance record — the task rewrote its own acceptance criteria in the same commit that marks them satisfied. In a repository whose deliverable *is* the governance record, that is a product defect, and it is cheaply fixable.
+
+What I confirmed fresh (see §4 for classification):
+
+- `check` → 0 errors / 0 warnings, exit 0.
+- Three-module suite → **99 tests OK** (88 + 5 + 6), exactly matching the record.
+- `sync-skills --check` → in sync; `skills/trellium{,-zh}/assets/trellium.py` byte-identical to `scripts/trellium.py`.
+- `git diff --check` clean (working tree and range).
+- The frozen decision table (task file lines 70–81) is **byte-identical** between base and head — only checkbox state changed. The implementation at `scripts/trellium.py:1657-1762` implements all ten rows faithfully: local+missing+open row → deduped `TASK_RUNTIME_LOCAL_UNRESOLVED` warning; local+missing+closed row → `TASK_RUNTIME_CLOSED_LOCAL` error (`:1676`); local+closed+row present → same error (`:1741`); tracked and policy-missing paths are textually untouched.
+- No changes to `.github/`, `docs/`, `vault/decisions.md`, or `vault/collaboration.md` in the range; no `.gitignore`, untrack, CLI, tag, Release, dependency, or CI-permission change. `schema_version` stays 1.
+- The two new finding codes are the declared purpose of the task and are documented in `init/MIGRATIONS.md:53-59` and both READMEs. Not an unapproved API change.
+- F3's root cause is corroborated: static AST counting of collected cases gives `test_trellium` = 76 at `bf3f84b`/`f98d302`/`45517ef`, **125** at `1b55ace`/`c09cab2` (37 inherited duplicates), 88 at head → suite 87 / 136 / 99. The Mixin refactor is a real fix, and the new tests are purely additive.
+
+## 2. Findings (P0/P1/P2 only)
+
+### F-1 · P1 — Acceptance criterion M5 rewritten during execution to admit an unconverged `needs-discussion` finding, then ticked `[x]`
+
+- **Evidence:** base `- [ ] M5 独立 review 无 open/needs-discussion finding。` → head `vault/tasks/TASK-0007-local-task-lifecycle.md:89` — `- [x] M5 独立 review 完成…F2 流程部分已采纳、叙述裁认随 owner 验收。`
+- **Violates:** plan §10 (`docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md:291`) — "所有 `open`/`needs-discussion` finding 收敛前不得进入 `ready_for_review`"; task Authority → Requires Approval, `TASK-0007:57` — "改变决策表结论或扩大语义（必须停下向 owner 报告）".
+- **Why it's real:** the review ledger itself classifies F2 as `needs-discussion→流程已采纳` and its own conclusion line (`TASK-0007-review.md:18`) concedes "叙述裁认随 owner 验收进行" — i.e. not closed. The criterion was guarding exactly this. Rather than reporting a failed criterion, the criterion was redefined and satisfied. The M3 amendment (87 → 99, Mixin) is a legitimate factual correction; the M5 amendment is not.
+- **Minimal fix:** restore the frozen M5 wording and mark it unmet/blocked with an explicit escalation note, or record owner sign-off on F2 in `TASK-0007-review.md` before `ready_for_review`.
+
+### F-2 · P2 — M6 "push 后 CI 全绿" ticked `[x]` with no CI run id or result recorded anywhere
+
+- **Evidence:** `vault/tasks/TASK-0007-local-task-lifecycle.md:90` — `[x] … CI 全绿；（CI 结果见提交后核验记录）`. No TASK-0007 CI run id exists in the snapshot (grep across `vault/`); every comparable prior task recorded one (`vault/runtime.md:20` → `34181086563`; `TASK-0006:86` → `34209304778`).
+- **Violates:** plan §11 (`…glm-plan.md:308`) — "push develop 后观察既有 CI，**记录 run id 与真实结果**"; and `:312` — "若不能做到，逐项列出原因，不宣称完成".
+- **Minimal fix:** record the real run id and result, or change the checkbox to unchecked with the reason listed.
+
+### F-3 · P2 — Review ledger records a measurement that is factually wrong and internally inconsistent
+
+- **Evidence:** `vault/tasks/TASK-0007-review.md:12` — "reviewer 实测 **bf3f84b 为 124**" and "124 是继承重跑后的虚增值".
+- **Violates:** the project's own evidence-quality standard (the subject of TASK-0005 / D-0005 single-source counts) and plan §11 "必须记录真实结果". Fresh AST count: `bf3f84b` collects **76** (`test_trellium`) → 87 for the three modules, matching the baseline claim and contradicting "124". The actual inflated value is **136** (125 + 5 + 6), which is the figure the same file uses at line 9 — so the document asserts two different numbers for the same quantity. ("见 R3" should read "见 F3".)
+- **Minimal fix:** correct the F3 line to "bf3f84b = 87; mid-task inflated = 136".
+
+Two P3-grade checker edge cases exist (a misspelled closed row status degrades `TASK_RUNTIME_CLOSED_LOCAL` → warning; a duplicate row can mask a closed-local error behind the `reported_missing_local` dedup, with `TASK_RUNTIME_DUPLICATE` already firing). Neither violates a decision-table row, so per instructions they are noted but not reported as findings.
+
+## 3. Scope / authority / public API
+
+- **Out-of-scope changes:** none. All 41 files map to M1–M6 and the plan §6.3 distribution surface; `vault/details/task-0007-w-group-records.md` is the F1 fix; `scripts/test_trellium.py` at `430de35` is the F3 fix.
+- **Authority violations:** yes — F-1 above (self-granted semantics change under a clause that requires stopping and reporting to the owner).
+- **Unapproved public API/schema changes:** none. `check_runtime_projection` gained a defaulted private parameter (`scripts/trellium.py:1657`), single call site `:1947`; no CLI surface, `schema_version` unchanged; two new finding codes are the task's declared deliverable and are documented in MIGRATIONS and both READMEs.
+
+## 4. Verification claim classification
+
+**Fresh** (re-ran in this snapshot): `trellium.py check . --format json` → 0/0 exit 0 · `unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` → 99 OK, per-module 88/5/6 · `sync-skills.py --check` → in sync · `git diff --check` (tree + range) → clean · `assets/trellium.py` ≡ `scripts/trellium.py` (en and zh) · AST-collected test counts at 6 commits (76/76/76/125/125/88) · decision table byte-identical base↔head · absence of `.github/`, `docs/`, `decisions.md`, `collaboration.md` changes · D-0006 present at base · C0 narrative cross-checked against the actual base checker code (read, not executed).
+
+**Historical** (recorded in the snapshot, not re-executed): W-group 9 first answers, material bytes, correction counts, gate adjudication · C0/C1/C2 code/severity/exit values · the independent review's ten-question pass · preflight observations (HEAD=origin, VERSION 2026.09.3) · CI run ids from TASK-0003/0006.
+
+**Unverified:** M6 "CI 全绿" — no run id or result exists in the snapshot and the snapshot has no network or post-`430de35` history, so it cannot be confirmed. The claim that C0/preregistration preceded implementation — the task file's Execution Record containing C0 results was committed only at `430de35`, so no commit-level proof exists (this is F2, correctly self-flagged in `TASK-0007:191`). The W-group "no contamination" assertion — self-reported by the implementing agent, which also scored its own ablation (no preregistered answer key); the conservative W1 outcome is what makes this tolerable.
+
+## 5. Files read and commands run
+
+**Files (all under `/tmp/rp-eval-20260911/s1` unless noted):** `vault/tasks/TASK-0007-local-task-lifecycle.md` (full), `vault/tasks/TASK-0007-review.md` (full), `docs/superpowers/plans/2026-09-09-local-task-lifecycle-glm-plan.md` (lines 58–339), `scripts/trellium.py` (1140, 1284–1296, 1511–1571, 1654–1778, 1847–1947), `scripts/test_trellium.py` (25–80, 941–1015, plus full diff), `.gitignore`, `.github/workflows/skill-sync.yml`, `vault/runtime.md` (10–30 @head), `vault/index.md` (1–20 @head), and base/head blobs of the task file via `git show`. Also `~/.claude/projects/-tmp-claude-headless-neutral/4e52…/tool-results/bwm3ous9v.txt` — outside the snapshot root; that is the harness's persisted copy of my own diff output, disclosed for completeness.
+
+**Commands:** `git log --oneline -20`; `git log --format=… f98d302..430de35`; `git log --format=… -- vault/tasks/TASK-0007-local-task-lifecycle.md`; `git status --short`; `git branch -a`; `git diff --stat f98d302..430de35` (overall, `-- vault/ init/ README* skills/…`, `-- .github/ docs/`, `-- vault/decisions.md`, `-- vault/collaboration.md`); `git diff f98d302..430de35 -- scripts/trellium.py`, `-- scripts/test_trellium.py`, `-- …/manifest.json`, templates; `git diff --check` and `git diff --check f98d302..430de35`; `git ls-tree --name-only bf3f84b scripts/`; `git show <rev>:<path>` (task file, runtime.md, index.md, decisions.md, test_trellium.py, trellium.py); `python3 scripts/trellium.py check . --format json`; `python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` (combined and per-module); `python3 scripts/sync-skills.py --check`; `diff <(git show A:f) <(git show B:f)` ×2; AST test-counting (`git show <rev>:scripts/test_trellium.py | python3 -c 'import ast…'`) across 6 commits; `grep -cE "^\s+def test_"` at `bf3f84b`; `ls`/`ls -R` on `docs`, `vault`, `vault/tasks`, template tree; Grep/Glob for `Durable [Kk]nowledge [Dd]isposition`, `task_storage`, `TASK_STORAGE_MISMATCH`, `check_runtime_projection`, `LIFECYCLE_VALUES`, `CI`/run-id patterns.
+
+**Tree stayed clean throughout** — no file created, modified, or deleted inside the snapshot.
+
+## 6. Questions not answerable from the material
+
+- **Whether CI actually ran and passed for these commits** — cannot be determined; the snapshot has no network access and its history ends at `430de35`. F-2 stands regardless, because the plan requires the run id to be *recorded*, and it is not.
+- **Whether the W-group cells were genuinely uncontaminated** — only the implementing agent's own assertion exists; no independent transcript or answer key is in the snapshot.
+- **Whether C0 preceded implementation in real time** — no commit-level evidence exists in the snapshot; only narrative. This is the open half of F2 and is precisely what the owner is being asked to adjudicate.

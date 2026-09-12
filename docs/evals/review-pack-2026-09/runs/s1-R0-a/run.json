@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "session_id": "s1-R0-a",
+  "cli_session_id": "<session-uuid>",
+  "model_id": [
+    "glm-5.3-flash"
+  ],
+  "material_bytes": 2019,
+  "tool_calls": 39,
+  "visible_output_bytes": 152935,
+  "file_opens_task_vault": 12,
+  "wall_clock_first_answer_s": 615.384,
+  "host_dispatch_epoch": 1789200294.8224595,
+  "host_return_epoch": 1789200910.2060435,
+  "cli_exit_code": 0,
+  "wall_clock_transcript_span_s": 614.637,
+  "pack_contract_fallback": null,
+  "platform_proxy": {
+    "is_error": false,
+    "subtype": "success",
+    "num_turns": 40,
+    "duration_api_ms": 553820,
+    "total_cost_usd": null,
+    "usage": {
+      "input_tokens": 98159,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1172224,
+      "output_tokens": 22426,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "stderr_head": "[claude-code:unrecognized_model] {\"model\":\"glm-5.3-flash[1m]\",\"query_source\":\"sdk\"}\n"
+  },
+  "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
+  "contamination_audit": {
+    "verdict": "contaminated",
+    "rules": "protocol v1.2",
+    "hits": [
+      "PROTECTED ref in Read: <host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>/tool-results/bwm3ous9v.txt (protected-repo-or-home)"
+    ],
+    "hit_count": 1,
+    "scratch_writes": [
+      "Bash redirect -> /dev/null; (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null (system)",
+      "Bash redirect -> /dev/null; (system)"
+    ],
+    "scratch_write_count": 6
+  },
+  "transcript_first_ts": "2026-09-12T08:04:55.353Z",
+  "transcript_last_ts": "2026-09-12T08:15:09.990Z"
+}
