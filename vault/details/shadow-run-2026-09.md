@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-13（TASK-0009 accepted + TASK-0010 draft 排期），审计基准为验收提交（hash 见 Git log；方案 B 重写后以 commit-map 映射值为准）**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 10 个（TASK-0001…0010；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，保持 **draft**（Authority 3 不直接 active，实现待方案 B 完成后由 owner 排期启动），其 draft→active 转换发生时按事件行补记。观测到 lifecycle 转换 19 次（历史明细保留在下方 K1 append-only 事件行；TASK-0009 ready_for_review→accepted 为第 19 次），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-13（TASK-0009 accepted + TASK-0010 draft 排期），审计基准为验收提交（hash 见 Git log；方案 B 重写后以 commit-map 映射值为准）**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 10 个（TASK-0001…0010；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 20 次（历史明细保留在下方 K1 append-only 事件行；TASK-0010 draft→active 为第 20 次），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -70,6 +70,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-09 | ready_for_review → accepted（owner 最终审查 APPROVE、无 open P0/P1/P2，正式验收并授权发布） | TASK-0008 | 2（状态块 + runtime 行） | 0 | durable decision 记为 D-0007；`2026.09.5` tag 指向 accepted 提交，Release 按授权顺序随后创建（无 gh 时由 owner 创建，D-0003 元数据可选） |
 | 2026-09-12 | active → ready_for_review（M0-M5 完成；独立 review Round 1 REQUEST_CHANGES 修复后 Round 2 APPROVE） | TASK-0009 | 2（状态块 + runtime 行） | 0 | R1 判定 No-Go；control_invalidated 双登记待 owner 裁决；不代 owner accepted |
 | 2026-09-13 | ready_for_review → accepted（owner 两轮 review 修正闭合后验收；结论锁定 Inconclusive / R2 不实现 / 12c-7v / 不得恢复 No-Go 表述，D-0008） | TASK-0009 | 2（状态块 + runtime 行） | 0 | 方案 B 历史脱敏获批执行；TASK-0010 批准排期（CI 绿后 draft→active） |
+| 2026-09-13 | draft → active（方案 B 完成、push 成功、远端 CI 全绿，owner 排期生效） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 范围严格限三个已裁定 status 缺陷（P1/P1/P2）；不夹带 Review Pack/Context |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 

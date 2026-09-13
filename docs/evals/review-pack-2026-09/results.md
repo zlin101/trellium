@@ -167,4 +167,4 @@
 4. ✅ 全历史敏感扫描（多树 grep 覆盖全部 30 个未推送提交树 + 补丁级）：`/home/liam`、`home-liam-git-trellium`、`tiki-taka`、`superbizagent`、UUID、numeric `total_cost_usd` 全部 **0 命中**。已知既存例外（非本次重写产物）：`vault/details/status-blind-test-2026-09/` 的 TASK-0008 逐字 golden 文件含 `/home/liam/git/trellium`——该内容在 origin/develop 已公开、本次重写零改动（不在变更文件列表），前向脱敏会改动他任务逐字档案，留 owner 决定。作者邮箱（已在 pushed 历史公开）按映射范围保留。
 5. ✅ 门禁：118+ tests OK、check 0/0、snapshot in sync、范围级 whitespace CLEAN、工作树干净。
 6. 计量完整性：重写后 12 有效会话聚合中位数与 results.md 逐位一致（R0 39 / 162,768 / 745.8；R1 34 / 69,051 / 928.2）。
-7. 备份引用不 push；bundle 保留至 push + 远端 CI 全绿。
+7. 备份引用不 push；bundle 保留至 push + 远端 CI 全绿。**闭环（2026-09-13）**：Actions 平台事故恢复后，恢复提交 `5c4c0f6` 的 workflow run "Skill protocol sync" completed/**success**；bundle 原件自本行起已按 owner 授权删除，其内容等价物仍在 pushed 历史（重写前的 `ee4f223` 及更早）与本地文件归档中——注意：重写前 24+ 个未推送提交的原始对象仅存在于已删除的 bundle 中，脱敏前的逐字节原文以 `~/trellium-eval-raw-archive-20260913/`（文件归档 + SHA256SUMS）为最终留存。

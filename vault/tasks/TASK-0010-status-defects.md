@@ -6,7 +6,7 @@
   "task_id": "TASK-0010",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "draft"
+  "lifecycle": "active"
 }
 -->
 
@@ -60,6 +60,12 @@ Forbidden:
 - [ ] `check --format json` 与基线逐字节一致（既有契约不变）。
 - [ ] 全量测试无退化；check 0/0；snapshot in sync；`git diff --check`（含 TASK-0009 豁免口径）通过。
 - [ ] 独立 review 无 open P0/P1/P2；任务停在 ready_for_review。
+
+## Execution Record
+
+### 2026-09-13 - Agent: GLM — 激活（owner 排期生效）
+
+- 方案 B 完成、push 成功、远端 CI 全绿（恢复提交 `5c4c0f6` 的 "Skill protocol sync" run success）；owner 排期条件满足，TASK-0010 draft→active，实现开工。
 
 ## Verification
 
