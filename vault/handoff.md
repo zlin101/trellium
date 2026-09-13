@@ -9,7 +9,7 @@
 
 - Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
 - Completed: **owner 验收（accepted，2026-09-13）**，结论锁定：R1 = Inconclusive；R2 本周期不实现、不提案；12 clean / 7 contaminated；不得恢复 No-Go 与 over-determined 表述（D-0008）。M0-M5 + 两轮 owner review 修正全部闭合；独立 review 四轮 APPROVE。
-- In progress: 方案 B 已执行完毕并 push（`ee4f223..a997f0e` 与 `a997f0e..c14ad60`）；全历史敏感扫描 0 命中、门禁全绿。**GitHub 未为两次 push 创建 workflow run——owner 诊断为 GitHub Actions 平台事故**（status 页 17:16 登记降级；两次 push 均已形成公开 PushEvent；workflow blob 与上次成功运行完全相同；账户级 Disable actions 项公共 API 无法排除，恢复后仍不触发才由 owner 登录检查）。恢复序列（owner 指定）：①等 Actions 恢复 operational；②提交一笔"记录事故恢复/CI 重触发"的正常 Vault 提交并 push（禁止 force-push）；③确认新 HEAD 产生 workflow run 且 gate success；④CI 绿后才可删除 bundle（`~/trellium-eval-raw-archive-20260913/develop-full-pre-rewrite.bundle`），并将 TASK-0010 draft→active。
+- In progress: GitHub Actions 平台事故已恢复（status operational，2026-09-13）；本提交即为事故恢复/CI 重触发提交。CI 绿后待办：删除 bundle（路径见 results.md 方案 B 执行记录）并将 TASK-0010 draft→active。
 - Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
 - Blockers: none（方案 B 已获批）。
 - Next best action: 完成方案 B 执行与 CI 确认；CI 绿后将 TASK-0010 draft→active 作为下一产品任务。
