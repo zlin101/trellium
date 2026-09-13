@@ -71,6 +71,18 @@ status 缺陷严重度：短行 unresolved 缺口 = 真实 P1；refused-vault un
 - 复审终局确认（HEAD `e707e50`）：**APPROVE**——预注册 DAG、材料可重算、污染裁决、Inconclusive 口径、双时期指标、范围合规、无 R2 越权全部核验通过。
 - 未推送计数现状以 `git rev-list origin/develop..HEAD --count` 现场重算为准（当时 26，因本修复提交本身未推送）。
 
+## Round 4（owner 二轮 P1 的专项复审，2026-09-13）
+
+owner 二轮提出 2×P1（最终 v1.4 审计未落盘；方案 B 缺历史安全设计），修复提交 `0a92a5c` 后专项复审：
+
+- P1-1 · PASS · 审计器重写（`__file__` 推导路径、白名单扫描、self-runtime 豁免按 session 自己的 cli_session_id 判定）并对 19 个 transcript 全量重跑落盘；19/19 run.json 含 `mechanical` 层（rules v1.4）；最终判定精确 12 clean / 7 contaminated（与 M4.1 作废集完全一致）；机械-最终分歧仅 {s3-R0-b, s3-R0-c}（快照内 golden 路径字面量，裁决在案）；人工裁决字段逐字节保留；计量字段零回归。
+- P1-2 · PASS · 方案 B 五项前置设计全部显式化：经验证的原始 develop git bundle（保留至 push+远端 CI 全绿）、filter-repo commit-map 保留且全部被引锚点 hash 可映射解析、可重算性分级（tool_calls/wall-clock 仍可机械重算；bytes 类降为冻结值、仅可对照 bundle 验证；等长替换因削弱脱敏被明确否决）、执行后全历史敏感扫描 0 命中、备份引用不 push。
+- TASK-0010 · PASS · refused-vault 设计与 owner 建议的联合记录形状逐字一致（`{"scope","path","reason"}`，无合成 task_id、无 clamp），lifecycle draft。
+
+### 结论（Round 4）
+
+**APPROVE**。两项 P1 阻断解除；TASK-0009 记录（R1 = Inconclusive、无 R2）可供 owner 验收；方案 B 设计完备，执行仍等 owner 明确回复"批准执行 B"。
+
 ## Round 3 补记（owner 复核发现的残留修正，2026-09-13）
 
 owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并已修正：
