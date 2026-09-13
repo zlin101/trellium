@@ -74,8 +74,8 @@ Forbidden:
 - [x] M0 正式计划包含真实问题证据、R0/R1/R2 边界、历史正负场景、盲法、指标、停止条件和 red-team。
 - [x] M1 预注册四件套的提交严格早于 Pack 和结果。（独立 review：DAG "airtight"，`543d8f3` 先于 `6e1b1bf` 与全部会话存档）
 - [x] 三个历史场景可重放，golden 来自 Head 后 owner review，reviewer 无泄漏。（三快照五点验收；泄漏 grep 全净；独立 review 10 项审计 PASS）
-- [x] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。（16 有效 + 3 污染作废 + 5 infra 中断，全部逐字留档；工具存档 `tools/`）
-- [x] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。（独立 review 逐项机械重算确认；No-Go 由条件 1/2 独立过定）
+- [x] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。（19 个会话目录：12 有效 + 7 污染作废 + 5 infra 中断，全部逐字留档；工具存档 `tools/`）
+- [x] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。（独立 review 逐项机械重算确认；正式结论 Inconclusive——control_invalidated 触发计划 §10.1 封顶，召回/成本缺口作为决策记录保留）
 - [x] R2 未实现；Go 时只交 owner 审批的 Level C 提案。（Inconclusive，无提案，产品代码零改动；R2 本周期不实现）
 - [x] 独立 review 无 open/needs-discussion，Vault 门禁通过，任务停在 ready_for_review。（独立 review 两轮 APPROVE；owner review Round 3 REQUEST_CHANGES 六项已全部修正，待 owner 复核）
 

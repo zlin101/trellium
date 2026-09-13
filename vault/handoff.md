@@ -8,7 +8,7 @@
 ## TASK-0009 - 2026-09-12
 
 - Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
-- Completed: M0-M5 全部完成。预注册→快照→19 会话（16 有效/3 污染作废）→评分全链路 DAG 可证；**R1 判定 No-Go**（负对照 fabricated blocker=1；S1/S2 golden 并集召回 20%/67%；wall-clock +29.6% 恶化；control_invalidated 双登记——两处 `status` 真实缺陷均经 scorer 与独立 review 双重复现）。独立 review Round 1 REQUEST_CHANGES（4×P1 记录修正）→ Round 2 APPROVE。
+- Completed: M0-M5 + owner round-3 修正全部完成。预注册→快照→19 会话（12 有效/7 污染作废）→评分全链路 DAG 可证；**R1 正式判定 Inconclusive**（计划 §10.1 封顶：control_invalidated 双登记——短行 unresolved 缺口、refused-vault unresolved:0，均经 scorer 与独立 review 双重复现；owner 裁定 P1/P1）。决策记录：S1 known-P0/P1 召回 25% 阻断任何 Go、wall-clock +24.4%、R2 本周期不实现。独立 review 两轮 APPROVE；owner 六项发现已修正。
 - In progress: 无。
 - Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
 - Blockers: push 前须 owner 就 raw transcript 隐私/历史处理授权（方案 A 原样 push / B filter-repo 脱敏 / C 剥离 transcript，见 results.md §push 前隐私与历史处理方案；当前全部实验提交仅在本地）。

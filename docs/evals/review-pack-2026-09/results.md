@@ -39,7 +39,7 @@
 
 - 有效会话 12（M4.1 修订：初版曾计 16）；作废 7（含 M4.1 新增的 4 个 Skill 会话，均留档并在 run.json 记录裁决）；infra 中断 5 次（内存守护 ×2、配额 ×1、argv 长度 ×1、投放脚本缺 prompt 文件 ×1——宿主操作失误，未启动模型）。
 - 污染审计规则演进：v1.2（scratch 写入不计污染）→ v1.3（self-runtime 工件放行）→ v1.4（工具白名单 {Read,Grep,Glob,Bash}）。**执行缺陷（owner review P1-2）**：v1.4 白名单曾只写入文档未落入审计脚本，且唯一一次全量白名单扫描运行于 s2-R0-c/s3-R0-c/s3-R1-c 完成之前——导致 4 个 Skill 会话漏判有效；owner review 发现后已按字面规则全部作废并重算，`tools/audit_session.py` 已补实现。
-- 协议偏差：S2 场景 tie-breaker 的 R1 侧（s2-R1-c）因 6 会话上限耗尽未运行；S2-R0 cell 以 b/c 两有效会话定局（verdict 平局 → unstable）。已如实记录，不影响 No-Go（该由安全与召回条件独立触发）。
+- 协议偏差：S2 场景 tie-breaker 的 R1 侧（s2-R1-c）因 6 会话上限耗尽未运行；S2-R0 cell 在初版口径下 1-1 unstable，M4.1 作废后仅剩 1 个有效会话（b）。已如实记录。
 
 ## M4 评分
 
@@ -121,7 +121,6 @@
 3. **管道截断**（s3-R1-b 发现，scorer 复现；s2-R0-c 作为 P3 独立观察到同一现象）：Next Action 含 `|` 时投影静默截断且 exit 0 无 finding。**owner 裁定（2026-09-13）：真实 P2。**
 4. **同 id 不可读副本**（s3-R1-b 以 P2 重报）：即任务内已记录的 P3-5。**owner 裁定（2026-09-13）：维持既有 P3，不作为本轮 blocker**（本会话已作废，升级行为不再计入 Gate）。
 5. **S1 场景 five 项 owner findings 中 4 项（G1/G3/G4/G5）双臂有效会话仅 1 次命中**（G1，R0-c）；G3（unittest.main 位置）、G4（重复行顺序依赖）、G5（runtime 矛盾行）双臂全部遗漏——review 输入形状不是该样本上 review 深度的约束瓶颈。
-5. **S1 场景 five 项 owner findings 中 4 项（G1/G3/G4/G5）双臂 7 个有效会话仅 1 次命中**（G1，R0-c）；G3（unittest.main 位置）、G4（重复行顺序依赖）、G5（runtime 矛盾行）双臂全部遗漏——review 输入形状不是该样本上 review 深度的约束瓶颈。
 
 ### 正样本场景非 golden blocker 主张分类（协议 §9.3，独立 review P1-3 补全）
 
@@ -141,11 +140,15 @@
 - 宿主操作失误两次：s2-R0-d 首次投放前未装配 prompt 文件（脚本瞬时失败，无模型调用）；v1.4 白名单只写文档未落入审计脚本且全量扫描时点过早（即 M4.1 起因）。如实记录。
 - 局限：有效会话 n=7/5（作废后）属探索性证据；单仓库三个场景；S2 两 cell 与 S3-R1 cell 仅剩 1 个有效会话、S1-R0/R1 各 3/3-1；wall-clock 受 Pack 内嵌体积影响显著；`visible_output_bytes` 的 R1 优势部分来自 Pack 替代了原本必要的自行读取，其对判断质量的净效应在本实验中无法与召回缺口分离。
 
-## push 前隐私与历史处理方案（待 owner 授权，未执行）
+## push 前隐私与历史处理（owner 已裁决方案 B；执行待最终批准）
 
 - 现状（owner review P1-3，已核实）：本 eval 目录的 19 份 transcript.jsonl 与 run.json 含宿主绝对路径、session UUID、`total_cost_usd` 等本机元数据；s2-R1-a 的 fork 输出枚举了 <host-path> 下无关仓库名；未发现任何凭据/Token。
-- 方案选项（供 owner 择一）：
-  - A. 原样 push（内容仅含本机路径与成本数字，无密钥；仓库为私有/受控前提下风险最低、历史最忠实）；
-  - B. 以 `git filter-repo` 重写未推送的 23 个本地提交，将 `runs/*/transcript.jsonl` 与 `runs/*/run.json` 中的宿主路径/UUID/成本字段脱敏（成本与时长聚合计算不受影响，但逐字节重算性下降，需在 README 声明脱敏映射）；
-  - C. 重写并剥离 transcript（仅保留 prompt/answer/run.json 聚合字段），transcript 另行本地归档不入库——损失 tool log 可审计性。
-- 在 owner 明确授权前：**不 push、不重写历史**；本仓库当前所有实验提交均仅在本地。
+- **owner 裁决（2026-09-13）：方案 B**——`git filter-repo` 脱敏未推送历史；A（原样 push）因仓库已有公开安装路径被否决，C（剥离 transcript）因损失审计证据被否决。**执行门槛：owner 明确回复"批准执行 B"后方可执行。**
+- B 的前置准备状态：
+  1. ✅ 原始归档已保留：`~/trellium-eval-raw-archive-20260913/`（16MB，167 文件）+ `SHA256SUMS-original.txt`（manifest 根哈希 `9f89536e…d783`）；仓库内不留该归档。
+  2. ✅ 范围更正：未推送提交为 **24 个**（`origin/develop..HEAD`，初版误报 23）。
+  3. ⏳ `git filter-repo` 未安装（owner 指出）；执行日前需 `pip install --user git-filter-repo` 或等价单文件安装。
+  4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
+  5. 执行后验证：对 `origin/develop..HEAD` 全历史（非仅最终文件）重跑同一敏感模式扫描，结果须为 0 命中；任何含原始元数据的备份引用（refs/original、filter-repo 自带 backup）不得 push，本地验证后删除。
+  6. 脱敏后逐字节重算性说明：metric 字段（bytes/次数/秒）不受影响；transcript 内路径类上下文降为占位符，README 需声明该映射。
+- 在 owner 回复"批准执行 B"前：**不 push、不重写历史**。

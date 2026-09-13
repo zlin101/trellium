@@ -6,7 +6,7 @@
   "task_id": "TASK-0010",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active"
+  "lifecycle": "draft"
 }
 -->
 
@@ -19,7 +19,7 @@
 ### In Scope
 
 1. **短行 id 缺口（P1）**：malformed 短行引用的任务不进 `unresolved`（`TASK_RUNTIME_INVALID` 无 task_id）——在 status 层物化该 id（复用 `7e494da` 的"物化在 status、不动 check 记录"先例），补聚焦测试。
-2. **refused-vault `unresolved: 0`（P1）**：`vault/` 或 `vault/tasks` 被拒绝枚举时 `summary.unresolved` 不得为 0（clamp ≥1 或输出摘要级 unresolved 条目）；涉及冻结 JSON v1 形状的一行 MIGRATIONS 说明。
+2. **refused-vault `unresolved: 0`（P1）——输出设计冻结（owner review 2026-09-13）**：`vault/` 或 `vault/tasks` 被拒绝枚举时，不得简单把 `summary.unresolved` clamp 为 1（会与 `tasks.unresolved` 空数组矛盾）。冻结设计：输出**一条显式的 vault-scope unresolved 记录**（合成 id 标识 vault 作用域，如 `VAULT_SCOPE`，`reason` 取实际 finding 码如 `SYMLINK_INPUT`，不携带 lifecycle/authority），使 `summary.unresolved` 计数与 `tasks.unresolved` 数组严格一致；JSON v1 的这一增量形状在 MIGRATIONS 中明确说明。
 3. **管道截断投影（P2）**：Next Action 含 `|` 导致投影静默截断且 exit 0——status 层检测过切行并抑制该任务投影（沿用既有 duplicated/enum-invalid 抑制模式）。
 
 ### Out of Scope
@@ -70,9 +70,10 @@ Required:
 
 ## Execution Record
 
-### 2026-09-13 - Agent: GLM — 立项（未开始实现）
+### 2026-09-13 - Agent: GLM — 立项（draft，未开始实现）
 
-- Owner 在 TASK-0009 review 中裁定三个 status 缺陷为真实缺陷（P1/P1/P2）并指示另立产品任务；本文件即该合同。实现待排期，不在 TASK-0009 内夹带。
+- Owner 在 TASK-0009 review 中裁定三个 status 缺陷为真实缺陷（P1/P1/P2）并指示另立产品任务；本文件即该合同。
+- Owner 复核修正（同日）：lifecycle 保持 **draft**——不以 Authority 3 直接 active，实现需 owner 排期启动；refused-vault 输出设计按 owner 意见冻结为显式 vault-scope unresolved 记录（禁止 clamp 方案）。
 
 ## Memory Updates
 

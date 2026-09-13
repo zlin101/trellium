@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contamination audit for one session transcript (protocol v1.2 §6).
+"""Contamination audit for one session transcript (protocol v1.4 §6; whitelist enforced).
 
 usage: audit_session.py <session-id>
 Contamination = write/read touching PROTECTED areas (assigned snapshot body,
@@ -85,10 +85,15 @@ with open(run_dir / "transcript.jsonl", encoding="utf-8") as f:
                     hits.append(f"PROTECTED ref in {name}: {pth} ({cls})")
 
 verdict = "contaminated" if hits else "clean"
-run["contamination_audit"] = {
-    "verdict": verdict, "rules": "protocol v1.2", "hits": hits[:20],
+new_audit = {
+    "verdict": verdict, "rules": "protocol v1.4", "hits": hits[:20],
     "hit_count": len(hits), "scratch_writes": scratch[:30], "scratch_write_count": len(scratch),
 }
+# preserve any manual host_adjudication / reaudit_note from prior passes instead of overwriting
+for k in ("host_adjudication", "reaudit_note", "scratch_write_note"):
+    if k in run.get("contamination_audit", {}):
+        new_audit[k] = run["contamination_audit"][k]
+run["contamination_audit"] = new_audit
 (run_dir / "run.json").write_text(json.dumps(run, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(json.dumps({"session": sid, "verdict": verdict, "hit_count": len(hits),
                   "scratch_write_count": len(scratch), "hits": hits[:3]}, ensure_ascii=False))

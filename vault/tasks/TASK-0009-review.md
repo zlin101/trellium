@@ -63,3 +63,17 @@ status 缺陷严重度：短行 unresolved 缺口 = 真实 P1；refused-vault un
 ### 结论（Round 3）
 
 修正已全部落盘（results.md M4.1 修订节、12 有效会话重算、TASK-0010 立项、vault 同步、隐私方案待授权）。任务保持 `ready_for_review`，等 owner 复核修正；R2 本周期不实现。
+
+## Round 3 补记（owner 复核发现的残留修正，2026-09-13）
+
+owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并已修正：
+
+- `vault/runtime.md:37` Current Progress 仍写 16 valid/No-Go → 改为 12 valid/Inconclusive；
+- `vault/handoff.md:11` Completed 仍写 No-Go → 改写；
+- TASK-0009 验收标准两条括注仍写"16 有效+3 作废""No-Go 由条件 1/2 独立过定" → 改为 12 有效/7 作废、Inconclusive 封顶表述；
+- `results.md:42` 协议偏差句仍以 b/c 两有效会话描述 S2-R0 cell → 改为 M4.1 后仅剩 b；
+- `results.md` 附带清单重复编号 5（初版编辑残留）→ 去重；
+- `runs/s3-R1-b/run.json` reaudit_note 尾句"维持 clean"与最终 contaminated 矛盾 → 改为三段式判定链（初判 contaminated → v1.3 clean → M4.1 最终 contaminated）；
+- `tools/audit_session.py` docstring/rules 串仍写 v1.2、重写会覆盖人工裁决字段 → 补 v1.4 白名单实现、rules 更正、host_adjudication/reaudit_note 合并保留。
+
+隐私方案 B 前置准备同步完成：原始归档 `~/trellium-eval-raw-archive-20260913/`（16MB/167 文件 + SHA-256 manifest，根哈希 `9f89536e…`）；未推送提交数更正为 24；`git filter-repo` 未安装列入执行日前置；脱敏映射冻结。方案 B 的执行仍等 owner 明确回复"批准执行 B"。
