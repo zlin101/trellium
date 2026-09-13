@@ -47,7 +47,6 @@
   "transcript_path_host": "<host-path>/.claude/projects/-tmp-claude-headless-neutral/<session-uuid>.jsonl",
   "contamination_audit": {
     "verdict": "clean",
-    "rules": "protocol v1.2",
     "hits": [
       "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
     ],
@@ -86,7 +85,8 @@
       "scratch_write_count": 6
     },
     "final_audit_rules": "protocol v1.4",
-    "last_mechanical_run": "2026-09-13"
+    "last_mechanical_run": "2026-09-13",
+    "rules_legacy": "protocol v1.2"
   },
   "transcript_first_ts": "2026-09-12T10:35:58.591Z",
   "transcript_last_ts": "2026-09-12T10:48:52.592Z"

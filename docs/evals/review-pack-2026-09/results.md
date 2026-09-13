@@ -144,12 +144,12 @@
 ## push 前隐私与历史处理（owner 已裁决方案 B；执行待最终批准）
 
 - 现状（owner review P1-3，已核实）：本 eval 目录的 19 份 transcript.jsonl 与 run.json 含宿主绝对路径、session UUID、`total_cost_usd` 等本机元数据；s2-R1-a 的 fork 输出枚举了 <host-path> 下无关仓库名；未发现任何凭据/Token。
-- **owner 裁决（2026-09-13）：方案 B**——`git filter-repo` 脱敏未推送历史；A（原样 push）因仓库已有公开安装路径被否决，C（剥离 transcript）因损失审计证据被否决。**执行门槛：owner 明确回复"批准执行 B"后方可执行。**
+- **owner 裁决（2026-09-13）：方案 B 已批准执行**——`git filter-repo` 脱敏未推送历史（TASK-0009 同日验收通过，结论锁定见 D-0008）；A（原样 push）因仓库已有公开安装路径被否决，C（剥离 transcript）因损失审计证据被否决。**执行门槛：owner 明确回复"批准执行 B"后方可执行。**
 - B 的前置准备状态：
   1. ✅ 原始归档已保留：`~/trellium-eval-raw-archive-20260913/`（16MB，167 文件）+ `SHA256SUMS-original.txt`（manifest 根哈希 `9f89536e…d783`）；仓库内不留该归档。
   2. ✅ 范围口径（自校验式，不硬编码计数——历史重写前该数字随每次 pre-push 提交递增）：未推送范围 = `origin/develop..HEAD`，执行时以 `git rev-list origin/develop..HEAD --count` 现场重算为准；参考值：25 @ `aca6324`（2026-09-13；初版两次误报 23、24）。
   3. ⏳ `git filter-repo` 未安装（owner 指出）；执行日前需 `pip install --user git-filter-repo` 或等价单文件安装。
-  4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
+  4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）；run.json 顶层的旧 `rules: protocol v1.2` 字段已在验收前统一更名为 `rules_legacy`（最终规则见 `final_audit_rules`/`mechanical.rules` = v1.4）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
   5. 执行前必须创建并验证**原始 develop 历史的本地 Git bundle**（`git bundle create` + `git bundle verify`，含全部 24+ 未推送提交），不能只依赖文件归档；**执行后该 bundle 保留至 push 成功且远端 CI 全绿之后**，不得在本地验证后立即删除。
   6. 保留 filter-repo 的 **commit-map**（old→new hash 全量映射），随脱敏仓库提交；所有文档中引用的旧 hash（`543d8f3`、`6e1b1bf`、`10647bd`、`f4498c3`、`accb2c2` 等预注册/里程碑/修复锚点）按映射更新或在映射表中可解析——否则"DAG airtight"证据在重写后不可解析。
   7. 脱敏后指标可重算性分级（owner review P1-2 要求显式声明）：

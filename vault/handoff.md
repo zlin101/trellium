@@ -5,15 +5,15 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0009 - 2026-09-12
+## TASK-0009 - 2026-09-13
 
 - Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
-- Completed: M0-M5 + owner round-3 修正全部完成。预注册→快照→19 会话（12 有效/7 污染作废）→评分全链路 DAG 可证；**R1 正式判定 Inconclusive**（计划 §10.1 封顶：control_invalidated 双登记——短行 unresolved 缺口、refused-vault unresolved:0，均经 scorer 与独立 review 双重复现；owner 裁定 P1/P1）。决策记录：S1 known-P0/P1 召回 25% 阻断任何 Go、wall-clock +24.4%、R2 本周期不实现。独立 review 两轮 APPROVE；owner 六项发现已修正。
-- In progress: 无。
+- Completed: **owner 验收（accepted，2026-09-13）**，结论锁定：R1 = Inconclusive；R2 本周期不实现、不提案；12 clean / 7 contaminated；不得恢复 No-Go 与 over-determined 表述（D-0008）。M0-M5 + 两轮 owner review 修正全部闭合；独立 review 四轮 APPROVE。
+- In progress: 方案 B 历史脱敏按 owner 批准顺序执行中（bundle → 脱敏+commit-map → hash 引用迁移 → 全历史 0 命中扫描 → 门禁 → push → CI 绿；bundle 保留至 CI 绿）。
 - Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
-- Blockers: push 前须 owner 就 raw transcript 隐私/历史处理授权（方案 A 原样 push / B filter-repo 脱敏 / C 剥离 transcript，见 results.md §push 前隐私与历史处理方案；当前全部实验提交仅在本地）。
-- Next best action: owner 复核 2026-09-13 修正后的 results.md（判定已按裁定改为 Inconclusive、12 有效会话、P0/P1 召回口径）；status 三项缺陷已另立 TASK-0010（不在本任务夹带）。
-- Files to read first: `docs/evals/review-pack-2026-09/results.md`（含 M4.1 修订记录）、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0010-status-defects.md`。
+- Blockers: none（方案 B 已获批）。
+- Next best action: 完成方案 B 执行与 CI 确认；CI 绿后将 TASK-0010 draft→active 作为下一产品任务。
+- Files to read first: `docs/evals/review-pack-2026-09/results.md`（含 M4.1 修订记录与方案 B 设计）、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0010-status-defects.md`。
 
 ## TASK-0004 - 2026-09-08
 

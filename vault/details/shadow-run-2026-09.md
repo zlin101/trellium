@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-13（owner review TASK-0009 修正 + TASK-0010 立项），审计基准 `f4498c3` + 本次修正变更集**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 10 个（TASK-0001…0010；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 均为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，保持 **draft**（Authority 3 不直接 active，实现待排期），其 draft→active 转换发生时按事件行补记。观测到 lifecycle 转换 18 次（历史明细保留在下方 K1 append-only 事件行；TASK-0009 active→ready_for_review 为第 18 次；其 owner review 修正期间按 TASK-0008 先例保持 ready_for_review 不回退），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**；TASK-0009 的 GLM 接手（M1-M5）已完成，现处 owner 复核态。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-13（TASK-0009 accepted + TASK-0010 draft 排期），审计基准为验收提交（hash 见 Git log；方案 B 重写后以 commit-map 映射值为准）**；事实源为本文件上方 append-only 事件行，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 10 个（TASK-0001…0010；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，保持 **draft**（Authority 3 不直接 active，实现待方案 B 完成后由 owner 排期启动），其 draft→active 转换发生时按事件行补记。观测到 lifecycle 转换 19 次（历史明细保留在下方 K1 append-only 事件行；TASK-0009 ready_for_review→accepted 为第 19 次），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -69,6 +69,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-09 | active → ready_for_review（2026.09.5 status 实现与独立 review 闭合） | TASK-0008 | 2（状态块 + runtime 行） | 0 | 实现前手写盲测 3/3 零纠正；review round 1 唯一 P1 已修复；owner 验收前不代做 tag/Release |
 | 2026-09-09 | ready_for_review → accepted（owner 最终审查 APPROVE、无 open P0/P1/P2，正式验收并授权发布） | TASK-0008 | 2（状态块 + runtime 行） | 0 | durable decision 记为 D-0007；`2026.09.5` tag 指向 accepted 提交，Release 按授权顺序随后创建（无 gh 时由 owner 创建，D-0003 元数据可选） |
 | 2026-09-12 | active → ready_for_review（M0-M5 完成；独立 review Round 1 REQUEST_CHANGES 修复后 Round 2 APPROVE） | TASK-0009 | 2（状态块 + runtime 行） | 0 | R1 判定 No-Go；control_invalidated 双登记待 owner 裁决；不代 owner accepted |
+| 2026-09-13 | ready_for_review → accepted（owner 两轮 review 修正闭合后验收；结论锁定 Inconclusive / R2 不实现 / 12c-7v / 不得恢复 No-Go 表述，D-0008） | TASK-0009 | 2（状态块 + runtime 行） | 0 | 方案 B 历史脱敏获批执行；TASK-0010 批准排期（CI 绿后 draft→active） |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
@@ -127,3 +128,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-09 | TASK-0008 owner review round 3×P1 闭合（vault 更新提交前） | 0 | 0 / 0 | 原因码改按 finding phase 推导（owner 复现输出实际码 CLOSED_LOCAL）；补 3 项测试；golden B/C 仍逐字节一致；snapshot in sync、`git diff --check` OK |
 | 2026-09-11 | TASK-0009 M0 方案与交接（提交前） | 0 | 0 / 1 | 唯一 warning 为新 tracked TASK 的预期 `TASK_STORAGE_PENDING`；五个历史 commit 存在、snapshot in sync、`git diff --check` OK。GLM 提交 M0 后必须重跑并消除此 warning |
 | 2026-09-12 | TASK-0009 M5 终验（vault 同步提交前） | 0 | 0 / 0 | check 0/0、双 snapshot in sync、`git diff --check` OK；五个冻结 commit 在场；M1（`543d8f3`）后 protected 路径（scripts/init/skills/README/VERSION/MIGRATIONS/AGENTS）零改动；独立 review Round 2 APPROVE |
+| 2026-09-13 | TASK-0009 验收 + 方案 B 执行前终验 | 0 | 0 / 0 | check 0/0、双 snapshot in sync、范围级 whitespace CLEAN；独立 review Round 4 APPROVE；owner 验收 accepted（结论锁定，D-0008）；原始 bundle + SHA-256 归档已在仓库外就位；历史重写按 owner 批准顺序执行 |

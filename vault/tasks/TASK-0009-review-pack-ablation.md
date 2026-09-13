@@ -6,7 +6,7 @@
   "task_id": "TASK-0009",
   "level": "B",
   "authority_level": 2,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -77,7 +77,8 @@ Forbidden:
 - [x] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。（19 个会话目录：12 有效 + 7 污染作废 + 5 infra 中断，全部逐字留档；工具存档 `tools/`）
 - [x] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。（独立 review 逐项机械重算确认；正式结论 Inconclusive——control_invalidated 触发计划 §10.1 封顶，召回/成本缺口作为决策记录保留）
 - [x] R2 未实现；Go 时只交 owner 审批的 Level C 提案。（Inconclusive，无提案，产品代码零改动；R2 本周期不实现）
-- [x] 独立 review 无 open/needs-discussion，Vault 门禁通过，任务停在 ready_for_review。（独立 review 两轮 APPROVE；owner review Round 3 REQUEST_CHANGES 六项已全部修正，待 owner 复核）
+- [x] 独立 review 无 open/needs-discussion，Vault 门禁通过，任务停在 ready_for_review。（独立 review 四轮：R1/R2/R3.5/R4，终局 APPROVE；owner 两轮 review 共 8 项发现全部修正）
+- [x] owner 验收（2026-09-13）：R1 = Inconclusive；R2 本周期不实现、不提案；实验数据 12 clean / 7 contaminated；**owner 指令：不得恢复早期 No-Go 或 "over-determined" 表述**。
 
 ## Verification
 
@@ -101,6 +102,7 @@ Completed:
 - 2026-09-12 M4（`493f8dc`）：首答全部冻结后评分。初版判定 No-Go（后被 owner review 更正，见下）。当时记录：负对照 fabricated blocker=1；S1/S2 召回缺口；wall-clock 恶化；control_invalidated 双登记。
 - 2026-09-12 M5：独立 review Round 1 REQUEST_CHANGES（4×P1+5×P2，全部记录准确性问题）→ 修复 `10647bd` → Round 2 **APPROVE**；全门禁绿。
 - 2026-09-13 M5.1（owner review，REQUEST_CHANGES → 修正）：①正式判定按计划 §10.1 封顶改为 **R1 = Inconclusive**（初版 No-Go 违反"control_invalidated 后结论最多 Inconclusive"）；②v1.4 白名单严格适用，新作废 4 个 Skill 会话（漏检根因：审计脚本未实现白名单+扫描时点过早），有效会话 16→12，聚合重算（visible −57.6%、vault −46.2%、wall +24.4%）；③召回改用冻结 known P0/P1 分母（S1 1/4=25% FAIL、S2 2/2=100%）；④push 前隐私/历史三选一方案待 owner 授权，未 push 未重写；⑤status 缺陷 severity 按 owner 裁定入档并另立 TASK-0010；⑥vault 同步矛盾修正、`git diff --check` 范围级口径 + 逐字证据豁免入 Required Checks。
+- 2026-09-13 M5.2（owner 二轮 2×P1 → 修正 → Round 4 APPROVE → **owner 验收**）：①最终 v1.4 审计对 19 个 transcript 落盘（mechanical/裁决/终判三层，12 clean / 7 contaminated，机械-最终分歧仅 s3-R0-b/c 两例且裁决在案）；②方案 B 增补五项历史安全设计（git bundle 保留至 push+CI 绿、commit-map 与锚点 hash 映射、可重算性分级、全历史 0 命中扫描、备份引用不 push）；③TASK-0010 refused-vault 设计改 owner 联合记录形状。owner 最终验收：**accepted**，结论锁定（Inconclusive / R2 不实现 / 12c-7v / 不得恢复 No-Go 与 over-determined 表述）；方案 B 获准执行（顺序与门禁按 owner 列举）；TASK-0010 批准排期（B 完成 + push + CI 绿后 draft→active）。
 
 ## Execution Record
 

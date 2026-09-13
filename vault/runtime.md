@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0009
+- TASK-0010（draft→active 待方案 B push + CI 全绿；方案 B 历史脱敏执行中）
 
 ## Active Tasks
 
@@ -23,7 +23,7 @@ table holds pointers only.
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
-| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | ready_for_review | Owner review round 1 (2026-09-13) corrections applied: verdict Inconclusive, 12 valid sessions, P0/P1 recall denominator; awaiting owner re-review. R2 stays unimplemented. |
+| TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | accepted | Closed 2026-09-13: owner accepted with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired). D-0008. |
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | draft | Owner-instructed 2026-09-13, separated from TASK-0009; severity P1/P1/P2 per owner adjudication. Draft until owner schedules implementation; refused-vault output design frozen (explicit vault-scope unresolved record, no clamp). |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
@@ -34,7 +34,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0009: ready_for_review — preregistered R0/R1 ablation executed (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median, R2 not implemented this cycle. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×2; owner review round 3 corrections applied 2026-09-13.
+- TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
@@ -53,6 +53,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Owner accepted TASK-0009 (2026-09-13) with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired — D-0008). Plan B history sanitization approved and executing per the owner-listed order; TASK-0010 activates after push + CI green.
 - TASK-0009 owner review round (2026-09-13, REQUEST_CHANGES → fixes applied): formal verdict corrected to **Inconclusive** per plan §10.1 cap; v1.4 whitelist strictly applied (4 more Skill sessions voided, 12 valid); recall recomputed on the frozen known-P0/P1 denominator (S1 25% FAIL, S2 100%); privacy/history plan for the unpushed eval transcripts drafted for owner authorization. R2 stays unimplemented this cycle.
 - Opened TASK-0009 and drafted the Review Pack R0/R1 ablation plan for GLM; R2 public CLI is gated behind a separate owner-approved Level C task.
 - Owner accepted TASK-0008 (final review APPROVE, no open P0/P1/P2): status summary is durable decision D-0007; release sequence in motion — push all commits, wait for develop CI, tag `2026.09.5` on the accepted commit, then the GitHub Release (owner-created if gh stays unavailable). Focus returns to TASK-0001.
@@ -107,8 +108,9 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
-- Owner re-reviews TASK-0009 after the 2026-09-13 corrections (verdict now Inconclusive; 12 valid sessions; P0/P1 recall denominator). Do not push `docs/evals/review-pack-2026-09/runs/` transcripts until the owner picks a privacy/history option (A push as-is / B filter-repo sanitize / C strip transcripts) — see results.md §push 前隐私与历史处理方案.
+- Plan B execution in progress per owner-approved order (bundle → sanitize + commit-map → hash-reference migration → 0-hit full-history scan → gates → push → CI green; bundle retained until CI green). After CI green: activate TASK-0010 (draft → active).
 - Owner adjudication list (short-row P1, refused-vault P1, pipe-truncation P2; same-id stays P3) is contracted as TASK-0010 (product fix task, separate from TASK-0009).
+- Owner creates the GitHub Release from the pushed `2026.09.5` tag (D-0003 gate), if not yet done.
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
