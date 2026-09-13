@@ -9,7 +9,7 @@
 
 - Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
 - Completed: **owner 验收（accepted，2026-09-13）**，结论锁定：R1 = Inconclusive；R2 本周期不实现、不提案；12 clean / 7 contaminated；不得恢复 No-Go 与 over-determined 表述（D-0008）。M0-M5 + 两轮 owner review 修正全部闭合；独立 review 四轮 APPROVE。
-- In progress: 方案 B 历史脱敏按 owner 批准顺序执行中（bundle → 脱敏+commit-map → hash 引用迁移 → 全历史 0 命中扫描 → 门禁 → push → CI 绿；bundle 保留至 CI 绿）。
+- In progress: 方案 B 已执行完毕并 push（`ee4f223..a997f0e`，FF）；全历史敏感扫描 0 命中、门禁全绿。**GitHub 未为该 push 创建 workflow run**（API 以真实 SHA 查询 0 runs，最后一次 run 为 09-09）——需 owner 在 Actions 页确认是否被停用/配额，CI 绿前 bundle 保留。
 - Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
 - Blockers: none（方案 B 已获批）。
 - Next best action: 完成方案 B 执行与 CI 确认；CI 绿后将 TASK-0010 draft→active 作为下一产品任务。
