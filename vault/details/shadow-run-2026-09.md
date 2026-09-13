@@ -127,5 +127,5 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-09 | TASK-0008 M5 终验（vault 更新提交前） | 0 | 0 / 0 | 代码里程碑期间 check 输出与 M0 审计基准（`55ae985`）逐字节一致；本行留档后 runtime.md 随本任务编辑更新，测量变为 bytes 11469 / 27 entries，发现保持 0 / 0；116/116 tests、snapshot in sync、`git diff --check` OK |
 | 2026-09-09 | TASK-0008 owner review round 3×P1 闭合（vault 更新提交前） | 0 | 0 / 0 | 原因码改按 finding phase 推导（owner 复现输出实际码 CLOSED_LOCAL）；补 3 项测试；golden B/C 仍逐字节一致；snapshot in sync、`git diff --check` OK |
 | 2026-09-11 | TASK-0009 M0 方案与交接（提交前） | 0 | 0 / 1 | 唯一 warning 为新 tracked TASK 的预期 `TASK_STORAGE_PENDING`；五个历史 commit 存在、snapshot in sync、`git diff --check` OK。GLM 提交 M0 后必须重跑并消除此 warning |
-| 2026-09-12 | TASK-0009 M5 终验（vault 同步提交前） | 0 | 0 / 0 | check 0/0、双 snapshot in sync、`git diff --check` OK；五个冻结 commit 在场；M1（`543d8f3`）后 protected 路径（scripts/init/skills/README/VERSION/MIGRATIONS/AGENTS）零改动；独立 review Round 2 APPROVE |
+| 2026-09-12 | TASK-0009 M5 终验（vault 同步提交前） | 0 | 0 / 0 | check 0/0、双 snapshot in sync、`git diff --check` OK；五个冻结 commit 在场；M1（`4773950`）后 protected 路径（scripts/init/skills/README/VERSION/MIGRATIONS/AGENTS）零改动；独立 review Round 2 APPROVE |
 | 2026-09-13 | TASK-0009 验收 + 方案 B 执行前终验 | 0 | 0 / 0 | check 0/0、双 snapshot in sync、范围级 whitespace CLEAN；独立 review Round 4 APPROVE；owner 验收 accepted（结论锁定，D-0008）；原始 bundle + SHA-256 归档已在仓库外就位；历史重写按 owner 批准顺序执行 |

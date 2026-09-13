@@ -70,7 +70,7 @@
       "verdict": "contaminated",
       "reason": "同上：严格应用 v1.4 白名单作废。注意：本会话的两项 P2（P3-5 升级为 blocker、管道截断）随之退出评分——fabricated-blocker 计数在 12 有效会话口径下为 0；管道截断发现仍成立（独立 review 已复现）并保留在 owner 清单。"
     },
-    "reaudit_note": "审计判定共三段：(1) v1.2 时代初判 contaminated（Bash 受保护路径字面量，后经裁决属误报）；(2) v1.3/v1.4 初期改判 clean（clean 改判版本见 Git 历史 2b5f9fe；其前一版 f71addf 为改判前的 contaminated 记录）；(3) M4.1 按 owner 裁定严格适用 v1.4 白名单，本会话的 Skill 调用触发作废——当前最终判定 contaminated（见 host_adjudication）。",
+    "reaudit_note": "审计判定共三段：(1) v1.2 时代初判 contaminated（Bash 受保护路径字面量，后经裁决属误报）；(2) v1.3/v1.4 初期改判 clean（clean 改判版本见 Git 历史 c5eafb6；其前一版 9f7fe9a 为改判前的 contaminated 记录）；(3) M4.1 按 owner 裁定严格适用 v1.4 白名单，本会话的 Skill 调用触发作废——当前最终判定 contaminated（见 host_adjudication）。",
     "adjudicated_by": "host orchestrator (GLM)",
     "date": "2026-09-13",
     "mechanical": {

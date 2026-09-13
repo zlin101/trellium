@@ -1,6 +1,6 @@
 # Results — Review Pack R0/R1 消融
 
-- M1 预注册（提交 `543d8f3`）→ M2 快照与 Pack（`6e1b1bf`）→ 逐会话存档提交均先于本节评分写入；Git DAG 可证评分晚于全部首答冻结。
+- M1 预注册（提交 `4773950`）→ M2 快照与 Pack（`f7f50e9`）→ 逐会话存档提交均先于本节评分写入；Git DAG 可证评分晚于全部首答冻结。
 - **R1 正式判定：Inconclusive**（M4.1 修订，owner review 2026-09-13；初版曾判 No-Go，见文末修订记录）。
 - **决策含义：R2 本周期不实现、不提案**（由 M4 记录的召回缺口、成本口径与 control_invalidated 共同支撑；产品代码零改动）。
 
@@ -102,7 +102,7 @@
 | vault_opens | 13 | 7 | **−46.2% ✓** |
 | wall_clock_first_answer_s | 745.8 | 928.2 | **+24.4% 恶化 ✗** |
 
-（初版 16 有效口径的聚合（visible −61.6%、vault −52.0%、tools −14.1%、wall +29.6%）保留于 Git 历史 `493f8dc`/`10647bd`，作对照。）
+（初版 16 有效口径的聚合（visible −61.6%、vault −52.0%、tools −14.1%、wall +29.6%）保留于 Git 历史 `0b442b7`/`808a7bc`，作对照。）
 
 - R1 builder 成本（端到端）：构建 compute ≈0.06s/份；会话级端到端（含规则修订与快照返工）≈25 分钟（`packs/builder-log.md`）。稳态自动化下 builder 成本可忽略，但 R2 的准入论证前提（R1 达 Go）未满足。
 - 计量口径注（独立 review P2-3）：`visible_output_bytes`、`tool_calls`、`material_bytes`、wall-clock 均可由 `runs/*/transcript.jsonl` 机械重算；`file_opens_task_vault` 含按调用目的对 Bash 读取的归类判断，非纯机械量——按纯 Read/Grep/Glob 机械口径复算为 −37.0%，两种口径下 ≥30% 改善的结论一致。宿主投放与计量脚本已存档于 `tools/` 供复算。
@@ -147,14 +147,24 @@
 - **owner 裁决（2026-09-13）：方案 B 已批准执行**——`git filter-repo` 脱敏未推送历史（TASK-0009 同日验收通过，结论锁定见 D-0008）；A（原样 push）因仓库已有公开安装路径被否决，C（剥离 transcript）因损失审计证据被否决。**执行门槛：owner 明确回复"批准执行 B"后方可执行。**
 - B 的前置准备状态：
   1. ✅ 原始归档已保留：`~/trellium-eval-raw-archive-20260913/`（16MB，167 文件）+ `SHA256SUMS-original.txt`（manifest 根哈希 `9f89536e…d783`）；仓库内不留该归档。
-  2. ✅ 范围口径（自校验式，不硬编码计数——历史重写前该数字随每次 pre-push 提交递增）：未推送范围 = `origin/develop..HEAD`，执行时以 `git rev-list origin/develop..HEAD --count` 现场重算为准；参考值：25 @ `aca6324`（2026-09-13；初版两次误报 23、24）。
+  2. ✅ 范围口径（自校验式，不硬编码计数——历史重写前该数字随每次 pre-push 提交递增）：未推送范围 = `origin/develop..HEAD`，执行时以 `git rev-list origin/develop..HEAD --count` 现场重算为准；参考值：25 @ `ba97db2`（2026-09-13；初版两次误报 23、24）。
   3. ⏳ `git filter-repo` 未安装（owner 指出）；执行日前需 `pip install --user git-filter-repo` 或等价单文件安装。
   4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）；run.json 顶层的旧 `rules: protocol v1.2` 字段已在验收前统一更名为 `rules_legacy`（最终规则见 `final_audit_rules`/`mechanical.rules` = v1.4）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
   5. 执行前必须创建并验证**原始 develop 历史的本地 Git bundle**（`git bundle create` + `git bundle verify`，含全部 24+ 未推送提交），不能只依赖文件归档；**执行后该 bundle 保留至 push 成功且远端 CI 全绿之后**，不得在本地验证后立即删除。
-  6. 保留 filter-repo 的 **commit-map**（old→new hash 全量映射），随脱敏仓库提交；所有文档中引用的旧 hash（`543d8f3`、`6e1b1bf`、`10647bd`、`f4498c3`、`accb2c2` 等预注册/里程碑/修复锚点）按映射更新或在映射表中可解析——否则"DAG airtight"证据在重写后不可解析。
+  6. 保留 filter-repo 的 **commit-map**（old→new hash 全量映射），随脱敏仓库提交；所有文档中引用的旧 hash（`4773950`、`f7f50e9`、`808a7bc`、`2d5ba01`、`98e2e07` 等预注册/里程碑/修复锚点）按映射更新或在映射表中可解析——否则"DAG airtight"证据在重写后不可解析。
   7. 脱敏后指标可重算性分级（owner review P1-2 要求显式声明）：
      - 仍可从脱敏 transcript 机械重算：`tool_calls`、`wall_clock`（时间戳不受影响）、transcript 结构类检查；
      - 降级为**冻结值**（仅可对照原始 bundle 验证）：`visible_output_bytes`、`material_bytes`（路径替换改变字节，严格等长替换会降低脱敏强度，不予采用）；
      - `run.json` 的聚合原值全部保留，标注"冻结值，原始依据见 bundle"。
   8. 执行后验证：对 `origin/develop..HEAD` 全历史（非仅最终文件）重跑同一敏感模式扫描，结果须为 0 命中；任何含原始元数据的备份引用（refs/original、filter-repo 自带 backup）不得 push。
 - 在 owner 回复"批准执行 B"前：**不 push、不重写历史**。
+
+### 方案 B 执行记录（owner 批准后，2026-09-13）
+
+1. ✅ 原始 bundle：`develop-full-pre-rewrite.bundle`（完整历史，`git bundle verify` 通过）+ 范围 bundle，均在 `~/trellium-eval-raw-archive-20260913/`；另有本地备份分支可弃。
+2. ✅ 重写：filter-repo `--refs origin/develop..HEAD` 共三遍——pass-1 主体映射（/home/liam、home-liam slug、两个无关仓库名、UUID、成本字段）、pass-2/pass-3 补漏。**执行缺陷如实记录**：初版两条成本正则漏写分隔符 `>`（`==` 应为 `==>`），filter-repo 将整行解析为 pattern、替换词落到默认值，导致零生效；scratch 仓库实测定位后以 `?"total_cost_usd": ?[0-9.]+==>"total_cost_usd": null` 修正（pass-3）。全部映射与三轮 commit-map 存档于 `tools/`。
+3. ✅ 引用迁移：commit-map 三轮组合后对 docs/vault 全量再迁移（9 文件），0 残留旧锚点、0 不可解析新锚点；origin 基点 `ee4f223` 未动，push 为 fast-forward。
+4. ✅ 全历史敏感扫描（多树 grep 覆盖全部 30 个未推送提交树 + 补丁级）：`/home/liam`、`home-liam-git-trellium`、`tiki-taka`、`superbizagent`、UUID、numeric `total_cost_usd` 全部 **0 命中**。已知既存例外（非本次重写产物）：`vault/details/status-blind-test-2026-09/` 的 TASK-0008 逐字 golden 文件含 `/home/liam/git/trellium`——该内容在 origin/develop 已公开、本次重写零改动（不在变更文件列表），前向脱敏会改动他任务逐字档案，留 owner 决定。作者邮箱（已在 pushed 历史公开）按映射范围保留。
+5. ✅ 门禁：118+ tests OK、check 0/0、snapshot in sync、范围级 whitespace CLEAN、工作树干净。
+6. 计量完整性：重写后 12 有效会话聚合中位数与 results.md 逐位一致（R0 39 / 162,768 / 745.8；R1 34 / 69,051 / 928.2）。
+7. 备份引用不 push；bundle 保留至 push + 远端 CI 全绿。

@@ -66,7 +66,7 @@
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
     },
-    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.2 前的初始规则下判 contaminated（Bash 字符串字面量误报），重审改判 clean；contaminated 原版见 Git 历史 b824b25。",
+    "reaudit_note": "本 run.json 的 contamination_audit 曾在 v1.2 前的初始规则下判 contaminated（Bash 字符串字面量误报），重审改判 clean；contaminated 原版见 Git 历史 08c1ef6。",
     "mechanical": {
       "verdict": "contaminated",
       "rules": "protocol v1.4 (whitelist + protected-area paths + network)",

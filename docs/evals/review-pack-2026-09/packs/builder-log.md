@@ -27,7 +27,7 @@
 
 ## 泄漏检查（宿主侧）
 
-- 方法：三份 Pack 的全部内容来源限定为 Head 快照内容（生成器输入仅快照）；另对每份 Pack grep 该场景 Head 之后的修复 commit 短哈希（S1/S2：`5a622b5 2acf0af fc0cf6d 5317784 ee4f223`；S3：`ee4f223` 及 M0/M1 提交 `b5c3f23 543d8f3`）与 golden 触发词（S2/S3：`STATUS_UNRESOLVED_CODES 删除`、`handoff 条目同步`、S1：`R1-R5`）。
+- 方法：三份 Pack 的全部内容来源限定为 Head 快照内容（生成器输入仅快照）；另对每份 Pack grep 该场景 Head 之后的修复 commit 短哈希（S1/S2：`5a622b5 2acf0af fc0cf6d 5317784 ee4f223`；S3：`ee4f223` 及 M0/M1 提交 `b5c3f23 4773950`）与 golden 触发词（S2/S3：`STATUS_UNRESOLVED_CODES 删除`、`handoff 条目同步`、S1：`R1-R5`）。
 - 结果：宿主 grep 三份全净（S3 pack 中出现的 `fc0cf6d` 属于 S3 diff 范围内部提交，非泄漏）；独立无历史只读检查会话 10 项全 PASS，未发现任何无法追溯到 Head 快照状态的内容。最终结论：无泄漏。
 
 ## 耗时

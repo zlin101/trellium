@@ -1,0 +1,6 @@
+literal:/home/liam==><host-path>
+literal:home-liam-git-trellium==>home-redacted-git-trellium
+literal:tiki-taka==>redacted-local-repo-1
+literal:superbizagent==>redacted-local-repo-2
+regex:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}==><session-uuid>
+regex:"total_cost_usd": [0-9.]+=="total_cost_usd": null

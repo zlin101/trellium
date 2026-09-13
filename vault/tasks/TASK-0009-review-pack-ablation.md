@@ -72,7 +72,7 @@ Forbidden:
 ## Acceptance Criteria
 
 - [x] M0 正式计划包含真实问题证据、R0/R1/R2 边界、历史正负场景、盲法、指标、停止条件和 red-team。
-- [x] M1 预注册四件套的提交严格早于 Pack 和结果。（独立 review：DAG "airtight"，`543d8f3` 先于 `6e1b1bf` 与全部会话存档）
+- [x] M1 预注册四件套的提交严格早于 Pack 和结果。（独立 review：DAG "airtight"，`4773950` 先于 `f7f50e9` 与全部会话存档）
 - [x] 三个历史场景可重放，golden 来自 Head 后 owner review，reviewer 无泄漏。（三快照五点验收；泄漏 grep 全净；独立 review 10 项审计 PASS）
 - [x] R0/R1 初始 12 会话及必要 tie-breaker 原文、工具与成本完整存档。（19 个会话目录：12 有效 + 7 污染作废 + 5 infra 中断，全部逐字留档；工具存档 `tools/`）
 - [x] 硬指标/成本可从原始记录重算，R1 结论严格使用冻结 Gate。（独立 review 逐项机械重算确认；正式结论 Inconclusive——control_invalidated 触发计划 §10.1 封顶，召回/成本缺口作为决策记录保留）
@@ -96,11 +96,11 @@ Required:
 Completed:
 
 - 2026-09-11 M0 现场：五个冻结 commit 均存在；TASK-0007/0008 的 Head 后 owner findings 与 accepted 控制可追溯；未修改产品代码。
-- 2026-09-11 M1（`543d8f3`）：预注册四件套独立提交，先于全部 Pack 与会话；scoring golden 锚点逐条在对应 Head 验证。
-- 2026-09-11 M2（`6e1b1bf`）：三快照五点验收（首建因 refs 未清判 FAIL 后重建）；v1.2 冻结规则机械生成三份 Pack；独立只读检查 10/10 PASS；宿主泄漏 grep 全净；12 份 prompt 预装配。
+- 2026-09-11 M1（`4773950`）：预注册四件套独立提交，先于全部 Pack 与会话；scoring golden 锚点逐条在对应 Head 验证。
+- 2026-09-11 M2（`f7f50e9`）：三快照五点验收（首建因 refs 未清判 FAIL 后重建）；v1.2 冻结规则机械生成三份 Pack；独立只读检查 10/10 PASS；宿主泄漏 grep 全净；12 份 prompt 预装配。
 - 2026-09-11/12 M3：19 个会话串行投放（16 有效 + 3 污染作废），5 次 infra 中断留档；协议 v1.1–v1.4 演进全部先于受影响评分；逐会话存档提交。
-- 2026-09-12 M4（`493f8dc`）：首答全部冻结后评分。初版判定 No-Go（后被 owner review 更正，见下）。当时记录：负对照 fabricated blocker=1；S1/S2 召回缺口；wall-clock 恶化；control_invalidated 双登记。
-- 2026-09-12 M5：独立 review Round 1 REQUEST_CHANGES（4×P1+5×P2，全部记录准确性问题）→ 修复 `10647bd` → Round 2 **APPROVE**；全门禁绿。
+- 2026-09-12 M4（`0b442b7`）：首答全部冻结后评分。初版判定 No-Go（后被 owner review 更正，见下）。当时记录：负对照 fabricated blocker=1；S1/S2 召回缺口；wall-clock 恶化；control_invalidated 双登记。
+- 2026-09-12 M5：独立 review Round 1 REQUEST_CHANGES（4×P1+5×P2，全部记录准确性问题）→ 修复 `808a7bc` → Round 2 **APPROVE**；全门禁绿。
 - 2026-09-13 M5.1（owner review，REQUEST_CHANGES → 修正）：①正式判定按计划 §10.1 封顶改为 **R1 = Inconclusive**（初版 No-Go 违反"control_invalidated 后结论最多 Inconclusive"）；②v1.4 白名单严格适用，新作废 4 个 Skill 会话（漏检根因：审计脚本未实现白名单+扫描时点过早），有效会话 16→12，聚合重算（visible −57.6%、vault −46.2%、wall +24.4%）；③召回改用冻结 known P0/P1 分母（S1 1/4=25% FAIL、S2 2/2=100%）；④push 前隐私/历史三选一方案待 owner 授权，未 push 未重写；⑤status 缺陷 severity 按 owner 裁定入档并另立 TASK-0010；⑥vault 同步矛盾修正、`git diff --check` 范围级口径 + 逐字证据豁免入 Required Checks。
 - 2026-09-13 M5.2（owner 二轮 2×P1 → 修正 → Round 4 APPROVE → **owner 验收**）：①最终 v1.4 审计对 19 个 transcript 落盘（mechanical/裁决/终判三层，12 clean / 7 contaminated，机械-最终分歧仅 s3-R0-b/c 两例且裁决在案）；②方案 B 增补五项历史安全设计（git bundle 保留至 push+CI 绿、commit-map 与锚点 hash 映射、可重算性分级、全历史 0 命中扫描、备份引用不 push）；③TASK-0010 refused-vault 设计改 owner 联合记录形状。owner 最终验收：**accepted**，结论锁定（Inconclusive / R2 不实现 / 12c-7v / 不得恢复 No-Go 与 over-determined 表述）；方案 B 获准执行（顺序与门禁按 owner 列举）；TASK-0010 批准排期（B 完成 + push + CI 绿后 draft→active）。
 

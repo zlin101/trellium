@@ -6,7 +6,7 @@
 
 ### 结论（七维核查）
 
-- 预注册 DAG "airtight"：M1 `543d8f3`（空 results 模板）→ M2 `6e1b1bf`（首个 Pack）→ 首个会话存档 `eb11c39`；scoring/prompts 自 M1 未动；全部协议修订先于唯一评分提交 M4 `493f8dc`；12 份初始 prompt 与归档逐字节一致，cell 内 md5 一致，Pack 与 prompt 内嵌逐字节一致。
+- 预注册 DAG "airtight"：M1 `4773950`（空 results 模板）→ M2 `f7f50e9`（首个 Pack）→ 首个会话存档 `03e5c4c`；scoring/prompts 自 M1 未动；全部协议修订先于唯一评分提交 M4 `0b442b7`；12 份初始 prompt 与归档逐字节一致，cell 内 md5 一致，Pack 与 prompt 内嵌逐字节一致。
 - 原始材料可重算：20 个 run 目录 material_bytes == prompt.md 实际大小；19 个会话的 tool_calls / visible_output_bytes 从 transcript **精确**重算；answer.md == 末条 assistant 消息。
 - 污染裁决均有据；三个作废会话未泄入任何评分表。
 - No-Go "mechanically correct and over-determined"：reviewer 本人在 `5317784` 复现两处 unlisted_real（短行 unresolved 缺口、管道截断）；确认 fabricated-blocker 定性（P3-5 为 owner 已裁定的 discretion 项）；稳健性——剔除 S3 臂或作废全部 Skill 会话仍 No-Go。
@@ -30,10 +30,10 @@ REQUEST_CHANGES（4×P1 + 5×P2；全部为记录准确性问题，数据与裁�
 
 ## Round 2（同一独立 reviewer 复核，2026-09-12）
 
-复核对象：修复提交 `10647bd`。
+复核对象：修复提交 `808a7bc`。
 
 - P1-1..P1-4 全部 RESOLVED 并逐项对照原始证据验证（含 reviewer 自行重算中位数、复核翻判引用、复现 refused-vault）。
-- P2-1/2/3/5 处理到位；遗留三个非阻断字符串错误（reaudit_note 中 s1-R0-a 命中描述有误、b824b25/f71addf 引用差一个 `^`）与 model_id 注记缺失。
+- P2-1/2/3/5 处理到位；遗留三个非阻断字符串错误（reaudit_note 中 s1-R0-a 命中描述有误、08c1ef6/9f7fe9a 引用差一个 `^`）与 model_id 注记缺失。
 - 修复提交本身合规：仅触及 eval 目录；七个 run.json 无任何计量字段变化（仅审计字段）；无 transcript/answer/prompt 被改；vault 门禁 0/0。
 
 ### 结论（Round 2）
@@ -67,13 +67,13 @@ status 缺陷严重度：短行 unresolved 缺口 = 真实 P1；refused-vault un
 ## Round 3.5（同一独立 reviewer 增量复审，2026-09-13）
 
 - Owner 复核发现的六处残留修正逐项 PASS（runtime/handoff/TASK 括注/results 去重与 cell 口径/s3-R1-b 判定链/审计工具 v1.4 完整实现含合并保留人工裁决）；TASK-0010 draft 与冻结设计 PASS；隐私 B 前置 PASS 但未推送计数 stale（24 → 实为 25）。
-- 修复 `e707e50`：计数改为自校验表述（范围命令 + as-of 参考值 25 @ `aca6324`，初版误报 23/24 记为 errata）；s3-R1-b stage-2 历史引用更正（clean 版在 `2b5f9fe`）。
-- 复审终局确认（HEAD `e707e50`）：**APPROVE**——预注册 DAG、材料可重算、污染裁决、Inconclusive 口径、双时期指标、范围合规、无 R2 越权全部核验通过。
+- 修复 `2c505bc`：计数改为自校验表述（范围命令 + as-of 参考值 25 @ `ba97db2`，初版误报 23/24 记为 errata）；s3-R1-b stage-2 历史引用更正（clean 版在 `c5eafb6`）。
+- 复审终局确认（HEAD `2c505bc`）：**APPROVE**——预注册 DAG、材料可重算、污染裁决、Inconclusive 口径、双时期指标、范围合规、无 R2 越权全部核验通过。
 - 未推送计数现状以 `git rev-list origin/develop..HEAD --count` 现场重算为准（当时 26，因本修复提交本身未推送）。
 
 ## Round 4（owner 二轮 P1 的专项复审，2026-09-13）
 
-owner 二轮提出 2×P1（最终 v1.4 审计未落盘；方案 B 缺历史安全设计），修复提交 `0a92a5c` 后专项复审：
+owner 二轮提出 2×P1（最终 v1.4 审计未落盘；方案 B 缺历史安全设计），修复提交 `e91b461` 后专项复审：
 
 - P1-1 · PASS · 审计器重写（`__file__` 推导路径、白名单扫描、self-runtime 豁免按 session 自己的 cli_session_id 判定）并对 19 个 transcript 全量重跑落盘；19/19 run.json 含 `mechanical` 层（rules v1.4）；最终判定精确 12 clean / 7 contaminated（与 M4.1 作废集完全一致）；机械-最终分歧仅 {s3-R0-b, s3-R0-c}（快照内 golden 路径字面量，裁决在案）；人工裁决字段逐字节保留；计量字段零回归。
 - P1-2 · PASS · 方案 B 五项前置设计全部显式化：经验证的原始 develop git bundle（保留至 push+远端 CI 全绿）、filter-repo commit-map 保留且全部被引锚点 hash 可映射解析、可重算性分级（tool_calls/wall-clock 仍可机械重算；bytes 类降为冻结值、仅可对照 bundle 验证；等长替换因削弱脱敏被明确否决）、执行后全历史敏感扫描 0 命中、备份引用不 push。
@@ -85,7 +85,7 @@ owner 二轮提出 2×P1（最终 v1.4 审计未落盘；方案 B 缺历史安�
 
 ## Round 3 补记（owner 复核发现的残留修正，2026-09-13）
 
-owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并已修正：
+owner 指出六处残留在 HEAD `98e2e07` 仍未同步，全部核实属实并已修正：
 
 - `vault/runtime.md:37` Current Progress 仍写 16 valid/No-Go → 改为 12 valid/Inconclusive；
 - `vault/handoff.md:11` Completed 仍写 No-Go → 改写；
@@ -95,4 +95,4 @@ owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并�
 - `runs/s3-R1-b/run.json` reaudit_note 尾句"维持 clean"与最终 contaminated 矛盾 → 改为三段式判定链（初判 contaminated → v1.3 clean → M4.1 最终 contaminated）；
 - `tools/audit_session.py` docstring/rules 串仍写 v1.2、重写会覆盖人工裁决字段 → 补 v1.4 白名单实现、rules 更正、host_adjudication/reaudit_note 合并保留。
 
-隐私方案 B 前置准备同步完成：原始归档 `~/trellium-eval-raw-archive-20260913/`（16MB/167 文件 + SHA-256 manifest，根哈希 `9f89536e…`）；未推送范围以 `git rev-list origin/develop..HEAD --count` 执行时现场重算为准（参考值 25 @ `aca6324`；初版两次误报 23、24）；`git filter-repo` 未安装列入执行日前置；脱敏映射冻结。方案 B 的执行仍等 owner 明确回复"批准执行 B"。
+隐私方案 B 前置准备同步完成：原始归档 `~/trellium-eval-raw-archive-20260913/`（16MB/167 文件 + SHA-256 manifest，根哈希 `9f89536e…`）；未推送范围以 `git rev-list origin/develop..HEAD --count` 执行时现场重算为准（参考值 25 @ `ba97db2`；初版两次误报 23、24）；`git filter-repo` 未安装列入执行日前置；脱敏映射冻结。方案 B 的执行仍等 owner 明确回复"批准执行 B"。
