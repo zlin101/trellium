@@ -64,7 +64,24 @@
       "reason": "两处命中均为 reviewer 自建 Python 重建 harness 中 payload 的路径字面量（target=Path('<host-path>/git/trellium')，镜像快照内归档 golden 的 target 字段格式）；VaultCheckRun/build_status_payload 为纯内存构造（findings/texts 均为注入值），无真实仓库文件系统访问；命令输出（GOLDEN MATCH 重构）全部派生自快照 git blob。与 s3-R0-b、s3-R1-b 同类裁决。",
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
-    }
+    },
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)",
+        "PROTECTED ref in Bash: <host-path>/git/trellium (protected-repo-or-home)"
+      ],
+      "hit_count": 2,
+      "scratch_writes": [
+        "Bash redirect -> /dev/null\", (system)",
+        "Bash redirect -> /tmp/pre_status.txt; (scratch)",
+        "Bash redirect -> /tmp/check_after.json; (scratch)"
+      ],
+      "scratch_write_count": 3
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T13:08:11.198Z",
   "transcript_last_ts": "2026-09-12T13:20:36.650Z"

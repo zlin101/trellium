@@ -69,7 +69,29 @@
       "reason": "多条 Bash/Read 引用位于自身快照内（合法）；其中一条 `ls -la /tmp/rp-eval-20260911/` 列出 eval 根目录（受保护区：协议 §6『本 eval 目录』；prompt 明令禁止读取快照根之外内容），暴露实验结构元信息：场景快照清单、宿主脚本（run_session.sh 等）与 expected-s*.patch 答案工件均在可见范围。与 s2-R0-a 跨快照知悉同类，判污染作废。",
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
-    }
+    },
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "PROTECTED ref in Bash: /tmp/rp-eval-20260911/ (protected-eval)"
+      ],
+      "hit_count": 1,
+      "scratch_writes": [
+        "Bash redirect -> /dev/stderr (system)",
+        "Bash redirect -> /dev/null (system)",
+        "Bash redirect -> /tmp/x; (scratch)",
+        "Bash redirect -> /dev/null)\\n (system)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null\", (system)",
+        "Bash redirect -> /dev/null; (system)"
+      ],
+      "scratch_write_count": 9
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T14:11:30.567Z",
   "transcript_last_ts": "2026-09-12T14:21:16.366Z"

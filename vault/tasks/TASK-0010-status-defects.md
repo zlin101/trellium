@@ -19,7 +19,9 @@
 ### In Scope
 
 1. **短行 id 缺口（P1）**：malformed 短行引用的任务不进 `unresolved`（`TASK_RUNTIME_INVALID` 无 task_id）——在 status 层物化该 id（复用 `7e494da` 的"物化在 status、不动 check 记录"先例），补聚焦测试。
-2. **refused-vault `unresolved: 0`（P1）——输出设计冻结（owner review 2026-09-13）**：`vault/` 或 `vault/tasks` 被拒绝枚举时，不得简单把 `summary.unresolved` clamp 为 1（会与 `tasks.unresolved` 空数组矛盾）。冻结设计：输出**一条显式的 vault-scope unresolved 记录**（合成 id 标识 vault 作用域，如 `VAULT_SCOPE`，`reason` 取实际 finding 码如 `SYMLINK_INPUT`，不携带 lifecycle/authority），使 `summary.unresolved` 计数与 `tasks.unresolved` 数组严格一致；JSON v1 的这一增量形状在 MIGRATIONS 中明确说明。
+2. **refused-vault `unresolved: 0`（P1）——输出设计冻结（owner review 2026-09-13，二次修正同日）**：`vault/` 或 `vault/tasks` 被拒绝枚举时，不得简单把 `summary.unresolved` clamp 为 1（会与 `tasks.unresolved` 空数组矛盾），也**不得伪造合成 task_id**（如 `VAULT_SCOPE`——会被消费者误认为任务 ID）。冻结设计：输出**明确的联合记录**，示例形状
+   `{"scope": "vault", "path": "vault", "reason": "SYMLINK_INPUT"}`
+   ——无 task_id 字段，scope/path/reason 三键显式表达作用域；`summary.unresolved` 计数与该数组严格一致；JSON v1 的这一增量形状在 MIGRATIONS 中明确说明。
 3. **管道截断投影（P2）**：Next Action 含 `|` 导致投影静默截断且 exit 0——status 层检测过切行并抑制该任务投影（沿用既有 duplicated/enum-invalid 抑制模式）。
 
 ### Out of Scope

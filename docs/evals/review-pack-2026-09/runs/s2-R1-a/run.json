@@ -69,7 +69,25 @@
     },
     "scratch_write_note": "scratch_writes 计数含一条被权限层拒绝而未执行的命令的重定向；实际执行的 scratch 写入少于计数。",
     "adjudicated_by": "host orchestrator (GLM)",
-    "date": "2026-09-13"
+    "date": "2026-09-13",
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "NON-WHITELIST tool Skill: {\"skill\": \"code-review\"}"
+      ],
+      "hit_count": 1,
+      "scratch_writes": [
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /tmp/rp-s2-verify/base-trellium.py (scratch)",
+        "Bash redirect -> /tmp/rp-s2-verify/head-script.json (scratch)",
+        "Bash redirect -> /tmp/rp-s2-verify/base-script.json (scratch)",
+        "Bash redirect -> /dev/null; (system)"
+      ],
+      "scratch_write_count": 5
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-11T08:28:09.292Z",
   "transcript_last_ts": "2026-09-11T08:43:28.015Z"

@@ -38,6 +38,7 @@
 | s1-R1-d | ok | §6 污染重跑（替换 s1-R1-c），不占 tie-breaker 名额 |
 
 - 有效会话 12（M4.1 修订：初版曾计 16）；作废 7（含 M4.1 新增的 4 个 Skill 会话，均留档并在 run.json 记录裁决）；infra 中断 5 次（内存守护 ×2、配额 ×1、argv 长度 ×1、投放脚本缺 prompt 文件 ×1——宿主操作失误，未启动模型）。
+- **最终 v1.4 审计已落盘（owner review P1-1 修复，2026-09-13）**：修复后的 `tools/audit_session.py`（路径自 `__file__` 推导、白名单生效、机械结果与人工裁决分层）对 19 个 transcript 全量重跑；每份 run.json 现含 `mechanical`（纯规则结果，任何人可从 transcript 重算）+ `host_adjudication`（人工裁决）+ 最终 `verdict` 三层。复核确认：12 clean / 7 contaminated；机械命中与最终判定不一致的仅有 s3-R0-b、s3-R0-c 两例（自身快照内归档 golden 的路径字面量，裁决记录在案）。s2-R1-c 目录仅含从未投放的 staged prompt，无 run.json（P2-4 既有记录）。
 - 污染审计规则演进：v1.2（scratch 写入不计污染）→ v1.3（self-runtime 工件放行）→ v1.4（工具白名单 {Read,Grep,Glob,Bash}）。**执行缺陷（owner review P1-2）**：v1.4 白名单曾只写入文档未落入审计脚本，且唯一一次全量白名单扫描运行于 s2-R0-c/s3-R0-c/s3-R1-c 完成之前——导致 4 个 Skill 会话漏判有效；owner review 发现后已按字面规则全部作废并重算，`tools/audit_session.py` 已补实现。
 - 协议偏差：S2 场景 tie-breaker 的 R1 侧（s2-R1-c）因 6 会话上限耗尽未运行；S2-R0 cell 在初版口径下 1-1 unstable，M4.1 作废后仅剩 1 个有效会话（b）。已如实记录。
 
@@ -149,6 +150,11 @@
   2. ✅ 范围口径（自校验式，不硬编码计数——历史重写前该数字随每次 pre-push 提交递增）：未推送范围 = `origin/develop..HEAD`，执行时以 `git rev-list origin/develop..HEAD --count` 现场重算为准；参考值：25 @ `aca6324`（2026-09-13；初版两次误报 23、24）。
   3. ⏳ `git filter-repo` 未安装（owner 指出）；执行日前需 `pip install --user git-filter-repo` 或等价单文件安装。
   4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
-  5. 执行后验证：对 `origin/develop..HEAD` 全历史（非仅最终文件）重跑同一敏感模式扫描，结果须为 0 命中；任何含原始元数据的备份引用（refs/original、filter-repo 自带 backup）不得 push，本地验证后删除。
-  6. 脱敏后逐字节重算性说明：metric 字段（bytes/次数/秒）不受影响；transcript 内路径类上下文降为占位符，README 需声明该映射。
+  5. 执行前必须创建并验证**原始 develop 历史的本地 Git bundle**（`git bundle create` + `git bundle verify`，含全部 24+ 未推送提交），不能只依赖文件归档；**执行后该 bundle 保留至 push 成功且远端 CI 全绿之后**，不得在本地验证后立即删除。
+  6. 保留 filter-repo 的 **commit-map**（old→new hash 全量映射），随脱敏仓库提交；所有文档中引用的旧 hash（`543d8f3`、`6e1b1bf`、`10647bd`、`f4498c3`、`accb2c2` 等预注册/里程碑/修复锚点）按映射更新或在映射表中可解析——否则"DAG airtight"证据在重写后不可解析。
+  7. 脱敏后指标可重算性分级（owner review P1-2 要求显式声明）：
+     - 仍可从脱敏 transcript 机械重算：`tool_calls`、`wall_clock`（时间戳不受影响）、transcript 结构类检查；
+     - 降级为**冻结值**（仅可对照原始 bundle 验证）：`visible_output_bytes`、`material_bytes`（路径替换改变字节，严格等长替换会降低脱敏强度，不予采用）；
+     - `run.json` 的聚合原值全部保留，标注"冻结值，原始依据见 bundle"。
+  8. 执行后验证：对 `origin/develop..HEAD` 全历史（非仅最终文件）重跑同一敏感模式扫描，结果须为 0 命中；任何含原始元数据的备份引用（refs/original、filter-repo 自带 backup）不得 push。
 - 在 owner 回复"批准执行 B"前：**不 push、不重写历史**。

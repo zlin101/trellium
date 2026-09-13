@@ -67,7 +67,24 @@
       "reason": "同上：严格应用 v1.4 白名单，fork 内部不可审计即作废；原判有效由本块取代。"
     },
     "adjudicated_by": "host orchestrator (GLM)",
-    "date": "2026-09-13"
+    "date": "2026-09-13",
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "NON-WHITELIST tool Skill: {\"skill\": \"code-review\", \"args\": \"55ae985..5317784 in /tmp/rp-eval-20260911/s3 (read-only frozen snapshot; output must follow the user's six-question governance format)\"}"
+      ],
+      "hit_count": 1,
+      "scratch_writes": [
+        "Bash redirect -> /tmp/claude-headless-neutral/check-head.json; (scratch)",
+        "Bash redirect -> /tmp/claude-headless-neutral/status-head.txt; (scratch)",
+        "Bash redirect -> /tmp/claude-headless-neutral/trellium-base.py (scratch)",
+        "Bash redirect -> /tmp/claude-headless-neutral/check-base.json; (scratch)"
+      ],
+      "scratch_write_count": 4
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T08:48:53.062Z",
   "transcript_last_ts": "2026-09-12T09:18:07.606Z"

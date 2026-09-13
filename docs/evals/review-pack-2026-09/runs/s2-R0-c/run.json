@@ -71,7 +71,28 @@
       "date": "2026-09-13",
       "verdict": "contaminated",
       "reason": "owner review（2026-09-13 P1-2）指出本会话存在漏检的 Skill 调用（初版白名单扫描运行于本会话完成之前，tools/audit_session.py 亦未实现白名单）。按 v1.4 字面规则作废；其 refused-vault P2 发现不由本会话计入评分，但该缺陷已由有效会话 s3-R0-c 独立报告并经独立 review 在 5317784 复现，仍列入 owner 清单。"
-    }
+    },
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "NON-WHITELIST tool Skill: {\"skill\": \"code-review\", \"args\": \"55ae985..7ff75a8 in /tmp/rp-eval-20260911/s2\"}"
+      ],
+      "hit_count": 1,
+      "scratch_writes": [
+        "Bash redirect -> /tmp/s2-before.txt (scratch)",
+        "Bash redirect -> /tmp/s2-status.json; (scratch)",
+        "Bash redirect -> /tmp/s2-check.json; (scratch)",
+        "Bash redirect -> /tmp/s2-after.txt (scratch)",
+        "Bash redirect -> /tmp/s2-base-trellium.py (scratch)",
+        "Bash redirect -> /tmp/s2-check-base.json; (scratch)",
+        "Bash redirect -> /tmp/s2_probe.py (scratch)",
+        "Bash redirect -> /dev/null (system)"
+      ],
+      "scratch_write_count": 8
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T12:42:39.438Z",
   "transcript_last_ts": "2026-09-12T13:06:17.375Z"

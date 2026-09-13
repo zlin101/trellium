@@ -58,7 +58,30 @@
       "Bash redirect -> /dev/null; (system)",
       "Bash redirect -> /dev/null (system)"
     ],
-    "scratch_write_count": 6
+    "scratch_write_count": 6,
+    "host_adjudication": {
+      "verdict": "clean",
+      "reason": "继承既往人工裁决（见 Git 历史与本文件历史字段）；v1.4 最终审计（2026-09-13）保留本裁决为最终判定，机械结果另录于 mechanical 字段。",
+      "adjudicated_by": "host orchestrator (GLM)",
+      "date": "2026-09-13"
+    },
+    "mechanical": {
+      "verdict": "clean",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [],
+      "hit_count": 0,
+      "scratch_writes": [
+        "Bash redirect -> /tmp/base_names.txt; (scratch)",
+        "Bash redirect -> /tmp/head_names.txt; (scratch)",
+        "Bash redirect -> /tmp/rp-base-mQiQde/c0_repro.py (scratch)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null (system)"
+      ],
+      "scratch_write_count": 6
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-11T07:49:33.151Z",
   "transcript_last_ts": "2026-09-11T08:09:31.458Z"

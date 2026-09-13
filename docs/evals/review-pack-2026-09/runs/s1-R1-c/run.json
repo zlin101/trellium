@@ -65,7 +65,25 @@
       "reason": "Skill 子调用触碰真实仓库（含 golden 材料）；按 §6 留档不计分，重跑 -d。",
       "adjudicated_by": "host orchestrator (GLM)",
       "date": "2026-09-12"
-    }
+    },
+    "mechanical": {
+      "verdict": "contaminated",
+      "rules": "protocol v1.4 (whitelist + protected-area paths + network)",
+      "hits": [
+        "NON-WHITELIST tool Skill: {\"skill\": \"code-review\"}"
+      ],
+      "hit_count": 1,
+      "scratch_writes": [
+        "Bash redirect -> /dev/null (system)",
+        "Bash redirect -> /dev/null (system)",
+        "Bash redirect -> /dev/null (system)",
+        "Bash redirect -> /dev/null; (system)",
+        "Bash redirect -> /dev/null (system)"
+      ],
+      "scratch_write_count": 5
+    },
+    "final_audit_rules": "protocol v1.4",
+    "last_mechanical_run": "2026-09-13"
   },
   "transcript_first_ts": "2026-09-12T12:16:54.044Z",
   "transcript_last_ts": "2026-09-12T12:42:04.722Z"
