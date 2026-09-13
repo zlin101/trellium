@@ -64,6 +64,13 @@ status 缺陷严重度：短行 unresolved 缺口 = 真实 P1；refused-vault un
 
 修正已全部落盘（results.md M4.1 修订节、12 有效会话重算、TASK-0010 立项、vault 同步、隐私方案待授权）。任务保持 `ready_for_review`，等 owner 复核修正；R2 本周期不实现。
 
+## Round 3.5（同一独立 reviewer 增量复审，2026-09-13）
+
+- Owner 复核发现的六处残留修正逐项 PASS（runtime/handoff/TASK 括注/results 去重与 cell 口径/s3-R1-b 判定链/审计工具 v1.4 完整实现含合并保留人工裁决）；TASK-0010 draft 与冻结设计 PASS；隐私 B 前置 PASS 但未推送计数 stale（24 → 实为 25）。
+- 修复 `e707e50`：计数改为自校验表述（范围命令 + as-of 参考值 25 @ `aca6324`，初版误报 23/24 记为 errata）；s3-R1-b stage-2 历史引用更正（clean 版在 `2b5f9fe`）。
+- 复审终局确认（HEAD `e707e50`）：**APPROVE**——预注册 DAG、材料可重算、污染裁决、Inconclusive 口径、双时期指标、范围合规、无 R2 越权全部核验通过。
+- 未推送计数现状以 `git rev-list origin/develop..HEAD --count` 现场重算为准（当时 26，因本修复提交本身未推送）。
+
 ## Round 3 补记（owner 复核发现的残留修正，2026-09-13）
 
 owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并已修正：
