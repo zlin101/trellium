@@ -146,7 +146,7 @@
 - **owner 裁决（2026-09-13）：方案 B**——`git filter-repo` 脱敏未推送历史；A（原样 push）因仓库已有公开安装路径被否决，C（剥离 transcript）因损失审计证据被否决。**执行门槛：owner 明确回复"批准执行 B"后方可执行。**
 - B 的前置准备状态：
   1. ✅ 原始归档已保留：`~/trellium-eval-raw-archive-20260913/`（16MB，167 文件）+ `SHA256SUMS-original.txt`（manifest 根哈希 `9f89536e…d783`）；仓库内不留该归档。
-  2. ✅ 范围更正：未推送提交为 **24 个**（`origin/develop..HEAD`，初版误报 23）。
+  2. ✅ 范围口径（自校验式，不硬编码计数——历史重写前该数字随每次 pre-push 提交递增）：未推送范围 = `origin/develop..HEAD`，执行时以 `git rev-list origin/develop..HEAD --count` 现场重算为准；参考值：25 @ `aca6324`（2026-09-13；初版两次误报 23、24）。
   3. ⏳ `git filter-repo` 未安装（owner 指出）；执行日前需 `pip install --user git-filter-repo` 或等价单文件安装。
   4. 冻结的脱敏映射（B 执行时逐条应用，映射表随仓库提交供复核）：宿主绝对路径 `<host-path>/...` → `<host-path>`；session UUID → `<session-uuid>`；`total_cost_usd` 数值 → 移除字段（保留 duration/bytes）；无关仓库名枚举（s2-R1-a fork 文本）→ `<redacted-local-repos>`；`/tmp/claude-1002/...` 与 `/tmp/rp-eval-20260911/` 保留（非个人路径，且为复算所需）。
   5. 执行后验证：对 `origin/develop..HEAD` 全历史（非仅最终文件）重跑同一敏感模式扫描，结果须为 0 命中；任何含原始元数据的备份引用（refs/original、filter-repo 自带 backup）不得 push，本地验证后删除。

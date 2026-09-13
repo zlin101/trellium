@@ -76,4 +76,4 @@ owner 指出六处残留在 HEAD `accb2c2` 仍未同步，全部核实属实并�
 - `runs/s3-R1-b/run.json` reaudit_note 尾句"维持 clean"与最终 contaminated 矛盾 → 改为三段式判定链（初判 contaminated → v1.3 clean → M4.1 最终 contaminated）；
 - `tools/audit_session.py` docstring/rules 串仍写 v1.2、重写会覆盖人工裁决字段 → 补 v1.4 白名单实现、rules 更正、host_adjudication/reaudit_note 合并保留。
 
-隐私方案 B 前置准备同步完成：原始归档 `~/trellium-eval-raw-archive-20260913/`（16MB/167 文件 + SHA-256 manifest，根哈希 `9f89536e…`）；未推送提交数更正为 24；`git filter-repo` 未安装列入执行日前置；脱敏映射冻结。方案 B 的执行仍等 owner 明确回复"批准执行 B"。
+隐私方案 B 前置准备同步完成：原始归档 `~/trellium-eval-raw-archive-20260913/`（16MB/167 文件 + SHA-256 manifest，根哈希 `9f89536e…`）；未推送范围以 `git rev-list origin/develop..HEAD --count` 执行时现场重算为准（参考值 25 @ `aca6324`；初版两次误报 23、24）；`git filter-repo` 未安装列入执行日前置；脱敏映射冻结。方案 B 的执行仍等 owner 明确回复"批准执行 B"。
