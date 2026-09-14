@@ -2230,5 +2230,107 @@ class LocalTemplateSemanticsTest(TargetTestCase):
             self.assertIn("task_storage=local", text)
 
 
+class StatusDefectRegressionsTest(VaultCheckMixin, TargetTestCase):
+    """TASK-0010: three reproduced status defects (owner adjudicated P1/P1/P2).
+
+    Frozen output design: vault-scope unresolved entries use the explicit
+    joint record {scope, path, reason} — never a synthetic task id, never a
+    bare summary clamp.
+    """
+
+    def status(self, target: Path, *extra: str) -> tuple[int, str, str]:
+        out, err = StringIO(), StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = agent_init.main(["status", str(target), *extra])
+        return code, out.getvalue(), err.getvalue()
+
+    def status_json(self, target: Path) -> tuple[int, dict, str]:
+        code, out, err = self.status(target, "--format", "json")
+        return code, json.loads(out), err
+
+    def one_active_project(self, runtime: str) -> Path:
+        files = {
+            "vault/tasks/TASK-0001-active.md": "# TASK-0001\n\n"
+            + state_block(valid_state(task_id="TASK-0001", lifecycle="active"))
+            + "\n"
+        }
+        return self.make_project(files=files, runtime=runtime)
+
+    def test_short_malformed_row_task_enters_unresolved(self) -> None:
+        runtime = (
+            "# Runtime Context\n\n## Focus\n\n- TASK-0001\n\n## Active Tasks\n\n"
+            "| Task | Objective | Status | Next Action |\n"
+            "| --- | --- | --- | --- |\n"
+            "| TASK-0001 | obj | active | next |\n"
+            "| TASK-0042 | short row |\n"
+        )
+        target = self.one_active_project(runtime)
+
+        code, payload, err = self.status_json(target)
+        self.assertEqual(code, 2, err)
+        entries = payload["tasks"]["unresolved"]
+        ids = [entry.get("task_id") for entry in entries]
+        self.assertIn("TASK-0042", ids)
+        entry = next(e for e in entries if e.get("task_id") == "TASK-0042")
+        self.assertEqual(entry["reason"], "TASK_RUNTIME_INVALID")
+        self.assertNotIn("scope", entry)
+        self.assertEqual(
+            payload["summary"]["unresolved"], len(entries), "count must match the array"
+        )
+        code, out, _ = self.status(target)
+        self.assertEqual(code, 2)
+        self.assertIn("TASK-0042 reason=TASK_RUNTIME_INVALID", out)
+
+    def test_refused_vault_emits_vault_scope_unresolved_record(self) -> None:
+        runtime = (
+            "# Runtime Context\n\n## Focus\n\n- TASK-0001\n\n## Active Tasks\n\n"
+            "| Task | Objective | Status | Next Action |\n"
+            "| --- | --- | --- | --- |\n"
+            "| TASK-0001 | obj | active | next |\n"
+        )
+        target = self.one_active_project(runtime)
+        outside = tempfile.mkdtemp()
+        shutil.rmtree(target / "vault" / "tasks")
+        os.symlink(outside, target / "vault" / "tasks")
+        (target / "vault" / "runtime.md").unlink()
+        os.symlink(Path(outside) / "missing", target / "vault" / "runtime.md")
+
+        code, payload, err = self.status_json(target)
+        self.assertEqual(code, 2, err)
+        entries = payload["tasks"]["unresolved"]
+        scope_entries = [e for e in entries if e.get("scope") == "vault"]
+        self.assertEqual(len(scope_entries), 1)
+        self.assertEqual(scope_entries[0]["path"], "vault/tasks")
+        self.assertEqual(scope_entries[0]["reason"], "SYMLINK_INPUT")
+        self.assertNotIn("task_id", scope_entries[0])
+        self.assertNotIn("lifecycle", scope_entries[0])
+        self.assertNotIn("authority_level", scope_entries[0])
+        self.assertEqual(
+            payload["summary"]["unresolved"], len(entries), "count must match the array"
+        )
+        code, out, _ = self.status(target)
+        self.assertIn("SYMLINK_INPUT", out)
+
+    def test_oversplit_row_loses_projection_but_keeps_lifecycle(self) -> None:
+        runtime = (
+            "# Runtime Context\n\n## Focus\n\n- TASK-0001\n\n## Active Tasks\n\n"
+            "| Task | Objective | Status | Next Action |\n"
+            "| --- | --- | --- | --- |\n"
+            "| TASK-0001 | obj here | active | run A \\| B then stop |\n"
+        )
+        target = self.one_active_project(runtime)
+
+        code, payload, err = self.status_json(target)
+        self.assertEqual(code, 0, err)
+        active = payload["tasks"]["active"]
+        self.assertEqual(len(active), 1)
+        self.assertEqual(active[0]["task_id"], "TASK-0001")
+        self.assertNotIn("runtime_projection", active[0])
+        self.assertNotIn("run A \\", json.dumps(payload), "truncated fragment must not leak")
+        code, out, _ = self.status(target)
+        self.assertEqual(code, 0)
+        self.assertNotIn("run A \\", out)
+
+
 if __name__ == "__main__":
     unittest.main()
