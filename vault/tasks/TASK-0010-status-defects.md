@@ -6,7 +6,7 @@
   "task_id": "TASK-0010",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active"
+  "lifecycle": "ready_for_review"
 }
 -->
 
@@ -56,16 +56,41 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] 三个缺陷各有一个能复现原始报告的失败测试，修复后转绿。
-- [ ] `check --format json` 与基线逐字节一致（既有契约不变）。
-- [ ] 全量测试无退化；check 0/0；snapshot in sync；`git diff --check`（含 TASK-0009 豁免口径）通过。
-- [ ] 独立 review 无 open P0/P1/P2；任务停在 ready_for_review。
+- [x] 三个缺陷各有一个能复现原始报告的失败测试，修复后转绿。（`StatusDefectRegressionsTest` 3 项，red-first 实证：对 cbd8713 的 checker 全红；独立 reviewer 第一手复跑确认）
+- [x] `check --format json` 与基线逐字节一致（既有契约不变）。（独立 review：健康仓库与错误 fixture 双态逐字节一致，payload diff 仅含预期 unresolved 增量）
+- [x] 全量测试无退化；check 0/0；snapshot in sync；`git diff --check`（含 TASK-0009 豁免口径）通过。（121 tests OK；71c64b3 曾因 snapshot 漂移被远端 gate 拦截，7d5c589 regen 后 CI success）
+- [x] 独立 review 无 open P0/P1/P2；任务停在 ready_for_review。（专项复审 APPROVE：三修复独立复现、冻结设计逐项核验；3 项非阻断观察已记录）
 
 ## Execution Record
 
 ### 2026-09-13 - Agent: GLM — 激活（owner 排期生效）
 
-- 方案 B 完成、push 成功、远端 CI 全绿（恢复提交 `5c4c0f6` 的 "Skill protocol sync" run success）；owner 排期条件满足，TASK-0010 draft→active，实现开工。
+- 方案 B 完成、push 成功、远端 CI 全绿（恢复提交 `5c4c0f6` 的 gate job success）；owner 排期条件满足，TASK-0010 draft→active，实现开工。
+
+### 2026-09-14 - Agent: GLM — M1-M3 实现、门禁与专项复审
+
+Context read: 合同、TASK-0009 实验记录（results.md 附带清单）、`scripts/trellium.py` status 段、`scripts/test_trellium.py` 夹具与 StatusSummaryTest 模式、MIGRATIONS。
+
+Changes made:
+
+- 三项 status 层修复（check 字节级零变化）：①短行 id 物化（`parse_runtime_task_pointers` problems 携带 id；`build_status_payload` 以实际码 `TASK_RUNTIME_INVALID` setdefault 物化进 unresolved）；②refused-vault 联合记录（`SYMLINK_INPUT` × {vault, vault/tasks} → `{"scope","path","reason"}`，计数与数组一致，无合成 id、无 clamp）；③oversplit 行投影抑制（>4 cells 记 id，投影按既有抑制模式丢弃，lifecycle 保留）。
+- 3 项 red-first 回归测试（`StatusDefectRegressionsTest`）；MIGRATIONS 新增 Unreleased 节（JSON v1 增量形状）。
+- 快照再生成（MIGRATIONS + assets/trellium.py + manifest ×2 包）。
+
+Checks run:
+
+- 121 tests OK（118+3，red-first 实证）；`check` text/JSON 对 cbd8713 逐字节一致（健康+错误 fixture 双态）；status text/JSON 真仓库 exit 0；snapshot in sync；范围级 whitespace CLEAN。
+- 远端 CI：71c64b3 gate **failure**（snapshot 漂移：MIGRATIONS 编辑 + assets/manifest 过期——本地 `sync --check | tail -1` 管道遮蔽了退出码与输出，教训记录）→ 7d5c589 regen 后 gate **success**（独立 review 经 GitHub API 双向核实）。
+
+Review and reflection:
+
+- 独立专项复审 **APPROVE**：三修复独立复现；冻结设计（联合记录、无合成 id、无 clamp、计数==数组）逐项核验；MIGRATIONS 准确；范围干净。
+- 3 项非阻断观察入档：(a) 短行指向已有效任务时不产生 unresolved 条目（信号仍经 check 错误可见，未测试未文档化）；(b) oversplit 抑制按设计无任何信号（exit 0）；(c) vault-scope 记录按冻结范围仅覆盖两路径的 SYMLINK_INPUT。
+- 复审指出我表述不精：CI 成功的是 `gate` job（sync check-run 被 skip），不是整个 workflow——已按精确口径记录。
+
+Next action:
+
+- 任务转 `ready_for_review` 等 owner 验收；不做 Release、不扩范围。
 
 ## Verification
 
@@ -75,6 +100,10 @@ Required:
 - `python3 scripts/trellium.py check . --format json`
 - `python3 scripts/trellium.py status .` 与 `--format json`
 - 三个缺陷的 fixture 级复现脚本（修复前红、修复后绿）
+
+Completed:
+
+- 2026-09-14 全项通过（见 Execution Record 与独立复审）；远端 CI `7d5c589` gate success。
 
 ## Execution Record
 

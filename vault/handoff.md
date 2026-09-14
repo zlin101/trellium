@@ -5,17 +5,17 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0009 - 2026-09-13
+## TASK-0010 - 2026-09-14
 
-- Objective: 以 TASK-0007/TASK-0008 的真实历史 review 快照，比较 R0 自行组装与 R1 手工最小 Review Pack；只在硬指标无损且成本收益明确时建议另立 R2 Level C。
-- Completed: **owner 验收（accepted，2026-09-13）**，结论锁定：R1 = Inconclusive；R2 本周期不实现、不提案；12 clean / 7 contaminated；不得恢复 No-Go 与 over-determined 表述（D-0008）。M0-M5 + 两轮 owner review 修正全部闭合；独立 review 四轮 APPROVE。
-- In progress: GitHub Actions 平台事故已恢复（status operational，2026-09-13）；本提交即为事故恢复/CI 重触发提交。CI 绿后待办：删除 bundle（路径见 results.md 方案 B 执行记录）并将 TASK-0010 draft→active。
-- Failed attempts: 快照首建 refs 未清（重建）；两次 harness 内存守护击杀、一次 provider 配额、一次 argv 超长、一次宿主漏装配 prompt——均已留档并顺延补齐。
-- Blockers: none（方案 B 已获批）。
-- Next best action: 完成方案 B 执行与 CI 确认；CI 绿后将 TASK-0010 draft→active 作为下一产品任务。
-- Files to read first: `docs/evals/review-pack-2026-09/results.md`（含 M4.1 修订记录与方案 B 设计）、`vault/tasks/TASK-0009-review.md`、`vault/tasks/TASK-0010-status-defects.md`。
+- Objective: 修复 TASK-0009 实验发现并经 owner 裁定的三个 `status` 缺陷（短行 unresolved 缺口 P1、refused-vault unresolved:0 P1、管道截断投影 P2）；check 字节级零变化。
+- Completed: 实现 + 3 项 red-first 回归测试（121 total）+ MIGRATIONS Unreleased 节 + 快照再生成；check text/JSON 对 cbd8713 逐字节一致；独立专项复审 APPROVE（三修复独立复现、red-first 实证、CI 两态核实）；远端 CI `7d5c589` gate success。任务已转 `ready_for_review` 等 owner 验收。
+- In progress: 无。
+- Failed attempts: 71c64b3 曾被远端 gate 以 snapshot 漂移拦截（MIGRATIONS 编辑 + assets/manifest 过期；本地 `sync --check | tail -1` 管道遮蔽退出码）→ 7d5c589 regen 修复。教训：门禁禁用管道遮蔽。
+- Blockers: none。
+- Next best action: owner 验收；验收后按 D-0008 边界结束（无 R2；2026.09.5 Release 对象仍待 owner 在 UI 创建）。
+- Files to read first: `vault/tasks/TASK-0010-status-defects.md`、`init/MIGRATIONS.md` Unreleased 节。
 
-## TASK-0004 - 2026-09-08
+## TASK-0004 - 2026-09-08## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。
 - Completed: M1 完成——S1-S7 七个独立新会话，判定 7/7 对、越权 0、错误声称 accepted 0、过期证据误用 0、owner 纠正 0（记录表与基线结论在协议文件）；M3 结论 **No-Go 已被 owner 采纳为 D-0004**（M4 不立项、不实现 context、暂不补 A/B、AGENTS.md→vault 必读路径为默认；重开仅限 D-0004 三条件）。

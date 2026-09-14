@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0010（active，实现开工）
+- TASK-0010（ready_for_review，等 owner 验收）
 
 ## Active Tasks
 
@@ -24,7 +24,7 @@ table holds pointers only.
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
 | TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | accepted | Closed 2026-09-13: owner accepted with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired). D-0008. |
-| TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | active | Activated 2026-09-13 (plan B pushed, CI green); severity P1/P1/P2 per owner adjudication; refused-vault output design frozen (explicit vault-scope joint record, no clamp). Implementation starting. |
+| TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | ready_for_review | Implemented 2026-09-14 (status layer only; check byte-identical; 3 red-first regression tests, 121 total). Independent review APPROVE; CI green (7d5c589). Awaiting owner acceptance. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -53,6 +53,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- TASK-0010 implemented and ready_for_review (2026-09-14): three status-layer fixes with red-first regression tests (short-row unresolved materialisation, refused-vault joint record, oversplit projection suppression); check byte-identical; snapshot regen after the remote gate caught drift; independent review APPROVE; CI green (7d5c589).
 - Owner accepted TASK-0009 (2026-09-13, D-0008) and approved plan B. Executed: bundle+verify → filter-repo ×3 (host paths/UUIDs/repo names/cost fields; the two cost regexes were initially malformed — missing `>` separator — caught by post-scan and fixed in pass-3) → hash-reference migration via composed commit-map → multi-tree 0-hit sensitive scan → gates green → pushed. GitHub Actions had a platform incident (no runs for two pushes); after recovery the re-trigger commit's run completed success. Bundle deleted per owner gate; TASK-0010 draft→active, implementation starting.
 - TASK-0009 owner review round (2026-09-13, REQUEST_CHANGES → fixes applied): formal verdict corrected to **Inconclusive** per plan §10.1 cap; v1.4 whitelist strictly applied (4 more Skill sessions voided, 12 valid); recall recomputed on the frozen known-P0/P1 denominator (S1 25% FAIL, S2 100%); privacy/history plan for the unpushed eval transcripts drafted for owner authorization. R2 stays unimplemented this cycle.
 - Opened TASK-0009 and drafted the Review Pack R0/R1 ablation plan for GLM; R2 public CLI is gated behind a separate owner-approved Level C task.
