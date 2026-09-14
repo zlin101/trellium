@@ -1353,15 +1353,21 @@ def markdown_section_lines(text: str, title: str) -> list[str]:
 
 def parse_runtime_task_pointers(
     runtime_text: str,
-) -> tuple[list[tuple[str, str, str, str]], list[str], list[tuple[str, str]]]:
-    """Return (task rows, focus pointers, problems) from fixed runtime sections.
+) -> tuple[list[tuple[str, str, str, str]], list[str], list[tuple[str, str, str | None]], set[str]]:
+    """Return (task rows, focus pointers, problems, oversplit ids).
 
     Task rows carry (task_id, status, objective, next_action); the objective
     and next_action cells are the runtime projection quoted by `status`.
+    Problems carry (kind, detail, task_id or None): a malformed short row
+    still exposes the task id it names so `status` can materialise it in
+    `unresolved` without touching check findings. Oversplit ids name rows
+    that split into more than four cells (e.g. an unescaped `|`), whose
+    projection cells cannot be trusted.
     """
     rows: list[tuple[str, str, str, str]] = []
     focus: list[str] = []
-    problems: list[tuple[str, str]] = []
+    problems: list[tuple[str, str, str | None]] = []
+    oversplit: set[str] = set()
 
     for line in markdown_section_lines(runtime_text, "Focus"):
         stripped = line.strip()
@@ -1380,13 +1386,16 @@ def parse_runtime_task_pointers(
         if not cells[0].startswith("TASK-"):
             continue
         if len(cells) < 4:
-            problems.append(("invalid", f"malformed Active Tasks row: {stripped}"))
+            pid = cells[0] if TASK_ID_RE.match(cells[0]) else None
+            problems.append(("invalid", f"malformed Active Tasks row: {stripped}", pid))
             continue
         if TASK_ID_RE.match(cells[0]) is None:
-            problems.append(("invalid", f"malformed task id in Active Tasks row: {cells[0]}"))
+            problems.append(("invalid", f"malformed task id in Active Tasks row: {cells[0]}", None))
             continue
+        if len(cells) > 4:
+            oversplit.add(cells[0])
         rows.append((cells[0], cells[2], cells[1], cells[3]))
-    return rows, focus, problems
+    return rows, focus, problems, oversplit
 
 
 def count_recent_entries(runtime_text: str) -> int:
@@ -1715,8 +1724,8 @@ def check_runtime_projection(run: VaultCheckRun, runtime_text: str | None, tasks
         elif task.get("lifecycle") is None:
             run.add("runtime-projection", "TASK_RUNTIME_UNRESOLVED", "warning", "vault/runtime.md", f"runtime row for {task_id} cannot be verified: the task state block is invalid", task_id=task_id)
 
-    rows, focus, problems = parse_runtime_task_pointers(runtime_text)
-    for _kind, detail in problems:
+    rows, focus, problems, _oversplit = parse_runtime_task_pointers(runtime_text)
+    for _kind, detail, _pid in problems:
         run.add("runtime-projection", "TASK_RUNTIME_INVALID", "error", "vault/runtime.md", detail)
 
     row_counts: dict[str, int] = {}
@@ -2079,12 +2088,14 @@ def build_status_payload(
     runtime_text = texts.get("vault/runtime.md")
     rows: list[tuple[str, str, str, str]] = []
     focus_ids: list[str] = []
+    problems: list[tuple[str, str, str | None]] = []
+    oversplit_ids: set[str] = set()
     if runtime_text is not None:
-        rows, focus_ids, _problems = parse_runtime_task_pointers(runtime_text)
+        rows, focus_ids, problems, oversplit_ids = parse_runtime_task_pointers(runtime_text)
 
-    # One projection per task: duplicated or enum-invalid rows cannot quote a
-    # trustworthy Next Action, so their tasks lose the projection but keep the
-    # lifecycle owned by their state block.
+    # One projection per task: duplicated, enum-invalid or oversplit rows
+    # cannot quote a trustworthy Next Action, so their tasks lose the
+    # projection but keep the lifecycle owned by their state block.
     invalid_row_ids = {
         finding["task_id"]
         for finding in findings
@@ -2094,12 +2105,21 @@ def build_status_payload(
     projections: dict[str, dict] = {}
     for task_id, _status, objective, next_action in rows:
         row_counts[task_id] = row_counts.get(task_id, 0) + 1
+        if task_id in oversplit_ids:
+            projections.pop(task_id, None)
+            continue
         if row_counts[task_id] == 1 and task_id not in invalid_row_ids:
             projections[task_id] = {"objective": objective, "next_action": next_action}
         elif task_id in projections:
             del projections[task_id]
 
     reasons = status_unresolved_reasons(phase_findings)
+    # A malformed short row names its task without emitting a task-scoped
+    # finding; the actual check diagnosis for that row is TASK_RUNTIME_INVALID,
+    # so materialise the id under that real code (check output stays intact).
+    for _kind, _detail, pid in problems:
+        if pid:
+            reasons.setdefault(pid, ["TASK_RUNTIME_INVALID"])
     open_buckets: dict[str, list[dict]] = {lifecycle: [] for lifecycle in STATUS_OPEN_LIFECYCLES}
     unresolved: list[dict] = []
     unresolved_ids: set[str] = set()
@@ -2168,7 +2188,20 @@ def build_status_payload(
             continue
         unresolved_ids.add(task_id)
         unresolved.append(unresolved_entry(task_id, None))
-    unresolved.sort(key=lambda entry: entry["task_id"])
+    # Enumeration refused (vault or vault/tasks unreadable): say so with an
+    # explicit vault-scope record instead of reporting a clean bill of health.
+    # The joint shape (scope/path/reason, no task_id) cannot be mistaken for a
+    # task, and summary.unresolved stays consistent with the array.
+    refused_paths = sorted(
+        {
+            finding["path"]
+            for finding in findings
+            if finding["code"] == "SYMLINK_INPUT" and finding.get("path") in {"vault", "vault/tasks"}
+        }
+    )
+    for path in refused_paths:
+        unresolved.append({"scope": "vault", "path": path, "reason": "SYMLINK_INPUT"})
+    unresolved.sort(key=lambda entry: entry.get("task_id") or f"~{entry.get('path', '')}")
 
     return {
         "schema_version": 1,
@@ -2238,7 +2271,10 @@ def render_status_text(payload: dict) -> None:
     else:
         print(f"unresolved ({len(unresolved)}):")
         for item in unresolved:
-            line = f"  {item['task_id']} reason={item['reason']}"
+            if "scope" in item:
+                line = f"  [{item['scope']}] path={item['path']} reason={item['reason']}"
+            else:
+                line = f"  {item['task_id']} reason={item['reason']}"
             if "task_path" in item:
                 line += f" path={item['task_path']}"
             print(line)

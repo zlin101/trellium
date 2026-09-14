@@ -7,6 +7,12 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## Unreleased（TASK-0010，post-2026.09.5）— status unresolved/投影增量形状
+
+- Added: `status` 的 `unresolved` 数组新增两类条目形态。①malformed 短行（少于四列）仅在消息文本中暴露其 task id、不产出 task-scoped finding 时，该 id 以实际 finding 码 `TASK_RUNTIME_INVALID` 物化进 `unresolved`——与 README"无法解析的任务显式列入 unresolved"承诺对齐，`check` 输出零变化；②`vault/` 或 `vault/tasks` 枚举被拒（`SYMLINK_INPUT`）时，输出显式 vault-scope 联合记录 `{"scope": "vault", "path": ..., "reason": "SYMLINK_INPUT"}`（无 `task_id`，不伪造任务 id，不携带 lifecycle/authority），`summary.unresolved` 计数与数组严格一致，消除"从未读取内容却报告 unresolved: 0"的 fail-open 表述。
+- Changed: runtime 行分裂出超过四列（如 Next Action 含未转义 `|`）时，该任务的 `runtime_projection` 被抑制（沿用重复行/枚举非法行的既有投影抑制模式），任务保留状态块 lifecycle 分类；此前投影会静默截断且 exit 0 无任何信号。文本渲染对 vault-scope 条目输出 `[vault] path=... reason=...`，与 JSON 同源。
+- Auto: 无模板变更；`check` 的发现、严重级与退出码字节级零变化；不新增 schema 版本（JSON 仍为 v1 增量）。
+
 ## 2026.09.5 — 只读 status 状态摘要
 
 - Added: `trellium.py status <target>`（`--format json` 可选）：完全只读、确定性的 owner 状态摘要，只编译 `check` 已校验的同一状态层，不新增事实源。输出：Focus（逐个标注 resolved/unresolved）；开放任务按 `draft/active/blocked/ready_for_review` 分类（含 `authority_level`、`task_path` 与可选 `current_slice`/`gates` 原值，runtime 行贡献 `runtime_projection` 的 `objective`/`next_action`）；`accepted`/`superseded` 只进 closed 计数，不进行动清单；无法解析的任务显式列入 `unresolved` 并附阻塞发现码（如 `TASK_RUNTIME_DRIFT`、`TASK_RUNTIME_LOCAL_UNRESOLVED`、`TASK_ID_DUPLICATE`），不声称 lifecycle/authority；runtime 行与状态块冲突（drift）时任务进 unresolved，不裁决哪边为真；重复行或行状态非法的行不产出投影。文本与 JSON v1 从同一份结果渲染，JSON 恒含 `schema_version/target/focus/summary/tasks/findings` 键。退出码与 `check` 一致：error → `2`，仅 warning → `0`，目标/参数错误 → `1`。
