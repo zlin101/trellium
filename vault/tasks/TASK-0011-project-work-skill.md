@@ -255,6 +255,28 @@ Completed:
 
 ## Execution Record
 
+### 2026-09-15 - Agent: GLM — M0 预注册与 M1 消融（判定：No-Go）
+
+Context read: 合同、`skills/agent-task/SKILL.md`（顶层+两包模板）、AGENTS 模板、`scripts/trellium.py` TEMPLATE_FILES/FILE_ROLES、`scripts/install.sh`。
+
+Changes made:
+
+- M0：现场复核基线（含新事实：顶层 `skills/agent-task/` 本身即可被发现）；冻结 `docs/evals/project-work-skill-2026-09/` 四件套 + 三场景 fixture + A1 薄路由草案（`e2fe146`，先于任何实现）。
+- M1：结构发现测试（Claude Code ×3 + Codex ×3 真实 headless 探测）+ 6 个 A0/A1 会话（交错顺序、先落原文后评分）。
+
+Checks run:
+
+- 121 tests、check 0/0、snapshot in sync、范围级 whitespace CLEAN（预注册提交时）。
+
+Review and reflection:
+
+- **判定 No-Go**：两臂全场景 0 关键遗漏、0 需要纠正、0 硬指标违规（A0 底座充分，地板效应）；A1 唯一可观察差异是读入更多材料（visible +79%）。附加结构事实：Codex 不发现项目级 `.claude/skills/`（项目 Skill 前提对 Codex 不成立），且 `agent-task` 全局泄漏在 Codex 复现（中性目录亦可见，来源为本机全局安装的控制包嵌套模板）。
+- 按停止条件：不进入 M2/M3 项目 Skill 实现；仅执行已复现泄漏的最小修复（模板改不可发现文件名）。
+
+Next action:
+
+- CI 恢复验证预注册提交后，执行泄漏最小修复；M2/M3 其余项按 No-Go 取消。
+
 ### 2026-09-15 - Agent: Codex — 合同建立并激活
 
 Context read:

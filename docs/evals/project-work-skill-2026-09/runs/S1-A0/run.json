@@ -1,0 +1,12 @@
+{
+  "session_id": "S1-A0",
+  "cli_session_id": "56057228-82b2-4090-8e3d-34fda57c6f5c",
+  "material_bytes": 786,
+  "tool_calls": 9,
+  "visible_output_bytes": 2860,
+  "wall_clock_first_answer_s": 98.663,
+  "cli_exit_code": 0,
+  "is_error": false,
+  "answer_bytes": 5031,
+  "transcript": "/home/liam/.claude/projects/-tmp-pws-eval-neutral/56057228-82b2-4090-8e3d-34fda57c6f5c.jsonl"
+}
