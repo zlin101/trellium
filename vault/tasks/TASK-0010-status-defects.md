@@ -6,7 +6,7 @@
   "task_id": "TASK-0010",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -60,6 +60,7 @@ Forbidden:
 - [x] `check --format json` 与基线逐字节一致（既有契约不变）。（独立 review：健康仓库与错误 fixture 双态逐字节一致，payload diff 仅含预期 unresolved 增量）
 - [x] 全量测试无退化；check 0/0；snapshot in sync；`git diff --check`（含 TASK-0009 豁免口径）通过。（121 tests OK；71c64b3 曾因 snapshot 漂移被远端 gate 拦截，7d5c589 regen 后 CI success）
 - [x] 独立 review 无 open P0/P1/P2；任务停在 ready_for_review。（专项复审 APPROVE：三修复独立复现、冻结设计逐项核验；3 项非阻断观察已记录）
+- [x] owner 验收（2026-09-15）：ready_for_review → **accepted**（远端 gate run 34927880245 success）。MIGRATIONS 的 Unreleased 节保持——本任务位于 `2026.09.5` tag 之后，属后续未发布内容，不改动既有 09.5 tag。
 
 ## Execution Record
 
@@ -95,7 +96,7 @@ Review and reflection:
 
 Next action:
 
-- 任务转 `ready_for_review` 等 owner 验收；不做 Release、不扩范围。
+- 2026-09-15 owner 验收通过转 accepted；handoff 条目按关闭任务规则归并回本文件；不新增决策记录（本次落实 D-0007 既有 status 契约）。
 
 ## Verification
 
