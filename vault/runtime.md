@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0001
+- TASK-0011
 
 ## Active Tasks
 
@@ -25,6 +25,7 @@ table holds pointers only.
 | TASK-0008 | Ship one 2026.09.5 feature from the Codex feedback audit: deterministic read-only status summary. | accepted | Closed 2026-09-09: owner APPROVE after three review rounds; `2026.09.5` tag and Release follow the accepted commit (D-0007). |
 | TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | accepted | Closed 2026-09-13: owner accepted with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired). D-0008. |
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | accepted | Closed 2026-09-15: three status-layer fixes (check byte-identical), 3 red-first tests (121 total), independent review APPROVE, CI green (34927880245). MIGRATIONS Unreleased section post-09.5-tag. |
+| TASK-0011 | Validate and, only on ablation Go, migrate the project workflow Skill from globally ambiguous `agent-task` to project-scoped `trellium-work`. | active | Claude runs M0 preregistration and M1 A0/A1 ablation before any product/template implementation. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -34,9 +35,10 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
+- TASK-0011: active 2026-09-15 — owner approved a Level C contract for the user-level control Skill / project-level work Skill split. Implementation is gated by preregistered A0 (`AGENTS.md + vault`) vs A1 (`+ trellium-work`) ablation and real project-scope discovery checks; No-Go/Inconclusive stops the project-Skill migration.
 - TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
-- TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Unmet gates: 5th real TASK, M2 second project, canonical cross-project evidence, five-question review.
+- TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Numeric coverage gate is met; remaining work is M2 second project, canonical cross-project evidence, and the five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
 - TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
@@ -53,6 +55,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Opened TASK-0011: test whether a thin project-scoped `trellium-work` adds value beyond `AGENTS.md + vault`; only an ablation Go authorizes replacing `agent-task`. The control/work split, global-template leakage fix, cross-Agent discovery evidence, and zero-loss upgrade migration are frozen in the contract.
 - Owner accepted TASK-0010 (2026-09-15): three status-layer fixes closed (check byte-identical, 121 tests, CI green). MIGRATIONS Unreleased section stays — TASK-0010 sits after the `2026.09.5` tag; the 09.5 tag itself is untouched.
 - TASK-0010 implemented and ready_for_review (2026-09-14): three status-layer fixes with red-first regression tests (short-row unresolved materialisation, refused-vault joint record, oversplit projection suppression); check byte-identical; snapshot regen after the remote gate caught drift; independent review APPROVE; CI green (7d5c589).
 - Owner accepted TASK-0009 (2026-09-13, D-0008) and approved plan B. Executed: bundle+verify → filter-repo ×3 (host paths/UUIDs/repo names/cost fields; the two cost regexes were initially malformed — missing `>` separator — caught by post-scan and fixed in pass-3) → hash-reference migration via composed commit-map → multi-tree 0-hit sensitive scan → gates green → pushed. GitHub Actions had a platform incident (no runs for two pushes); after recovery the re-trigger commit's run completed success. Bundle deleted per owner gate; TASK-0010 draft→active, implementation starting.
@@ -112,8 +115,8 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
+- Claude executes TASK-0011 M0/M1 first; do not edit product/template files until the preregistered A0/A1 and project-scope discovery Gate returns Go.
 - Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
-- Owner reviews TASK-0010 (ready_for_review; three status-layer fixes, check byte-identical, independent review APPROVE).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.

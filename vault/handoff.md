@@ -5,6 +5,16 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
+## TASK-0011 - 2026-09-15
+
+- Objective: 验证项目级工作 Skill 是否比 `AGENTS.md + vault` 有独立价值；仅在消融 Go 后把 `agent-task` 最小迁移为项目限定、语言无关 ID 的 `trellium-work`。
+- Completed: owner 批准方向并要求形成 TASK 交 Claude；Level C / Authority 3 合同已激活，控制面/执行面边界、A0/A1 消融、污染规则、kill criteria、模板全局泄漏修复和旧项目安全迁移均已冻结。
+- In progress: 尚无产品或模板实现；等待 Claude 执行 M0 预注册与 M1 发现/行为消融。
+- Failed attempts: 无。已知反例是 `AGENTS.md` 可能已经足够；若 A1 无关键遗漏或成本改善，必须 No-Go，不以架构整洁为由开发第二 Skill。
+- Blockers: 无；Go 之后才能进入实现。任一 Agent 在当前环境不可真实运行时，该平台 discovery 记未验证，不准猜测。
+- Next best action: 阅读 TASK-0011；先以独立提交冻结实验材料和 golden，再做 3 场景 × 2 臂首答与项目内/外发现检查；根据 Gate 决定是否进入 M2。
+- Files to read first: `vault/tasks/TASK-0011-project-work-skill.md`、`vault/runtime.md`、`scripts/trellium.py`、`skills/agent-task/SKILL.md`、`scripts/install.sh`。
+
 ## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。
