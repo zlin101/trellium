@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0010（ready_for_review，等 owner 验收）
+- TASK-0001
 
 ## Active Tasks
 
@@ -91,6 +91,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Known Risks
 
+- Tool boundary (2026-09-14): a Focus line annotated beyond the pure task id (e.g. `- TASK-0010（ready_for_review…）`) is silently ignored by both checker and status — `TASK_ID_RE` strict-matches the whole line and neither tool warns. Seen when an annotated Focus shipped in an acceptance commit; `status .` reported `focus: (none)` while check stayed 0/0. Keep Focus lines to the bare task id.
+
 - `vault/decisions.md` is past the 150-line indexing threshold (7 full records); the protocol says it should become a pure index with bodies under `vault/decisions/`. Restructuring is queued for the owner's confirmation, not silently executed here.
 - The PR-only snapshot self-heal push path has not yet been observed in a real GitHub PR run; develop push event routing and the read-only gate have been verified.
 - The checker validates the Active Tasks table and structure but cannot see natural-language counts elsewhere; stale prose numbers need manual reconciliation (observed 2026-09-08: "3 TASKs" vs `current_task_files: 4`).
@@ -109,9 +111,8 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
-- Plan B execution in progress per owner-approved order (bundle → sanitize + commit-map → hash-reference migration → 0-hit full-history scan → gates → push → CI green; bundle retained until CI green). After CI green: activate TASK-0010 (draft → active).
-- Owner adjudication list (short-row P1, refused-vault P1, pipe-truncation P2; same-id stays P3) is contracted as TASK-0010 (product fix task, separate from TASK-0009).
-- Owner creates the GitHub Release from the pushed `2026.09.5` tag (D-0003 gate), if not yet done.
+- Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
+- Owner reviews TASK-0010 (ready_for_review; three status-layer fixes, check byte-identical, independent review APPROVE).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
 - Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.

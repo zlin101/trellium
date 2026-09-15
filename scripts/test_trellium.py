@@ -2289,7 +2289,8 @@ class StatusDefectRegressionsTest(VaultCheckMixin, TargetTestCase):
             "| TASK-0001 | obj | active | next |\n"
         )
         target = self.one_active_project(runtime)
-        outside = tempfile.mkdtemp()
+        outside = self.root / "outside-enumeration"
+        outside.mkdir()
         shutil.rmtree(target / "vault" / "tasks")
         os.symlink(outside, target / "vault" / "tasks")
         (target / "vault" / "runtime.md").unlink()

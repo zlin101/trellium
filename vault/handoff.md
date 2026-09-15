@@ -15,7 +15,7 @@
 - Next best action: owner 验收；验收后按 D-0008 边界结束（无 R2；2026.09.5 Release 对象仍待 owner 在 UI 创建）。
 - Files to read first: `vault/tasks/TASK-0010-status-defects.md`、`init/MIGRATIONS.md` Unreleased 节。
 
-## TASK-0004 - 2026-09-08## TASK-0004 - 2026-09-08
+## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。
 - Completed: M1 完成——S1-S7 七个独立新会话，判定 7/7 对、越权 0、错误声称 accepted 0、过期证据误用 0、owner 纠正 0（记录表与基线结论在协议文件）；M3 结论 **No-Go 已被 owner 采纳为 D-0004**（M4 不立项、不实现 context、暂不补 A/B、AGENTS.md→vault 必读路径为默认；重开仅限 D-0004 三条件）。

@@ -63,6 +63,11 @@ Forbidden:
 
 ## Execution Record
 
+### 2026-09-13 - Agent: GLM — 立项（draft，未开始实现）
+
+- Owner 在 TASK-0009 review 中裁定三个 status 缺陷为真实缺陷（P1/P1/P2）并指示另立产品任务；本文件即该合同。
+- Owner 复核修正（同日）：lifecycle 保持 **draft**——不以 Authority 3 直接 active，实现需 owner 排期启动；refused-vault 输出设计按 owner 意见冻结为显式 vault-scope unresolved 记录（禁止 clamp 方案）。
+
 ### 2026-09-13 - Agent: GLM — 激活（owner 排期生效）
 
 - 方案 B 完成、push 成功、远端 CI 全绿（恢复提交 `5c4c0f6` 的 gate job success）；owner 排期条件满足，TASK-0010 draft→active，实现开工。
@@ -105,12 +110,6 @@ Completed:
 
 - 2026-09-14 全项通过（见 Execution Record 与独立复审）；远端 CI `7d5c589` gate success。
 
-## Execution Record
-
-### 2026-09-13 - Agent: GLM — 立项（draft，未开始实现）
-
-- Owner 在 TASK-0009 review 中裁定三个 status 缺陷为真实缺陷（P1/P1/P2）并指示另立产品任务；本文件即该合同。
-- Owner 复核修正（同日）：lifecycle 保持 **draft**——不以 Authority 3 直接 active，实现需 owner 排期启动；refused-vault 输出设计按 owner 意见冻结为显式 vault-scope unresolved 记录（禁止 clamp 方案）。
 
 ## Memory Updates
 
