@@ -5,16 +5,6 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0012 - 2026-09-16
-
-- Objective: 将真实 Go 开发中发生的注释知识丢失转化为跨语言工程规范，同时用一跳条件路由避免默认上下文与 Vault 膨胀。
-- Completed: M0 预注册、R0/R1/R2 结构消融（R1 Go）、公共核心 + Go/Python 适配、`adopt --profile PROFILE[=ROOT]` 多语言/多 root、单一项目文档、stamp schema 2、安全 upgrade/proposal、双语文档与 2026.09.7；实现提交 `bbae794`。136 tests、check 0/0、status 0 unresolved、snapshot/whitespace 通过。
-- In progress: 无；任务已按真实顺序 active → ready_for_review，等待 owner 验收。
-- Failed attempts: structured review 初轮发现 root 文档注入与 malformed stamp fail-open 两项 P1，均已改为写入前拒绝并补回归；无剩余 P0/P1/P2。
-- Blockers: owner acceptance；push/tag/Release 未授权。
-- Next best action: owner 复核 TASK-0012、`bbae794` 和 2026.09.7 迁移契约，决定 accepted 与后续发布。
-- Files to read first: `vault/tasks/TASK-0012-code-comment-routing.md`、`docs/evals/code-comment-routing-2026-09/results.md`、`scripts/trellium.py`、`init/MIGRATIONS.md`。
-
 ## TASK-0011 - 2026-09-15
 
 - Objective: 验证项目级工作 Skill 是否比 `AGENTS.md + vault` 有独立价值；仅在消融 Go 后把 `agent-task` 最小迁移为项目限定、语言无关 ID 的 `trellium-work`。

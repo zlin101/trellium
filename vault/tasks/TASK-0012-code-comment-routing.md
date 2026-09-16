@@ -6,8 +6,7 @@
   "task_id": "TASK-0012",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review",
-  "current_slice": "M5 — owner review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -164,7 +163,7 @@ Forbidden:
 - [x] `check`/`status` 输出与退出码无非预期变化。
 - [x] 全量测试、check、snapshot、whitespace 门禁通过。
 - [x] review 无 open P0/P1/P2。
-- [ ] owner 决定 accepted 与发布。
+- [x] owner 决定 accepted 与发布。（2026-09-16：owner 确认已 push，并指示 Codex 自行验收；TASK-0012 转 accepted。tag/Release 仍另行决定。）
 
 ## Verification
 
@@ -260,6 +259,18 @@ Review result:
 Next action:
 
 - Owner 复核 TASK-0012 与 `bbae794`，决定是否 accepted；accepted 后才授权 push、tag 或 Release。
+
+### 2026-09-16 - Agent: Codex — Owner-directed acceptance
+
+Decision:
+
+- Owner 明确表示实现已经 push，并指示 Codex 自行验收；该指令构成 lifecycle acceptance 授权。
+- 逐条复核 Acceptance Criteria：预注册与消融 DAG、实现、数据保护、兼容性、结构化 review 和本地终验均已闭合，无 open P0/P1/P2。
+- GitHub 实时 ref 查询因执行平台容量异常未返回结果；不把该基础设施异常冒充远端 CI 证据。验收依据为 owner 的已 push 确认、实现提交 `bbae794`、Vault 收尾 `7ad4d58` 与提交后本地终验。
+
+Final state:
+
+- `ready_for_review → accepted`；本任务不代做 tag/Release，也不关闭 TASK-0011。
 
 ## Memory Updates
 

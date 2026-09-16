@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-16（TASK-0012 ready_for_review），审计基准（固定锚点）：TASK-0006 的 rfr 提交为 `bf3f84b`（2026-09-08）、TASK-0007 的 rfr 提交为 `430de35`（2026-09-09）、TASK-0011 的 rfr 提交为 `aa8038e`（2026-09-16）、TASK-0012 的实现提交为 `bbae794`（2026-09-16）；对账补记提交为 `703b140`。2026-09-16 owner review 对账：K1 表原 22 行漏计 TASK-0006/0007 两笔 active→ready_for_review 转换（已补记），此前快照的 22 系漏计后与行数的巧合一致**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 12 个（TASK-0001…0012；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0011/0012 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 25 次（含 TASK-0012 active→ready_for_review；历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-16（TASK-0012 accepted），审计基准（固定锚点）：TASK-0006 的 rfr 提交为 `bf3f84b`（2026-09-08）、TASK-0007 的 rfr 提交为 `430de35`（2026-09-09）、TASK-0011 的 rfr 提交为 `aa8038e`（2026-09-16）、TASK-0012 的实现提交为 `bbae794`（2026-09-16）；对账补记提交为 `703b140`。2026-09-16 owner review 对账：K1 表原 22 行漏计 TASK-0006/0007 两笔 active→ready_for_review 转换（已补记），此前快照的 22 系漏计后与行数的巧合一致**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 12 个（TASK-0001…0012；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0011/0012 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 26 次（含 TASK-0012 ready_for_review→accepted；历史明细保留在下方 K1 append-only 事件行），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -77,6 +77,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-15 | ready_for_review → accepted（owner 验收：Focus/记录一致性修正闭合，远端 gate run 34927880245 success） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 落实 D-0007 既有 status 契约，不新增决策；MIGRATIONS Unreleased 节位于 09.5 tag 之后，不改动既有 tag |
 | 2026-09-16 | active → ready_for_review（A0/A1 消融 No-Go 判定落地 + 泄漏修复 + 隐私历史重写；**owner 复核发现遗漏后补记**——转换实际发生于远端 CI run success 后，投影文字曾过早声称 rfr，且本行初稿误混入 TASK-0010 内容，已更正） | TASK-0011 | 2（状态块 + runtime 行） | 1 | 修复完成、CI 绿后按正确顺序转换；此前该行曾与撤销注记混写，本轮重写为纯事件行 |
 | 2026-09-16 | active → ready_for_review（R1 路由消融通过；2026.09.7 profile-aware 注释规范实现与结构化 review 闭合） | TASK-0012 | 2（状态块 + runtime 行） | 0 | 实现锚点 `bbae794`；136 tests、check 0/0、snapshot/whitespace 通过；待 owner accepted，不代发 |
+| 2026-09-16 | ready_for_review → accepted（owner 确认已 push，并明确指示 Codex 自行验收） | TASK-0012 | 2（状态块 + runtime 行） | 0 | 本地提交后终验 136 tests、check 0/0、status 0 unresolved；远端实时查询因平台容量未返回，不伪造 CI 证据；tag/Release 另行决定 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
