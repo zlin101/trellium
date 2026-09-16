@@ -6,8 +6,8 @@
   "task_id": "TASK-0012",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active",
-  "current_slice": "M2 — protocol and project document generation"
+  "lifecycle": "ready_for_review",
+  "current_slice": "M5 — owner review"
 }
 -->
 
@@ -155,15 +155,16 @@ Forbidden:
 
 - [x] 预注册在任何实现修改之前冻结，Git DAG 可证。（`e4f58c9`，产品/模板零 diff）
 - [x] 载体裁决逐条对应冻结 Gate，不用“更整洁”代替证据。（R1 Go；R2 被同内容、额外一跳与第二 route owner 支配；R0 非源码任务默认成本过高）
-- [ ] owner 原规范的关键语义全部进入公共核心或 Go 适配，无静默删减。
-- [ ] Python 适配符合项目公共 API 与 PEP 257 约定，不照搬 Go 语法。
-- [ ] Go-only、Python-only、Go+Python 都只生成一个工程规范文件，且不含未选语言章节。
-- [ ] AGENTS 路由一跳直达；Vault 零新增工程规范文件。
-- [ ] 旧 stamp 可读；多 profile、多 root、非法路径、重复参数行为确定。
-- [ ] 已存在或已定制的工程规范零静默覆盖；升级冲突可恢复。
-- [ ] `check`/`status` 输出与退出码无非预期变化。
-- [ ] 全量测试、check、snapshot、whitespace 门禁通过。
-- [ ] review 无 open P0/P1/P2；owner 决定 accepted 与发布。
+- [x] owner 原规范的关键语义全部进入公共核心或 Go 适配，无静默删减。
+- [x] Python 适配符合项目公共 API 与 PEP 257 约定，不照搬 Go 语法。
+- [x] Go-only、Python-only、Go+Python 都只生成一个工程规范文件，且不含未选语言章节。
+- [x] AGENTS 路由一跳直达；Vault 零新增工程规范文件。
+- [x] 旧 stamp 可读；多 profile、多 root、非法路径、重复参数行为确定。
+- [x] 已存在或已定制的工程规范零静默覆盖；升级冲突可恢复。
+- [x] `check`/`status` 输出与退出码无非预期变化。
+- [x] 全量测试、check、snapshot、whitespace 门禁通过。
+- [x] review 无 open P0/P1/P2。
+- [ ] owner 决定 accepted 与发布。
 
 ## Verification
 
@@ -226,6 +227,39 @@ Review and reflection:
 Next action:
 
 - 提交 M1 结果，随后进入 M2；实现不得更改冻结 Gate 或把工程规范放回 Vault。
+
+### 2026-09-16 - Agent: Codex — M2-M4 实现
+
+Changes made:
+
+- 公共核心与 Go/Python 语言适配落入协议源和双语模板；目标项目只生成 `docs/engineering/code-comments.md`，未选择的语言章节不渲染。
+- `adopt --profile PROFILE[=ROOT]` 支持多语言与同语言多 root；不传 profile 时输出集合保持不变，不做语言自动检测。
+- adoption stamp 升级为 schema 2，记录 profile、roots、source hash 与工程文档位置；v1 stamp 继续可读。
+- 工程规范作为 merge 载体进入 upgrade：pristine 可刷新，项目定制与上游同时变化时生成 proposal；已有文件即使 `--force` 也不覆盖，重复 adopt 不允许静默更换 profile 集。
+- `AGENTS.md` 只添加源码/API/注释/TODO 任务的一跳直达路由；版本升至 2026.09.7，README、初始化/接入流程、MIGRATIONS 与两套 Skill 快照同步。
+
+Checks run:
+
+- 实现提交：`bbae794`。
+- 聚焦 adopt/upgrade/profile 与模板测试通过；随后全量 136/136 tests 通过。
+- `check --format json` 0 error / 0 warning；`status --format json` 0 unresolved；两套 snapshot in sync；`git diff --check` clean。
+
+Review and reflection:
+
+- 规范正文属于工程层，不进入 Vault；stamp 只保存机器升级所需元数据，不能替代人类可读规范。
+- profile root 只是显式声明，不以 manifest 猜测；路径重叠时按文件实际语言选适配，避免把 Go 语法套到 Python。
+
+### 2026-09-16 - Agent: Codex — M5 structured review
+
+Review result:
+
+- `code-review-expert` 结构化审查初轮发现 2 项 P1：root 可通过换行/反引号破坏 Agent 规范边界；损坏的 v2 profile metadata 被宽容忽略，可能让 upgrade 错误分类工程规范。
+- 两项均改为写入前 fail-closed：root 拒绝非打印字符/反引号/边缘空白；stamp metadata 严格验证，工程规范存在但 profile metadata 缺失时拒绝生成删除计划。
+- 补充路径注入、malformed/inconsistent stamp、legacy v1 stamp 与 tooling-only v1→v2 测试；复跑后无 open P0/P1/P2，结论 APPROVE。
+
+Next action:
+
+- Owner 复核 TASK-0012 与 `bbae794`，决定是否 accepted；accepted 后才授权 push、tag 或 Release。
 
 ## Memory Updates
 

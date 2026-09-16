@@ -5,6 +5,16 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
+## TASK-0012 - 2026-09-16
+
+- Objective: 将真实 Go 开发中发生的注释知识丢失转化为跨语言工程规范，同时用一跳条件路由避免默认上下文与 Vault 膨胀。
+- Completed: M0 预注册、R0/R1/R2 结构消融（R1 Go）、公共核心 + Go/Python 适配、`adopt --profile PROFILE[=ROOT]` 多语言/多 root、单一项目文档、stamp schema 2、安全 upgrade/proposal、双语文档与 2026.09.7；实现提交 `bbae794`。136 tests、check 0/0、status 0 unresolved、snapshot/whitespace 通过。
+- In progress: 无；任务已按真实顺序 active → ready_for_review，等待 owner 验收。
+- Failed attempts: structured review 初轮发现 root 文档注入与 malformed stamp fail-open 两项 P1，均已改为写入前拒绝并补回归；无剩余 P0/P1/P2。
+- Blockers: owner acceptance；push/tag/Release 未授权。
+- Next best action: owner 复核 TASK-0012、`bbae794` 和 2026.09.7 迁移契约，决定 accepted 与后续发布。
+- Files to read first: `vault/tasks/TASK-0012-code-comment-routing.md`、`docs/evals/code-comment-routing-2026-09/results.md`、`scripts/trellium.py`、`init/MIGRATIONS.md`。
+
 ## TASK-0011 - 2026-09-15
 
 - Objective: 验证项目级工作 Skill 是否比 `AGENTS.md + vault` 有独立价值；仅在消融 Go 后把 `agent-task` 最小迁移为项目限定、语言无关 ID 的 `trellium-work`。
@@ -24,14 +34,3 @@
 - Blockers: M2 等待 owner 提供第二个真实 local 项目；任务 active → blocked，项目到位后 blocked → active 继续 M2 与跨项目证据。
 - Next best action: owner 提供第二个真实项目；期间由真实工作（TASK-0001）继续累积 K1-K4 证据，D-0004 的误判/成本重开证据若出现须先登记 ledger。
 - Files to read first: `vault/decisions.md`（D-0004）、`vault/details/cold-start-baseline-2026-09.md`（记录表+基线结论）、`vault/tasks/TASK-0004-post-release-validation.md`、`vault/runtime.md`。
-
-## TASK-0001 - 2026-09-04
-
-- Objective: 完成 review 修复并发布 2026.09.3；随后把本仓库接入为 tracked 自托管试点，开始 K1-K4 shadow 取证。
-- Completed: 四项 check 修复已发布（commit 97d5506，tag 2026.09.3）；本仓库已 adopt（tracked）；创建 TASK-0001 与 `vault/details/shadow-run-2026-09.md`；完成首次转换 draft → active 与首次 handoff；交接前 `check --format json` 为 0 error / 0 warning。
-- In progress: 试点覆盖指标（累计 5 真实 TASK / 6 次转换 / 2 次 handoff / 1 次 blocked → active）随真实工作逐步累积，当前 1 TASK / 1 转换 / 1 handoff / 0 blocked。
-- Failed attempts: 无。
-- Blockers: none。
-- Next best action: 阅读 TASK-0001 的 Acceptance Criteria 与 shadow-run 台账；继续以真实开发任务填充试点覆盖；发现旧 prose TASK 语义与 check 冲突时按治理升级（Level C，另立任务）。
-- Files to read first: `vault/tasks/TASK-0001-self-hosting-pilot.md`、`vault/details/shadow-run-2026-09.md`、`vault/runtime.md`、`docs/superpowers/plans/2026-09-04-agent-native-vault-check-plan.md` 第 10 节。
-- Environment snapshot（可选，观察于 2026-09-04，历史快照）: 协议 2026.09.3，GitHub Release 对象尚未创建（releases/latest 仍指向 2026.09.0，需用户在网页创建）。
