@@ -12,7 +12,7 @@
 
 1. 读取 `init/INIT.md`。
 2. 按顺序读取协议模块。
-3. 如果项目类型明确，读取选定 profile。
+3. 如果项目类型明确，显式选择一个或多个 profile 及其目标根目录；不自动猜测。
 4. 明确项目名称、项目类型和当前阶段。
 5. 创建或更新 `AGENTS.md`。
 6. 如需要，创建或同步 `CLAUDE.md`。
@@ -28,11 +28,12 @@
 16. 只在需要时创建 `vault/details/*` 文件。
 17. 创建 `skills/`。
 18. 创建必要初始 skill。
-19. 仅按选定 profile 的需要初始化源码、测试和依赖文件。
-20. 更新 `README.md`。
-21. 运行最小检查。
-22. 更新 `vault/runtime.md`，记录最终初始化状态。
-23. 将长期有效的协议或 profile 决策记录到 `vault/decisions.md`。
+19. 将公共注释原则与选定语言适配合并为唯一的 `docs/engineering/code-comments.md`，并在 `AGENTS.md` 写入一跳条件路由；未选语言不进入文档，已有工程规范不覆盖。
+20. 仅按选定 profile 的需要初始化源码、测试和依赖文件。
+21. 更新 `README.md`。
+22. 运行最小检查。
+23. 更新 `vault/runtime.md`，记录最终初始化状态。
+24. 将长期有效的协议或 profile 决策记录到 `vault/decisions.md`。
 
 ## 验收
 

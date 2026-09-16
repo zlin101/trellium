@@ -23,6 +23,8 @@
 - `profiles/python-backend.md`：Python 后端默认值。
 - `profiles/go-backend.md`：Go 后端默认值。
 
+选择 profile 时，公共注释原则与所选语言适配会合并到目标项目唯一的 `docs/engineering/code-comments.md`；该工程文档不进入 Vault，`AGENTS.md` 仅保留按任务触发的一跳路由。
+
 ## 源文件边界
 
 `init/` 是初始化协议源目录，其中 `init/INIT.md` 是入口清单，`init/protocol/` 是协议正文。

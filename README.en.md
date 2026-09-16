@@ -207,6 +207,16 @@ To add the Agent collaboration layer to an existing project:
 python3 scripts/trellium.py adopt /path/to/project
 ```
 
+When project languages are known, declare their scopes explicitly with repeatable `--profile PROFILE[=ROOT]` arguments. A language may have multiple roots, and multiple languages share one project document:
+
+```bash
+python3 scripts/trellium.py adopt /path/to/project \
+  --profile go-backend=services/api \
+  --profile python-backend=services/model
+```
+
+This additionally creates one `docs/engineering/code-comments.md` containing the common policy and selected language sections, plus a one-hop AGENTS route that activates only for source-related work. Unselected languages are omitted and non-source tasks need not load the policy. The selection is recorded in `vault/.agent-init.json` for deterministic upgrades, but the engineering policy itself stays outside the Vault. An existing policy is preserved even with `--force`; simultaneous upstream and local changes produce an upgrade proposal.
+
 `adopt` only adds Agent collaboration files that are missing, by default:
 
 - `AGENTS.md`
@@ -237,7 +247,7 @@ python3 scripts/trellium.py upgrade /path/to/project --apply   # execute the saf
 python3 scripts/trellium.py upgrade /path/to/project --complete  # finalize resolved proposals
 ```
 
-The upgrade splits collaboration files into two classes: **project data** (runtime, handoff, decisions, tasks, project, collaboration, and friends) is read-only to the upgrader and is never replaced by templates; **protocol files** (governance, index, tasks/README, skills/agent-task, the managed AGENTS.md region) may be refreshed, but local modifications are never silently discarded — when both sides changed, a proposal is written under `vault/.upgrade/<version>/` for the Agent to merge and the user to confirm. Upgrades are per-file opt-in (`--only` / `--skip`) and produce a standalone, revertable commit.
+The upgrade splits collaboration files into two classes: **project data** (runtime, handoff, decisions, tasks, project, collaboration, and friends) is read-only to the upgrader and is never replaced by templates; **protocol files** (governance, index, tasks/README, skills/agent-task, the managed AGENTS.md region, and the generated engineering policy when profiles were selected) may be refreshed, but local modifications are never silently discarded — when both sides changed, a proposal is written under `vault/.upgrade/<version>/` for the Agent to merge and the user to confirm. Upgrades are per-file opt-in (`--only` / `--skip`) and produce a standalone, revertable commit.
 
 `adopt` records a stamp at `vault/.agent-init.json` (the content hash of each file at install time). Projects adopted before the stamp existed should first run `baseline <target>`. Format migrations for data files are defined entry by entry in `init/MIGRATIONS.md`: content is carried over, never dropped.
 

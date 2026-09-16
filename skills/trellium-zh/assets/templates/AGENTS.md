@@ -25,6 +25,8 @@
 
 追踪任务或治理任务读取 `vault/tasks/` 下的活跃任务文件。
 
+修改、生成或评审源码、公共 API、注释或 TODO/FIXME 时，如果 `docs/engineering/code-comments.md` 存在，直接读取它，并只应用与当前路径匹配的语言章节。
+
 ## Working Principles
 
 - 先思考再编码。需求有歧义时，指出歧义并选择稳妥路径或请求确认。

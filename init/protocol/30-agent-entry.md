@@ -21,6 +21,7 @@ Agent 入口文件是项目级 Agent 指令。
 - 动态上下文放入 `vault/`。
 - 长工作流放入 `skills/`。
 - 技术栈细节放入 profile 或开发文档。
+- 工程规则正文放在项目工程文档；入口只做一跳条件路由，不经 Vault 二次转发。
 
 ## Required Reading
 
@@ -60,6 +61,8 @@ vault/parked.md
 ```text
 vault/tasks/<task-id>.md
 ```
+
+修改、生成或评审源码、公共 API、注释或 TODO/FIXME 时，如果 `docs/engineering/code-comments.md` 存在，直接读取它，并只应用与当前文件路径匹配的语言章节。非源码任务不加载该正文。
 
 ## 必备工作规则
 

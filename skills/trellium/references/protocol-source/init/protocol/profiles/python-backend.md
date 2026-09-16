@@ -177,7 +177,10 @@ class Settings(BaseSettings):
 - 依赖通过框架的依赖注入（如 FastAPI `Depends`）传入，不创建全局单例。
 - 不使用全局可变状态存储请求级数据。
 - 运行日志使用集中或结构化 logger，不使用 `print` 代替服务日志。
-- 注释保持克制，代码应自解释；仅当逻辑极复杂时加极简注释。
+- 公共 module、class、function 和 method 应有 docstring；公共性由项目约定、`__all__`、前导下划线和公开文档共同确定。
+- docstring 使用三重双引号，首行给出简短行为摘要；多行 docstring 在摘要后空一行再写细节。
+- 记录重要参数语义、返回值、异常、副作用、调用约束和生命周期，但不机械重复签名或类型注解；参数章节沿用项目已有的 Google、NumPy、Sphinx 或其他格式，不擅自切换。
+- decorator、context manager、async、generator、线程安全和资源所有权存在非显然行为时必须记录；行内 `#` 注释主要解释 Why、不变量和特殊约束。
 - import 顺序由 isort 维护：标准库、第三方库、本项目模块。
 
 ## 异步与资源生命周期

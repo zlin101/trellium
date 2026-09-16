@@ -37,6 +37,7 @@
 - `vault/details/*`，仅在已有项目确实需要时创建
 - `skills/`
 - `skills/agent-task/SKILL.md`
+- `docs/engineering/code-comments.md`，仅在 owner 显式选择语言 profile 时生成；它是项目工程文档，不是 Vault 数据
 
 可选修改：
 
@@ -66,7 +67,8 @@ Agent 执行接入前，应只做只读扫描：
 3. 查找既有项目文档：`README.md`、`docs/`、`CONTRIBUTING.md`。
 4. 查找既有记忆或任务目录：`vault/`、`memory/`、`docs/adr/`、`decisions/`。
 5. 识别项目类型和技术栈，但不改依赖或代码。
-6. 检查工作区是否已有未说明的变更。
+6. 如需语言工程规范，明确 profile 与适用根目录；多语言或同语言多根目录使用重复选择，不自动猜测。
+7. 检查工作区是否已有未说明的变更。
 
 扫描后，Agent 应给出接入计划，列出将创建或修改的协作层文件。
 
@@ -154,6 +156,18 @@ Agent 执行接入前，应只做只读扫描：
 
 任何命令可加 `--fetch`：从 GitHub 拉取最新 tag release（缓存于 `~/.cache/trellium/`），以该版本的脚本与模板执行——协议内容更新因此不需要重装 Skill 包；目标版本低于项目已装版本时拒绝执行。`--templates <dir>` 可覆盖模板目录（版本信息仍随运行脚本）。
 
+### Profile 工程规范
+
+`adopt --profile PROFILE[=ROOT]` 可重复使用，例如：
+
+```bash
+python3 trellium.py adopt <target> \
+  --profile go-backend=services/api \
+  --profile python-backend=services/model
+```
+
+工具只把公共核心和所选语言适配合并为一个 `docs/engineering/code-comments.md`，并让 `AGENTS.md` 一跳直达。选择及 root 记录在 `.agent-init.json`，便于确定性升级；人类可读规范仍以项目文档为准。已有规范（包括 `adopt --force`）不静默覆盖，后续上游与本地同时变化时走 proposal。改变既有 profile 集属于显式评审迁移，不由重复 adopt 偷偷改写。
+
 ### 文件两分法
 
 升级器把协作层文件分成两类，写入权限不同：
@@ -161,7 +175,7 @@ Agent 执行接入前，应只做只读扫描：
 | 类 | 文件 | 升级权限 |
 | --- | --- | --- |
 | 项目数据 | `runtime.md`、`handoff.md`、`decisions.md`、`decisions/`、`tasks/*`、`project.md`、`collaboration.md`、`details/*` | 只读。写入范围是硬编码白名单，数据文件不在其中，不依赖 Agent 自觉 |
-| 协议文件 | `governance.md`、`index.md`、`tasks/README.md`、`skills/agent-task/`、`AGENTS.md` | 可写。本地未改的跟进上游；本地改过且上游也改过的出冲突提案 |
+| 协议文件 | `governance.md`、`index.md`、`tasks/README.md`、`skills/agent-task/`、`AGENTS.md`、显式选择后生成的 `docs/engineering/code-comments.md` | 可写。本地未改的跟进上游；本地改过且上游也改过的出冲突提案 |
 
 `vault/.agent-init.json` 是升级器的版本戳：记录每个文件上次安装时的内容 hash，用于区分"项目自己改的"和"上游旧模板"。`AGENTS.md` 有两种形态：从模板整文件创建的按整文件对比；追加到用户已有文件的，只管理 marker 标记区域。
 

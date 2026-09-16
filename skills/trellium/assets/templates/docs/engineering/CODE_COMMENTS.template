@@ -1,0 +1,108 @@
+<!-- trellium-comment-policy:common:start -->
+# Code Comments and API Documentation
+
+The goal is not a higher comment ratio. Comments preserve information that code cannot express clearly and durably by itself.
+
+## Scope
+
+{{PROFILE_SCOPE}}
+
+Match the file path against these roots, then apply the adapter for the file's actual language. When roots overlap, do not apply another language's syntax rules to the current file.
+
+## Common Principles
+
+Code expresses how and what. Comments and API documentation primarily preserve:
+
+- design intent and rationale;
+- caller-visible API contracts;
+- business rules, domain meaning, invariants, and preconditions;
+- boundaries and exceptional cases;
+- security, concurrency, resource ownership, lifecycle, and deployment constraints;
+- reasons for counter-intuitive implementations;
+- reasons for temporary workarounds and their removal conditions.
+
+Do not add comments merely to make code look documented.
+
+### Public API Documentation
+
+Write for the caller: explain what the API does, important parameter and return-value semantics, constraints, special behavior, errors or exceptions, and necessary side effects. Do not explain internal algorithms in public API documentation or mechanically repeat signatures and type information.
+
+Document complex internal functions or types when their responsibility, constraints, or semantics cannot be understood reliably from the code.
+
+### Implementation Comments
+
+Implementation comments should explain why, not translate code. Preserve architectural reasons that cannot be inferred reliably, such as required node colocation, loopback-only binding, labels that must remain, why the newest record is not necessarily effective, why work cannot run concurrently, or why shutdown ordering matters.
+
+Avoid comments such as:
+
+```text
+Set the status.
+Return when an error occurs.
+```
+
+They add no information.
+
+### Comments Do Not Replace Code Quality
+
+When code is hard to understand, improve names, split responsibilities, simplify control flow, and adjust data structures before adding explanatory prose. Do not use long comments to compensate for structure that can be made clear in code.
+
+### TODO / FIXME
+
+A TODO or FIXME must state the concrete problem and the condition for removal. Link the relevant issue when the project uses an issue tracker. Do not write placeholders such as `TODO: optimize`.
+
+### Synchronization and Review
+
+When implementation, design, constraints, or behavior changes, update or remove affected comments. Git preserves history; source comments should not preserve obsolete implementations.
+
+Before writing a comment, ask whether it adds important information that cannot be recovered reliably from the code. During review, ask whether removing it could cause a future maintainer to misunderstand intent, constraints, or behavior.
+
+Change comments in generated files through the generator or source template. Do not translate or reformat tool directives, compiler directives, or other comments with machine semantics as ordinary prose.
+<!-- trellium-comment-policy:common:end -->
+
+<!-- trellium-comment-policy:go-backend:start -->
+## Go
+
+- Every package should have a package comment, and every exported type, function, method, constant, and variable should have a doc comment.
+- A doc comment normally uses complete sentences and starts with the declared name.
+- Function and method documentation explains returned results or side effects. Important errors, panics, blocking, concurrency safety, zero-value behavior, and resource ownership must be visible to callers.
+- Do not use Javadoc-style parameter lists that mechanically repeat a Go signature.
+- Document complex unexported declarations when their responsibility or constraints cannot be understood reliably from the code.
+- Preserve the syntax, placement, and machine semantics of directives such as `//go:`, `//line`, and `//export`.
+
+Preferred:
+
+```go
+// UpdateTerminalPolicy updates the policy for the specified terminal.
+func UpdateTerminalPolicy(...) error {
+    // ...
+}
+```
+
+```go
+// Keep the latest successful task because a failed newer snapshot must not
+// override the terminal's last effective policy.
+task := findLatestEffectiveTask(...)
+```
+<!-- trellium-comment-policy:go-backend:end -->
+
+<!-- trellium-comment-policy:python-backend:start -->
+## Python
+
+- Public modules, classes, functions, and methods should have docstrings. Determine public API from project conventions, `__all__`, leading underscores, and published documentation together.
+- Use triple double quotes. Start with a short behavioral summary; in a multi-line docstring, put a blank line between the summary and details.
+- Document important parameter semantics, return values, exceptions, side effects, calling constraints, and lifecycle without mechanically repeating the signature or type hints.
+- Follow the project's existing Google, NumPy, Sphinx, or other parameter-section format; do not introduce a competing style.
+- Document non-obvious behavior in decorators, context managers, async code, generators, thread safety, and resource ownership.
+- Inline `#` comments follow the common principles and primarily explain rationale, invariants, and exceptional constraints.
+
+Preferred:
+
+```python
+def select_effective_task(tasks: list[Task]) -> Task:
+    """Return the latest successful task eligible to become effective.
+
+    Failed newer snapshots are ignored so they cannot replace the last known
+    effective policy.
+    """
+```
+<!-- trellium-comment-policy:python-backend:end -->

@@ -207,6 +207,16 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 python3 scripts/trellium.py adopt /path/to/project
 ```
 
+项目语言已明确时，用可重复的 `--profile PROFILE[=ROOT]` 显式声明作用域；同语言可有多个 root，多语言共存于一个项目文档：
+
+```bash
+python3 scripts/trellium.py adopt /path/to/project \
+  --profile go-backend=services/api \
+  --profile python-backend=services/model
+```
+
+这会额外生成唯一的 `docs/engineering/code-comments.md`（公共原则 + 所选语言章节），并在 `AGENTS.md` 添加源码任务才触发的一跳路由。未选语言不进入文档，非源码任务不需读取正文。选择记录在 `vault/.agent-init.json` 供升级器重放，但工程规范正文不进入 Vault。已有规范即使使用 `--force` 也不覆盖；上游与本地同时变化时生成 upgrade proposal。
+
 `adopt` 默认只新增缺失的 Agent 协作文件：
 
 - `AGENTS.md`
@@ -237,7 +247,7 @@ python3 scripts/trellium.py upgrade /path/to/project --apply   # 执行安全子
 python3 scripts/trellium.py upgrade /path/to/project --complete  # 提案解决后收尾
 ```
 
-升级把协作层文件分为两类：**项目数据**（runtime、handoff、decisions、tasks、project、collaboration 等）对升级器只读，永不被模板替换；**协议文件**（governance、index、tasks/README、skills/agent-task、AGENTS.md 管理区域）可刷新，但本地修改永不静默丢弃——双方都改过时生成提案到 `vault/.upgrade/<version>/`，由 Agent 合并、用户确认。升级逐文件可选（`--only` / `--skip`），产出独立提交可随时 `git revert`。
+升级把协作层文件分为两类：**项目数据**（runtime、handoff、decisions、tasks、project、collaboration 等）对升级器只读，永不被模板替换；**协议文件**（governance、index、tasks/README、skills/agent-task、AGENTS.md 管理区域，以及显式选择后生成的工程规范）可刷新，但本地修改永不静默丢弃——双方都改过时生成提案到 `vault/.upgrade/<version>/`，由 Agent 合并、用户确认。升级逐文件可选（`--only` / `--skip`），产出独立提交可随时 `git revert`。
 
 `adopt` 会在 `vault/.agent-init.json` 记录版本戳（各文件安装时的内容 hash）。版本戳出现之前的存量项目先运行 `baseline <target>` 补记。数据文件的格式迁移由 `init/MIGRATIONS.md` 迁移手册逐条定义：只做内容搬运，不丢事实。
 

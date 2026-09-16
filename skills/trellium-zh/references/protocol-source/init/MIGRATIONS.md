@@ -7,6 +7,14 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.7 — Profile-aware 代码注释规范与一跳路由
+
+- Added: `adopt --profile PROFILE[=ROOT]` 可重复选择 `go-backend` / `python-backend` 及一个或多个项目相对根目录。选择后只生成一个项目工程文档 `docs/engineering/code-comments.md`，内容为语言无关公共原则加所选语言适配；未选语言不进入文档。`AGENTS.md` 新增源码、公共 API、注释、TODO/FIXME 任务的一跳条件路由，非源码任务无需加载正文，工程规范不写入 Vault。
+- Added: `vault/.agent-init.json` schema 2 的 `profiles` 元数据记录 profile id、roots、source hash 和人类可读项目文档路径；旧 schema/stamp 继续按无 profile 读取。升级器把生成的工程规范作为可合并协议载体：本地 pristine 时可刷新，项目定制与上游同时变化时只生成 proposal。
+- Breaking: 无。未传 `--profile` 的 adopt 输出集合不新增工程文档；不自动检测语言，不修改业务源码、依赖、lint 或注释率 Gate。已有 `docs/engineering/code-comments.md` 即使 `adopt --force` 也不覆盖；已记录的 profile 集不能通过重复 adopt 静默改写。
+- Agent migration: 既有项目只有在 owner 明确选择 profile 与 roots 后才生成规范。可用示例：`trellium.py adopt <target> --profile go-backend=. --profile python-backend=services/model`。若项目已有同名规范，保留本地文件并通过后续 diff/proposal 语义合并，不把正文复制到 Vault。
+- Auto: `AGENTS.md` 管理区域与未定制协议文件按既有升级规则刷新；纯旧 stamp 在无文件变化的升级中自动写为 schema 2、`profiles: []`。项目数据文件零替换。
+
 ## 2026.09.6 — status unresolved/投影增量形状；控制包模板源更名
 
 - Added: `status` 的 `unresolved` 数组新增两类条目形态。①malformed 短行（少于四列）仅在消息文本中暴露其 task id、不产出 task-scoped finding 时，该 id 以实际 finding 码 `TASK_RUNTIME_INVALID` 物化进 `unresolved`——与 README"无法解析的任务显式列入 unresolved"承诺对齐，`check` 输出零变化；②`vault/` 或 `vault/tasks` 枚举被拒（`SYMLINK_INPUT`）时，输出显式 vault-scope 联合记录 `{"scope": "vault", "path": ..., "reason": "SYMLINK_INPUT"}`（无 `task_id`，不伪造任务 id，不携带 lifecycle/authority），`summary.unresolved` 计数与数组严格一致，消除"从未读取内容却报告 unresolved: 0"的 fail-open 表述。

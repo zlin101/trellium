@@ -48,6 +48,7 @@
 - Agentic 执行模式；
 - 可演化协作画像；
 - 仅在所选 profile 需要时创建项目源码、测试和依赖文件；
+- 仅在显式选择 profile 时生成一个项目工程规范 `docs/engineering/code-comments.md`，由 Agent 入口按任务条件一跳直达；
 - `README.md`；
 - 记录最终初始化状态的 `vault/runtime.md`。
 

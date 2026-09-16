@@ -25,6 +25,8 @@ When resuming interrupted work, also read:
 
 For tracked or governed tasks, read the active task file under `vault/tasks/`.
 
+When modifying, generating, or reviewing source code, public APIs, comments, or TODO/FIXME items, read `docs/engineering/code-comments.md` directly when it exists and apply only the language sections whose paths match the work.
+
 ## Working Principles
 
 - Think before coding. If requirements are ambiguous, state the ambiguity and choose the safest path or ask.

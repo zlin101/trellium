@@ -151,6 +151,156 @@ class AgentInitTest(TargetTestCase):
         self.assertEqual(self.snapshot(target), first_snapshot)
         self.assertIn("changed: 0", out)
 
+    def test_adopt_with_go_profile_writes_one_scoped_comment_policy(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+
+        self.assertEqual(code, 0, err)
+        policy_path = target / "docs/engineering/code-comments.md"
+        self.assertTrue(policy_path.is_file())
+        policy = policy_path.read_text(encoding="utf-8")
+        self.assertIn("## 通用原则", policy)
+        self.assertIn("## Go", policy)
+        self.assertNotIn("## Python", policy)
+        self.assertIn("`go-backend`: `.`", policy)
+        agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("docs/engineering/code-comments.md", agents)
+
+        stamp = self.read_stamp(target)
+        self.assertEqual(stamp["schema_version"], 2)
+        self.assertEqual(
+            stamp["profiles"],
+            [
+                {
+                    "id": "go-backend",
+                    "project_rules": "docs/engineering/code-comments.md",
+                    "roots": ["."],
+                    "source_hash": stamp["profiles"][0]["source_hash"],
+                }
+            ],
+        )
+        self.assertRegex(stamp["profiles"][0]["source_hash"], r"^[0-9a-f]{64}$")
+        self.assertEqual(stamp["files"]["docs/engineering/code-comments.md"]["role"], "merge")
+
+    def test_adopt_combines_multiple_profiles_and_roots_into_one_file(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+
+        code, _, err = self.adopt(
+            target,
+            "--profile",
+            "go-backend=services/api",
+            "--profile",
+            "go-backend=cmd/operator",
+            "--profile",
+            "python-backend=services/model",
+        )
+
+        self.assertEqual(code, 0, err)
+        policies = list(target.rglob("code-comments.md"))
+        self.assertEqual(policies, [target / "docs/engineering/code-comments.md"])
+        policy = policies[0].read_text(encoding="utf-8")
+        self.assertEqual(policy.count("## Go"), 1)
+        self.assertEqual(policy.count("## Python"), 1)
+        for root in ("services/api", "cmd/operator", "services/model"):
+            self.assertIn(f"`{root}`", policy)
+        stamp = self.read_stamp(target)
+        self.assertEqual([item["id"] for item in stamp["profiles"]], ["go-backend", "python-backend"])
+        self.assertEqual(stamp["profiles"][0]["roots"], ["cmd/operator", "services/api"])
+        self.assertEqual(stamp["profiles"][1]["roots"], ["services/model"])
+
+    def test_adopt_rejects_invalid_or_duplicate_profile_selection_before_writes(self) -> None:
+        invalid = (
+            "unknown=.",
+            "go-backend=/absolute",
+            "go-backend=../escape",
+            "go-backend=",
+            "go-backend=services/`injected`",
+            "go-backend=services/api\n## injected",
+        )
+        for index, value in enumerate(invalid):
+            with self.subTest(value=value):
+                target = self.root / f"invalid-{index}"
+                target.mkdir()
+                code, _, err = self.adopt(target, "--profile", value)
+                self.assertEqual(code, 1)
+                self.assertIn("profile", err.lower())
+                self.assertEqual(self.snapshot(target), {})
+
+        target = self.root / "duplicate"
+        target.mkdir()
+        code, _, err = self.adopt(
+            target,
+            "--profile",
+            "go-backend=services/api",
+            "--profile",
+            "go-backend=services/api",
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("duplicate", err.lower())
+        self.assertEqual(self.snapshot(target), {})
+
+    def test_adopt_preserves_existing_comment_policy(self) -> None:
+        target = self.root / "project"
+        policy = target / "docs/engineering/code-comments.md"
+        policy.parent.mkdir(parents=True)
+        policy.write_text("project-owned policy\n", encoding="utf-8")
+
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(policy.read_text(encoding="utf-8"), "project-owned policy\n")
+        stamp = self.read_stamp(target)
+        entry = stamp["files"]["docs/engineering/code-comments.md"]
+        self.assertTrue(entry["observed"])
+        self.assertEqual(entry["baseline"], agent_init.sha256_hex(b"project-owned policy\n"))
+
+    def test_adopt_force_still_preserves_existing_comment_policy(self) -> None:
+        target = self.root / "project"
+        policy = target / agent_init.PROFILE_RULES_RELATIVE
+        policy.parent.mkdir(parents=True)
+        policy.write_text("project-owned policy\n", encoding="utf-8")
+
+        code, _, err = self.adopt(
+            target,
+            "--force",
+            "--profile",
+            "go-backend=.",
+        )
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(policy.read_text(encoding="utf-8"), "project-owned policy\n")
+        self.assertTrue(self.read_stamp(target)["files"][agent_init.PROFILE_RULES_RELATIVE]["observed"])
+
+    def test_repeated_adopt_without_profile_keeps_recorded_profiles(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=services/api")
+        self.assertEqual(code, 0, err)
+        before = self.snapshot(target)
+
+        code, out, err = self.adopt(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.snapshot(target), before)
+        self.assertIn("changed: 0", out)
+        self.assertEqual(self.read_stamp(target)["profiles"][0]["roots"], ["services/api"])
+
+    def test_repeated_adopt_rejects_profile_reconfiguration_before_writes(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=services/api")
+        self.assertEqual(code, 0, err)
+        before = self.snapshot(target)
+
+        code, _, err = self.adopt(target, "--profile", "python-backend=services/model")
+
+        self.assertEqual(code, 1)
+        self.assertIn("profile selections differ", err)
+        self.assertEqual(self.snapshot(target), before)
+
     def test_dry_run_with_create_does_not_write_anything(self) -> None:
         target = self.root / "new-project"
 
@@ -412,7 +562,8 @@ class UpgradeMechanismTest(TargetTestCase):
 
         self.assertEqual(stamp["protocol_version"], agent_init.read_protocol_version())
         self.assertEqual(stamp["trust"], "versioned")
-        self.assertEqual(stamp["schema_version"], 1)
+        self.assertEqual(stamp["schema_version"], 2)
+        self.assertEqual(stamp["profiles"], [])
         self.assertEqual(set(stamp["files"]), set(agent_init.FILE_ROLES))
         for relative, entry in stamp["files"].items():
             expected_role = "merge" if relative == "AGENTS.md" else agent_init.FILE_ROLES[relative]
@@ -429,6 +580,49 @@ class UpgradeMechanismTest(TargetTestCase):
         self.assertEqual(code, 0, err)
         self.assertIn("in_sync", out)
         self.assertIn("protected", out)
+
+    def test_diff_reads_legacy_v1_stamp_without_profiles(self) -> None:
+        target = self.make_adopted_target()
+        stamp_path = target / agent_init.STAMP_RELATIVE
+        stamp = self.read_stamp(target)
+        stamp["schema_version"] = 1
+        stamp.pop("profiles")
+        stamp_path.write_text(json.dumps(stamp), encoding="utf-8")
+
+        code, out, err = self.run_agent_init("diff", str(target))
+
+        self.assertEqual(code, 0, err)
+        self.assertIn("in_sync", out)
+
+    def test_diff_rejects_inconsistent_profile_stamp_without_removing_policy(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        stamp_path = target / agent_init.STAMP_RELATIVE
+        stamp = self.read_stamp(target)
+        stamp["profiles"] = []
+        stamp_path.write_text(json.dumps(stamp), encoding="utf-8")
+        policy = (target / agent_init.PROFILE_RULES_RELATIVE).read_bytes()
+
+        code, out, err = self.run_agent_init("diff", str(target))
+
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("without profile metadata", err)
+        self.assertEqual((target / agent_init.PROFILE_RULES_RELATIVE).read_bytes(), policy)
+
+    def test_diff_rejects_malformed_profile_metadata(self) -> None:
+        target = self.make_adopted_target()
+        stamp_path = target / agent_init.STAMP_RELATIVE
+        stamp = self.read_stamp(target)
+        stamp["profiles"] = {"id": "go-backend", "roots": ["."]}
+        stamp_path.write_text(json.dumps(stamp), encoding="utf-8")
+
+        code, _, err = self.run_agent_init("diff", str(target))
+
+        self.assertEqual(code, 1)
+        self.assertIn("profiles must be a list", err)
 
     def test_upgrade_preserves_local_edits_and_data_files(self) -> None:
         target = self.make_adopted_target()
@@ -465,6 +659,69 @@ class UpgradeMechanismTest(TargetTestCase):
             agent_init.sha256_hex(b"new index template\n"),
         )
         self.assertTrue(stamp["files"]["vault/governance.md"]["pending"])
+
+    def test_upgrade_refreshes_pristine_profile_policy(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        policy_path = target / agent_init.PROFILE_RULES_RELATIVE
+        before = policy_path.read_text(encoding="utf-8")
+
+        with self.patched_templates() as templates:
+            template = templates / agent_init.PROFILE_RULES_TEMPLATE
+            template.write_text(
+                template.read_text(encoding="utf-8").replace(
+                    "禁止为了“看起来有注释”而注释。",
+                    "禁止为了“看起来有注释”而注释。\n\n升级测试规则。",
+                ),
+                encoding="utf-8",
+            )
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertNotEqual(policy_path.read_text(encoding="utf-8"), before)
+        self.assertIn("升级测试规则。", policy_path.read_text(encoding="utf-8"))
+        stamp = self.read_stamp(target)
+        self.assertEqual(
+            stamp["files"][agent_init.PROFILE_RULES_RELATIVE]["baseline"],
+            agent_init.sha256_hex(policy_path.read_bytes()),
+        )
+
+    def test_upgrade_proposes_profile_policy_when_local_and_upstream_changed(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        policy_path = target / agent_init.PROFILE_RULES_RELATIVE
+        policy_path.write_text(
+            policy_path.read_text(encoding="utf-8") + "\n## Project Rule\n\nKeep this.\n",
+            encoding="utf-8",
+        )
+
+        with self.patched_templates() as templates:
+            template = templates / agent_init.PROFILE_RULES_TEMPLATE
+            template.write_text(
+                template.read_text(encoding="utf-8").replace(
+                    "禁止为了“看起来有注释”而注释。",
+                    "禁止为了“看起来有注释”而注释。\n\n上游新增规则。",
+                ),
+                encoding="utf-8",
+            )
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertIn("Keep this.", policy_path.read_text(encoding="utf-8"))
+        proposal = (
+            target
+            / agent_init.PROPOSAL_DIRECTORY
+            / agent_init.read_protocol_version()
+            / "docs__engineering__code-comments.md.proposal.md"
+        )
+        self.assertTrue(proposal.is_file())
+        text = proposal.read_text(encoding="utf-8")
+        self.assertIn("上游新增规则。", text)
+        self.assertIn("Keep this.", text)
 
     def test_upgrade_complete_marks_merged_files_observed(self) -> None:
         target = self.make_adopted_target()
@@ -875,6 +1132,8 @@ class FetchTest(TargetTestCase):
         self.assertIn("recorded protocol version", out)
         updated = self.read_stamp(target)
         self.assertEqual(updated["protocol_version"], agent_init.read_protocol_version())
+        self.assertEqual(updated["schema_version"], 2)
+        self.assertEqual(updated["profiles"], [])
 
     def test_fetch_refuses_downgrade(self) -> None:
         target = self.root / "project"
@@ -2356,6 +2615,29 @@ class TemplatePackagingTest(TargetTestCase):
         rendered = target / "skills" / "agent-task" / "SKILL.md"
         self.assertTrue(rendered.is_file(), "adopt must still render skills/agent-task/SKILL.md")
         self.assertIn("name: agent-task", rendered.read_text(encoding="utf-8"))
+
+    def test_localized_profile_templates_have_matching_sections_and_routes(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        for package, common_heading in (
+            ("trellium", "## Common Principles"),
+            ("trellium-zh", "## 通用原则"),
+        ):
+            templates = repo / "skills" / package / "assets" / "templates"
+            policy = (templates / agent_init.PROFILE_RULES_TEMPLATE).read_text(encoding="utf-8")
+            agents = (templates / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn(common_heading, policy)
+            self.assertEqual(policy.count(agent_init.PROFILE_SCOPE_PLACEHOLDER), 1)
+            for section in ("common", *agent_init.PROFILE_IDS):
+                self.assertEqual(
+                    policy.count(f"<!-- {agent_init.PROFILE_MARKER_PREFIX}:{section}:start -->"),
+                    1,
+                )
+                self.assertEqual(
+                    policy.count(f"<!-- {agent_init.PROFILE_MARKER_PREFIX}:{section}:end -->"),
+                    1,
+                )
+            self.assertIn(agent_init.PROFILE_RULES_RELATIVE, agents)
+            self.assertNotIn("vault/index.md ->", agents)
 
 
 if __name__ == "__main__":
