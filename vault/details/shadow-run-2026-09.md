@@ -138,3 +138,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-12 | TASK-0009 M5 终验（vault 同步提交前） | 0 | 0 / 0 | check 0/0、双 snapshot in sync、`git diff --check` OK；五个冻结 commit 在场；M1（`4773950`）后 protected 路径（scripts/init/skills/README/VERSION/MIGRATIONS/AGENTS）零改动；独立 review Round 2 APPROVE |
 | 2026-09-13 | TASK-0009 验收 + 方案 B 执行前终验 | 0 | 0 / 0 | check 0/0、双 snapshot in sync、范围级 whitespace CLEAN；独立 review Round 4 APPROVE；owner 验收 accepted（结论锁定，D-0008）；原始 bundle + SHA-256 归档已在仓库外就位；历史重写按 owner 批准顺序执行 |
 | 2026-09-16 | TASK-0012 M5 终验（实现提交 `bbae794` 后、Vault 收尾前） | 0 | 0 / 0 | 136/136 tests、status 0 unresolved、双 snapshot in sync、`git diff --check` clean；structured review 初轮 2×P1 已 fail-closed 修复，复审无 open P0/P1/P2 |
+| 2026-09-16 | TASK-0012 accepted push / 2026.09.7 发布门禁 | 0 | 0 / 0 | develop `cf7e06a` 对应 GitHub Actions run 35076645891 success；tag 与 Release 已发布；Release 非 draft/非 prerelease、正文为空，latest 解析 2026.09.7 |

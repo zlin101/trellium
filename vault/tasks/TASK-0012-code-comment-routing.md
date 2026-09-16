@@ -272,6 +272,12 @@ Final state:
 
 - `ready_for_review → accepted`；本任务不代做 tag/Release，也不关闭 TASK-0011。
 
+### 2026-09-16 - Agent: Codex — Post-accept release attempt
+
+- Pushed `develop` through `cf7e06a`; GitHub Actions run `35076645891` completed success for that exact SHA.
+- Created and pushed lightweight tag `2026.09.7` at `cf7e06a`; public GitHub ref lookup returned HTTP 200.
+- Owner created the Release in GitHub UI. Public API verification returned HTTP 200: tag `2026.09.7`, title `Trellium 2026.09.7`, empty body, `draft=false`, `prerelease=false`; `releases/latest` resolves to `2026.09.7`.
+
 ## Memory Updates
 
 - `vault/runtime.md`

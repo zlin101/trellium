@@ -26,7 +26,7 @@ table holds pointers only.
 | TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | accepted | Closed 2026-09-13: owner accepted with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired). D-0008. |
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | accepted | Closed 2026-09-15: three status-layer fixes (check byte-identical), 3 red-first tests (121 total), independent review APPROVE, CI green (34927880245). MIGRATIONS Unreleased section post-09.5-tag. |
 | TASK-0011 | Test whether a thin project-scoped `trellium-work` adds value beyond `AGENTS.md + vault`; only an ablation Go authorizes replacing `agent-task` with a project-scoped skill. | ready_for_review | M1 verdict No-Go (both arms zero omissions/violations; A1 costs more; Codex project-discovery unverified); No-Go stop-condition leak fix landed. Independent review APPROVE; CI green. Awaiting owner acceptance. |
-| TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | accepted | Closed 2026-09-16 by owner-directed self-acceptance: R1 direct routing, 2026.09.7 profile-aware policy, 136 tests, local gates green, structured review APPROVE. tag/Release remain separate. |
+| TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | accepted | Closed 2026-09-16; develop/tag pushed, CI run 35076645891 green, Release 2026.09.7 live with empty body, and releases/latest resolves to it. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -36,7 +36,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0012: accepted 2026-09-16 — owner confirmed the implementation was pushed and directed Codex to self-accept. R1 direct routing, explicit multi-profile/root selection, one project-owned policy, schema-2 upgrade metadata and zero-silent-overwrite proposals shipped in the 2026.09.7 development line; 136 tests and local gates passed, structured review closed 2 P1 fail-closed issues. tag/Release remain separate.
+- TASK-0012: accepted and released 2026-09-16 — develop and lightweight tag `2026.09.7` are pushed at `cf7e06a`; CI run 35076645891 success. Release is non-draft/non-prerelease, titled `Trellium 2026.09.7` with an empty body; `releases/latest` resolves to it.
 - TASK-0011: ready_for_review 2026-09-16 — M1 verdict **No-Go** (both arms zero key omissions/violations across three scenarios; A1 costs more; Codex project-discovery unverified). No-Go stop-condition leak fix landed (packages sanitized, adopt/upgrade unchanged); privacy history rewrite executed per owner authorization. Independent review APPROVE. Awaiting owner acceptance.
 - TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
@@ -57,6 +57,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- Released `2026.09.7`: exact-SHA CI run 35076645891 succeeded; tag and Release are public, title-only with empty body, and `releases/latest` resolves to 2026.09.7.
 - Owner accepted TASK-0012 by explicit self-acceptance instruction (2026-09-16); Focus returned to TASK-0001. Remote ref lookup was unavailable due execution-platform capacity, so the record relies on owner push confirmation plus local post-commit gates and does not invent remote CI evidence.
 - TASK-0012 implemented and ready_for_review: direct AGENTS route + one profile-aware project engineering document; no Vault policy growth or language auto-detection. Review closed root-injection and malformed-stamp fail-open risks; version 2026.09.7, 136 tests, check 0/0, snapshots in sync.
 - Opened TASK-0012: convert the owner-observed comment-knowledge loss into a routed, cross-language engineering standard; implementation is gated by a frozen carrier ablation and must not add engineering-policy files to Vault.
@@ -123,7 +124,6 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
-- TASK-0012: implement M2 from the frozen R1 decision, then add explicit multi-profile metadata and safe adopt/upgrade coverage in M3.
 - Owner runs the incremental re-review of TASK-0011's record closure (M0/M1 done, No-Go verdict + leak fix landed, privacy rewrite executed and CI green); then owner acceptance.
 - Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
