@@ -226,16 +226,16 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] 预注册提交在实现提交之前，Git DAG 可证；原始 prompt/材料/首答先于评分冻结。
-- [ ] A0/A1 裁决严格符合 Decision Gate；No-Go/Inconclusive 时没有越权实现项目 Skill。
+- [x] 预注册提交在实现提交之前，Git DAG 可证；原始 prompt/材料/首答先于评分冻结。（M0 预注册提交先于全部实现与会话存档；独立复审核实冻结提交先于评分提交）
+- [x] A0/A1 裁决严格符合 Decision Gate；No-Go/Inconclusive 时没有越权实现项目 Skill。（判定 No-Go：两臂零遗漏/零违规、A1 成本更高；M2/M3 已取消，无任何项目 Skill 实现）
 - [x] 全局模板泄漏有实施前复现和修复后反证；用户级包不再暴露嵌套项目工作 Skill。（Codex 项目外亦报告 agent-task 可用 = 复现；两包模板更名 AGENT_TASK_SKILL.template + TemplatePackagingTest 运行时断言 = 反证；Claude Code 侧嵌套模板本就不发现，实证 43 项全列表）
-- [ ] 若 Go，新项目只发现 `trellium-work`，离开项目不可发现；中英文 `name` 一致。
-- [ ] 若 Go，旧项目四类迁移 fixture 零静默覆盖、零双 Skill 残留、重复升级幂等。
-- [ ] `trellium-work` 为薄路由层；没有复制当前预算、storage 值或完整 governance。
-- [ ] `check`/`status` 既有输出与退出码无非预期变化。
-- [ ] 版本、MIGRATIONS、双语 README、协议源、嵌入脚本和两套 snapshot 一致。
-- [ ] 全量测试通过，`check` 0 error / 0 warning，`sync-skills.py --check` 通过，范围级 whitespace 检查通过。
-- [ ] 独立 review 无 open P0/P1/P2；owner 决定 accepted 与后续发布。
+- [x] 若 Go，新项目只发现 `trellium-work`，离开项目不可发现；中英文 `name` 一致。 — **N/A — No-Go**：项目 Skill 不实现。结构事实如实记录：Claude Code 项目内✓/项目外✗（实验草案实测）；Codex 经 `.claude/skills` 未发现，其项目级发现位置 unverified
+- [x] 若 Go，旧项目四类迁移 fixture 零静默覆盖、零双 Skill 残留、重复升级幂等。 — **N/A — No-Go**：`agent-task` → `trellium-work` 迁移取消，无迁移发生
+- [x] `trellium-work` 为薄路由层；没有复制当前预算、storage 值或完整 governance。 — **N/A — No-Go**：薄路由仅存在于实验材料（eval materials），未实现为产品 Skill
+- [x] `check`/`status` 既有输出与退出码无非预期变化。（check text/JSON 对修复前逐字节一致；status 真仓库 exit 0、focus resolved、0 unresolved；独立复审双态验证）
+- [x] 版本、MIGRATIONS、双语 README、协议源、嵌入脚本和两套 snapshot 一致。（VERSION 2026.09.5 不变——No-Go 不升版；MIGRATIONS Unreleased 节含 TASK-0010 增量与 TASK-0011 泄漏修复条目；regen 后 `sync --check` exit 0）
+- [x] 全量测试通过，`check` 0 error / 0 warning，`sync-skills.py --check` 通过，范围级 whitespace 检查通过。（123 tests OK；多轮验证 + 远端 CI success）
+- [x] 独立 review 无 open P0/P1/P2；owner 决定 accepted 与后续发布。（专项复审 APPROVE：消融完整性、判定忠实、泄漏修复、范围全部 PASS；owner 复核发现的 4 项记录问题——含隐私历史重写授权执行——本轮已全部闭合，待 owner 最终确认）
 
 ## Verification
 
@@ -251,7 +251,10 @@ Required:
 
 Completed:
 
-- 待 Claude 实施。
+- 2026-09-15 M0+M1（`e2fe146` 冻结后）：结构发现测试（Claude Code 三态 + Codex 真实 headless 探测）+ 6 个 A0/A1 会话；判定 **No-Go**（两臂全场景 0 关键遗漏/0 需要纠正/0 硬指标违规；A1 成本更高；Codex 全局泄漏复现、其项目级发现位置 unverified）。详见 `docs/evals/project-work-skill-2026-09/results.md`。
+- 2026-09-15 泄漏最小修复（No-Go 停止条件授权）：两控制包模板源更名 `AGENT_TASK_SKILL.template` + `TEMPLATE_SOURCE_OVERRIDE`/`template_source()`；adopt/upgrade 对目标项目渲染不变。
+- 2026-09-16 owner review REQUEST_CHANGES（4 阻断）修正：隐私历史重写经 owner 批准执行（8 提交收敛为 1、12 份敏感文件移出历史、全历史扫描 0 命中、force-with-lease push、远端 CI success）；提前登记的转换撤销；Codex 结论收回为 unverified；成本/措辞修正；验收清单本节闭合。
+- 验证结果：123 tests OK；check 0 error / 0 warning；snapshot in sync（`sync --check` exit 0）；范围级 whitespace CLEAN；远端 CI gate success。
 
 ## Execution Record
 
@@ -317,4 +320,4 @@ Next action:
 - 独立复审 **APPROVE**：消融完整性（冻结提交 e2fe146 先于 934e892 评分提交、单变量纪律、计量逐位重算）、判定忠实（No-Go 无越级表述）、修复正确性、范围干净全部 PASS。
 - P2 勘误：results.md 成本表 material_bytes 行初版误记 1,966/2,109（不可重算）→ 以 run.json 原值更正为 786/932（+18.6%）。
 - owner review REQUEST_CHANGES（2026-09-16，4 阻断）：P1-1 实验记录隐私违规 → 历史重写已获 owner 批准并执行（8 提交收敛为单提交、12 份敏感文件从历史移除、原始证据仓库外归档+清单、全历史扫描 0 命中、force-with-lease push、远端 CI 全绿）；P1-2 提前登记的转换已撤销，修复完成后按正确顺序重新转换（本条目即）；P1-3 验收清单/Verification 已闭合；P1-4 Codex 结论越权已收回（unverified）；P2 已改。
-- owner 复核通过（同日）→ 任务转 `ready_for_review` 等 owner 验收。R2/项目 Skill 实现按 No-Go 不做。
+- owner review REQUEST_CHANGES（记录闭合项）：验收清单与 Verification 此前未闭合、投影与 ledger 曾误提前登记 rfr——本轮全部修正（见上与 handoff）；记录修正后任务保持 ready_for_review，等 owner 复核与验收。R2/项目 Skill 实现按 No-Go 不做。

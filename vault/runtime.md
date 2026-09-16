@@ -118,7 +118,7 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
-- Claude executes TASK-0011 M0/M1 first; do not edit product/template files until the preregistered A0/A1 and project-scope discovery Gate returns Go.
+- Owner runs the incremental re-review of TASK-0011's record closure (M0/M1 done, No-Go verdict + leak fix landed, privacy rewrite executed and CI green); then owner acceptance.
 - Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.

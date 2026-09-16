@@ -73,6 +73,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-13 | draft → active（方案 B 完成、push 成功、远端 CI 全绿，owner 排期生效） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 范围严格限三个已裁定 status 缺陷（P1/P1/P2）；不夹带 Review Pack/Context |
 | 2026-09-14 | active → ready_for_review（三缺陷修复 + red-first 测试 + 独立复审 APPROVE + 远端 CI 全绿） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 中途 71c64b3 被远端 gate 以 snapshot 漂移拦截（本地管道遮蔽退出码），regen 后修复 |
 | 2026-09-15 | ready_for_review → accepted（owner 验收：Focus/记录一致性修正闭合，远端 gate run 34927880245 success） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 落实 D-0007 既有 status 契约，不新增决策；MIGRATIONS Unreleased 节位于 09.5 tag 之后，不改动既有 tag |
+| 2026-09-16 | active → ready_for_review（三缺陷修复 + No-Go 消融 + 泄漏修复；**owner 复核发现遗漏后补记**——转换实际发生于远端 CI run success 后，投影文字曾过早声称） | TASK-0011 | 2（状态块 + runtime 行） | 1 | 状态块/runtime 本为 active 一致，仅 execution record、handoff 与本表曾过早记 rfr——已按 owner 指示撤销并待本轮闭合后补记本行 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
