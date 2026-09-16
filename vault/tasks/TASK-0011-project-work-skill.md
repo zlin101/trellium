@@ -235,7 +235,8 @@ Forbidden:
 - [x] `check`/`status` 既有输出与退出码无非预期变化。（check text/JSON 对修复前逐字节一致；status 真仓库 exit 0、focus resolved、0 unresolved；独立复审双态验证）
 - [x] 版本、MIGRATIONS、双语 README、协议源、嵌入脚本和两套 snapshot 一致。（VERSION 2026.09.5 不变——No-Go 不升版；MIGRATIONS Unreleased 节含 TASK-0010 增量与 TASK-0011 泄漏修复条目；regen 后 `sync --check` exit 0）
 - [x] 全量测试通过，`check` 0 error / 0 warning，`sync-skills.py --check` 通过，范围级 whitespace 检查通过。（123 tests OK；多轮验证 + 远端 CI success）
-- [x] 独立 review 无 open P0/P1/P2；owner 决定 accepted 与后续发布。（专项复审 APPROVE：消融完整性、判定忠实、泄漏修复、范围全部 PASS；owner 复核发现的 4 项记录问题——含隐私历史重写授权执行——本轮已全部闭合，待 owner 最终确认）
+- [x] 独立 review 无 open P0/P1/P2。（专项复审 APPROVE：消融完整性、判定忠实、泄漏修复、范围全部 PASS；owner 复核发现的 4 项记录问题本轮已闭合，其中隐私历史重写经 owner 批准执行并 CI 绿——待 owner 复核确认本轮记录闭合）
+- [ ] owner 决定 accepted 与后续发布。（lifecycle Gate，不提前勾选）
 
 ## Verification
 
@@ -319,5 +320,5 @@ Next action:
 - 泄漏修复（No-Go 停止条件授权的唯一实现）：两控制包模板源更名 `AGENT_TASK_SKILL.template`；`trellium.py` 增加 `TEMPLATE_SOURCE_OVERRIDE`/`template_source()`，adopt/upgrade 对目标项目仍渲染/刷新 `skills/agent-task/SKILL.md`（独立 reviewer 实测 adopt 渲染与两包模板及 canonical 逐字节一致；diff/upgrade/--apply exit 0）。`TemplatePackagingTest` 运行时断言包内无可发现 SKILL.md。
 - 独立复审 **APPROVE**：消融完整性（冻结提交 e2fe146 先于 934e892 评分提交、单变量纪律、计量逐位重算）、判定忠实（No-Go 无越级表述）、修复正确性、范围干净全部 PASS。
 - P2 勘误：results.md 成本表 material_bytes 行初版误记 1,966/2,109（不可重算）→ 以 run.json 原值更正为 786/932（+18.6%）。
-- owner review REQUEST_CHANGES（2026-09-16，4 阻断）：P1-1 实验记录隐私违规 → 历史重写已获 owner 批准并执行（8 提交收敛为单提交、12 份敏感文件从历史移除、原始证据仓库外归档+清单、全历史扫描 0 命中、force-with-lease push、远端 CI 全绿）；P1-2 提前登记的转换已撤销，修复完成后按正确顺序重新转换（本条目即）；P1-3 验收清单/Verification 已闭合；P1-4 Codex 结论越权已收回（unverified）；P2 已改。
+- owner review REQUEST_CHANGES（2026-09-16，4 阻断）：P1-1 实验记录隐私违规 → 历史重写已获 owner 批准并执行（8 提交收敛为单提交、12 份敏感文件从历史移除、原始证据仓库外归档+清单、全历史扫描 0 命中、force-with-lease push、远端 CI 全绿）；P1-2 提前登记的转换已撤销，修复完成后按正确顺序重新转换（本条目即）；P1-3 验收清单/Verification 的闭合实际发生于后续的记录修正提交（本行书写时点尚未来得及闭合——时序如实更正）；P1-4 Codex 结论越权已收回（unverified）；P2 已改。
 - owner review REQUEST_CHANGES（记录闭合项）：验收清单与 Verification 此前未闭合、投影与 ledger 曾误提前登记 rfr——本轮全部修正（见上与 handoff）；记录修正后任务保持 ready_for_review，等 owner 复核与验收。R2/项目 Skill 实现按 No-Go 不做。
