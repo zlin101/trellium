@@ -26,7 +26,7 @@ table holds pointers only.
 | TASK-0009 | Evaluate whether a minimal Review Pack improves review quality/cost before any CLI implementation. | accepted | Closed 2026-09-13: owner accepted with locked conclusions (R1 Inconclusive; R2 not implemented/proposed this cycle; 12 clean / 7 contaminated; No-Go and over-determined phrasing retired). D-0008. |
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | accepted | Closed 2026-09-15: three status-layer fixes (check byte-identical), 3 red-first tests (121 total), independent review APPROVE, CI green (34927880245). MIGRATIONS Unreleased section post-09.5-tag. |
 | TASK-0011 | Test whether a thin project-scoped `trellium-work` adds value beyond `AGENTS.md + vault`; only an ablation Go authorizes replacing `agent-task` with a project-scoped skill. | ready_for_review | M1 verdict No-Go (both arms zero omissions/violations; A1 costs more; Codex project-discovery unverified); No-Go stop-condition leak fix landed. Independent review APPROVE; CI green. Awaiting owner acceptance. |
-| TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | active | M0 preregistration frozen; run the carrier ablation before changing protocol, templates, CLI, or stamp schema. |
+| TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | active | M1 selected R1 direct routing; implement the common + Go/Python policy and one project-owned document without Vault policy files. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -36,7 +36,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0012: active 2026-09-16 — owner mandated the comment standard and approved implementation; M0 freezes carrier-only ablation (inline vs direct route vs Vault two-hop), common/Go/Python split, explicit multi-profile selection, one project document, and zero Vault policy files.
+- TASK-0012: active 2026-09-16 — M1 structural ablation selected R1 direct routing: 254 unconditional bytes vs R0 4,562 (−94.4%); R2 was dominated by an extra hop and route owner. M2 may now implement the common + Go/Python policy and single project document.
 - TASK-0011: ready_for_review 2026-09-16 — M1 verdict **No-Go** (both arms zero key omissions/violations across three scenarios; A1 costs more; Codex project-discovery unverified). No-Go stop-condition leak fix landed (packages sanitized, adopt/upgrade unchanged); privacy history rewrite executed per owner authorization. Independent review APPROVE. Awaiting owner acceptance.
 - TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
 - TASK-0008: accepted 2026-09-09 — read-only deterministic `trellium.py status` (text/JSON v1, fail-closed unresolved boundaries, closed count-only) shipped as 2026.09.5; three review rounds (independent ×2 + owner ×2 rounds) closed with the reason-code fix and verbatim ablation archive (`vault/details/status-blind-test-2026-09/`); durable decision D-0007.
@@ -121,7 +121,7 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
-- TASK-0012: commit M0 preregistration separately, then measure R0/R1/R2 and classify the owner policy into common/Go/Python before any implementation change.
+- TASK-0012: implement M2 from the frozen R1 decision, then add explicit multi-profile metadata and safe adopt/upgrade coverage in M3.
 - Owner runs the incremental re-review of TASK-0011's record closure (M0/M1 done, No-Go verdict + leak fix landed, privacy rewrite executed and CI green); then owner acceptance.
 - Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).

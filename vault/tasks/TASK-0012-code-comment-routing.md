@@ -7,7 +7,7 @@
   "level": "C",
   "authority_level": 3,
   "lifecycle": "active",
-  "current_slice": "M0 — carrier ablation preregistration"
+  "current_slice": "M2 — protocol and project document generation"
 }
 -->
 
@@ -153,8 +153,8 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] 预注册在任何实现修改之前冻结，Git DAG 可证。
-- [ ] 载体裁决逐条对应冻结 Gate，不用“更整洁”代替证据。
+- [x] 预注册在任何实现修改之前冻结，Git DAG 可证。（`e4f58c9`，产品/模板零 diff）
+- [x] 载体裁决逐条对应冻结 Gate，不用“更整洁”代替证据。（R1 Go；R2 被同内容、额外一跳与第二 route owner 支配；R0 非源码任务默认成本过高）
 - [ ] owner 原规范的关键语义全部进入公共核心或 Go 适配，无静默删减。
 - [ ] Python 适配符合项目公共 API 与 PEP 257 约定，不照搬 Go 语法。
 - [ ] Go-only、Python-only、Go+Python 都只生成一个工程规范文件，且不含未选语言章节。
@@ -206,6 +206,26 @@ Review and reflection:
 Next action:
 
 - 单独提交 M0 预注册，然后执行 M1；裁决通过后才修改产品/模板文件。
+
+### 2026-09-16 - Agent: Codex — M1 载体消融与规则分类
+
+Changes made:
+
+- 用同一份 4,413-byte / 96-line 中文规范构造 R0 inline、R1 direct-route、R2 Vault two-hop 三臂；R0 内联正文与独立规范逐字节一致。
+- 逐条把 owner 原规范分类为 common/Go/Python；修正 package/导出表述，并补入 Python 公共 API/docstring 的语言适配边界。
+
+Checks run:
+
+- R0/R1/R2 真实材料 `wc -c -l`；R0 正文与独立 policy `diff -u` 无差异；`git diff --check` clean。
+
+Review and reflection:
+
+- R1 默认入口 254 bytes，相比 R0 4,562 bytes 减少 94.4%；R2 默认 327 bytes 且多一跳/一个 route owner，无收益。
+- 裁决仅声称载体结构与成本，不声称 Agent 准确率提升；真实漏读事件是未来重开信号。
+
+Next action:
+
+- 提交 M1 结果，随后进入 M2；实现不得更改冻结 Gate 或把工程规范放回 Vault。
 
 ## Memory Updates
 
