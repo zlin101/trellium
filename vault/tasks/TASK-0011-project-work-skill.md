@@ -228,7 +228,7 @@ Forbidden:
 
 - [ ] 预注册提交在实现提交之前，Git DAG 可证；原始 prompt/材料/首答先于评分冻结。
 - [ ] A0/A1 裁决严格符合 Decision Gate；No-Go/Inconclusive 时没有越权实现项目 Skill。
-- [ ] 全局模板泄漏有实施前复现和修复后反证；用户级包不再暴露嵌套项目工作 Skill。
+- [x] 全局模板泄漏有实施前复现和修复后反证；用户级包不再暴露嵌套项目工作 Skill。（Codex 项目外亦报告 agent-task 可用 = 复现；两包模板更名 AGENT_TASK_SKILL.template + TemplatePackagingTest 运行时断言 = 反证；Claude Code 侧嵌套模板本就不发现，实证 43 项全列表）
 - [ ] 若 Go，新项目只发现 `trellium-work`，离开项目不可发现；中英文 `name` 一致。
 - [ ] 若 Go，旧项目四类迁移 fixture 零静默覆盖、零双 Skill 残留、重复升级幂等。
 - [ ] `trellium-work` 为薄路由层；没有复制当前预算、storage 值或完整 governance。
@@ -254,6 +254,28 @@ Completed:
 - 待 Claude 实施。
 
 ## Execution Record
+
+### 2026-09-15 - Agent: GLM — M0 预注册与 M1 消融（判定：No-Go）
+
+Context read: 合同、`skills/agent-task/SKILL.md`（顶层+两包模板）、AGENTS 模板、`scripts/trellium.py` TEMPLATE_FILES/FILE_ROLES、`scripts/install.sh`。
+
+Changes made:
+
+- M0：现场复核基线（含新事实：顶层 `skills/agent-task/` 本身即可被发现）；冻结 `docs/evals/project-work-skill-2026-09/` 四件套 + 三场景 fixture + A1 薄路由草案（`e2fe146`，先于任何实现）。
+- M1：结构发现测试（Claude Code ×3 + Codex ×3 真实 headless 探测）+ 6 个 A0/A1 会话（交错顺序、先落原文后评分）。
+
+Checks run:
+
+- 121 tests、check 0/0、snapshot in sync、范围级 whitespace CLEAN（预注册提交时）。
+
+Review and reflection:
+
+- **判定 No-Go**：两臂全场景 0 关键遗漏、0 需要纠正、0 硬指标违规（A0 底座充分，地板效应）；A1 唯一可观察差异是读入更多材料（visible +79%）。附加结构事实：Codex 不发现项目级 `.claude/skills/`（项目 Skill 前提对 Codex 不成立），且 `agent-task` 全局泄漏在 Codex 复现（中性目录亦可见，来源为本机全局安装的控制包嵌套模板）。
+- 按停止条件：不进入 M2/M3 项目 Skill 实现；仅执行已复现泄漏的最小修复（模板改不可发现文件名）。
+
+Next action:
+
+- CI 恢复验证预注册提交后，执行泄漏最小修复；M2/M3 其余项按 No-Go 取消。
 
 ### 2026-09-15 - Agent: Codex — 合同建立并激活
 
@@ -288,3 +310,10 @@ Next action:
 - `vault/details/shadow-run-2026-09.md`（真实 TASK 派生计数，不伪造 lifecycle 转换）
 - `vault/decisions.md`：仅在 owner 验收最终架构后记录 durable decision
 - Durable knowledge disposition: not_applicable (`task_storage=tracked`)
+
+### 2026-09-16 - Agent: GLM — 泄漏最小修复、独立复审与验收前收尾
+
+- 泄漏修复（No-Go 停止条件授权的唯一实现）：两控制包模板源更名 `AGENT_TASK_SKILL.template`；`trellium.py` 增加 `TEMPLATE_SOURCE_OVERRIDE`/`template_source()`，adopt/upgrade 对目标项目仍渲染/刷新 `skills/agent-task/SKILL.md`（独立 reviewer 实测 adopt 渲染与两包模板及 canonical 逐字节一致；diff/upgrade/--apply exit 0）。`TemplatePackagingTest` 运行时断言包内无可发现 SKILL.md。
+- 独立复审 **APPROVE**：消融完整性（冻结提交 e2fe146 先于 934e892 评分提交、单变量纪律、计量逐位重算）、判定忠实（No-Go 无越级表述）、修复正确性、范围干净全部 PASS。
+- P2 勘误：results.md 成本表 material_bytes 行初版误记 1,966/2,109（不可重算）→ 以 run.json 原值更正为 786/932（+18.6%）。
+- owner review REQUEST_CHANGES（2026-09-16，4 阻断）：任务**保持 active**（曾误提前登记 ready_for_review 投影与转换，已撤销）；P1-1 实验记录隐私违规待历史脱敏授权；P1-3 验收清单未闭合；P1-4 Codex 结论越权已收回；P2 已改。R2/项目 Skill 实现按 No-Go 不做。

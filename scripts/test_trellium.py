@@ -2214,8 +2214,8 @@ class LocalTemplateSemanticsTest(TargetTestCase):
 
     def test_agent_task_templates_carry_disposition_step(self) -> None:
         for relative in (
-            "skills/trellium-zh/assets/templates/skills/agent-task/SKILL.md",
-            "skills/trellium/assets/templates/skills/agent-task/SKILL.md",
+            "skills/trellium-zh/assets/templates/skills/agent-task/AGENT_TASK_SKILL.template",
+            "skills/trellium/assets/templates/skills/agent-task/AGENT_TASK_SKILL.template",
         ):
             text = self.read(relative)
             self.assertIn("Durable knowledge disposition", text)
@@ -2331,6 +2331,31 @@ class StatusDefectRegressionsTest(VaultCheckMixin, TargetTestCase):
         code, out, _ = self.status(target)
         self.assertEqual(code, 0)
         self.assertNotIn("run A \\", out)
+
+
+class TemplatePackagingTest(TargetTestCase):
+    """TASK-0011 No-Go stop-condition fix: the control packages must not carry
+    a discoverable SKILL.md template (Codex globally discovered the nested
+    agent-task template). adopt/upgrade must still render the target project's
+    skills/agent-task/SKILL.md via the source-name override."""
+
+    def test_control_packages_carry_no_discoverable_skill_template(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        for package in ("trellium", "trellium-zh"):
+            templates = repo / "skills" / package / "assets" / "templates"
+            discoverable = [p for p in templates.rglob("SKILL.md")]
+            self.assertEqual(discoverable, [], f"{package} leaks a discoverable template: {discoverable}")
+            packaged = templates / "skills" / "agent-task" / "AGENT_TASK_SKILL.template"
+            self.assertTrue(packaged.is_file(), f"missing renamed template source: {packaged}")
+
+    def test_adopt_still_renders_agent_task_skill_md(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.run_agent_init("adopt", str(target))
+        self.assertEqual(code, 0, err)
+        rendered = target / "skills" / "agent-task" / "SKILL.md"
+        self.assertTrue(rendered.is_file(), "adopt must still render skills/agent-task/SKILL.md")
+        self.assertIn("name: agent-task", rendered.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

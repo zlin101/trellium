@@ -8,11 +8,11 @@
 ## TASK-0011 - 2026-09-15
 
 - Objective: 验证项目级工作 Skill 是否比 `AGENTS.md + vault` 有独立价值；仅在消融 Go 后把 `agent-task` 最小迁移为项目限定、语言无关 ID 的 `trellium-work`。
-- Completed: owner 批准方向并要求形成 TASK 交 Claude；Level C / Authority 3 合同已激活，控制面/执行面边界、A0/A1 消融、污染规则、kill criteria、模板全局泄漏修复和旧项目安全迁移均已冻结。
-- In progress: 尚无产品或模板实现；等待 Claude 执行 M0 预注册与 M1 发现/行为消融。
+- Completed: M0 预注册冻结（`docs/evals/project-work-skill-2026-09/`，先于任何实现）+ M1 消融与结构测试。**判定 No-Go**：两臂全场景 0 关键遗漏/0 需要纠正/0 硬指标违规（A0 的 AGENTS.md+vault 底座充分，地板效应），A1 唯一差异是成本更高（visible +79%）；结构记录：经 `.claude/skills` 的项目级 trellium-work 未被 Codex 发现（其项目级发现位置 unverified）；`agent-task` 全局泄漏在 Codex 复现（与合同 Baseline 一致）。独立材料：`docs/evals/project-work-skill-2026-09/results.md`。
+- In progress: owner review REQUEST_CHANGES（4 阻断）：P1-1 实验原始记录含本机路径/UUID/无关内容且已推送（历史脱敏重写待 owner 明确授权）；P1-2 提前登记的 ready_for_review 转换已撤销（本条目即修正）；P1-3 验收清单/Verification 未闭合（隐私修复完成前独立 review 不视为无 open 项）；P1-4 Codex 项目级发现位置结论越权（改为 unverified）。P2 已改。任务保持 active。
 - Failed attempts: 无。已知反例是 `AGENTS.md` 可能已经足够；若 A1 无关键遗漏或成本改善，必须 No-Go，不以架构整洁为由开发第二 Skill。
 - Blockers: 无；Go 之后才能进入实现。任一 Agent 在当前环境不可真实运行时，该平台 discovery 记未验证，不准猜测。
-- Next best action: 阅读 TASK-0011；先以独立提交冻结实验材料和 golden，再做 3 场景 × 2 臂首答与项目内/外发现检查；根据 Gate 决定是否进入 M2。
+- Next best action: owner 对历史脱敏重写明确授权（六步方案已入 results.md §偏差与修订；步骤 1-3 已完成：归档+清单、仓库留 prompt/answer/评分/纯指标、run.json 已去标识）→ 授权后执行步骤 4-6（历史移除/脱敏 → 0 命中扫描 → force-with-lease push + CI 绿）→ 完成 R1-R4 剩余项与增量复审 → 2026.09.5 Release 对象（UI）仍待 owner 创建。
 - Files to read first: `vault/tasks/TASK-0011-project-work-skill.md`、`vault/runtime.md`、`scripts/trellium.py`、`skills/agent-task/SKILL.md`、`scripts/install.sh`。
 
 ## TASK-0004 - 2026-09-08

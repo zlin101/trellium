@@ -51,6 +51,20 @@ TEMPLATE_FILES = (
 )
 RENDERED_FILES = ("vault/project.md", "vault/runtime.md")
 
+# TASK-0011 (No-Go stop-condition fix): the agent-task template source must
+# not be named SKILL.md anywhere in the distributed packages — Codex globally
+# discovered the nested template (reproduced 2026-09-15). The packaged file
+# uses a non-discoverable name; adopt/upgrade still render the target
+# project's skills/agent-task/SKILL.md unchanged.
+TEMPLATE_SOURCE_OVERRIDE = {
+    "skills/agent-task/SKILL.md": "skills/agent-task/AGENT_TASK_SKILL.template",
+}
+
+
+def template_source(relative: str) -> Path:
+    """Resolve the packaged template source for a target-relative path."""
+    return TEMPLATES_ROOT / TEMPLATE_SOURCE_OVERRIDE.get(relative, relative)
+
 # Upgrade scope. "data" files are project memory: the upgrader never writes
 # them. "merge" and "template" files are protocol carriers: they may be
 # refreshed while local modifications are preserved. "marker" scopes the
@@ -179,7 +193,7 @@ def validate_output_paths(target: Path, destinations: list[Path]) -> None:
 
 def validate_template_sources(relative_files: tuple[str, ...]) -> None:
     for relative in relative_files:
-        source = TEMPLATES_ROOT / relative
+        source = template_source(relative)
         if not source.is_file():
             raise AdoptionError(f"template file does not exist: {source}")
 
@@ -888,7 +902,7 @@ def local_hash_for_role(target: Path, relative: str, role: str) -> str | None:
 def upstream_hash_for_role(relative: str, role: str) -> str | None:
     if role == "marker":
         return sha256_hex(upstream_marker_region().encode("utf-8"))
-    return hash_path(TEMPLATES_ROOT / relative)
+    return hash_path(template_source(relative))
 
 
 def open_upgrade_descriptor(target: Path) -> int | None:
@@ -969,9 +983,9 @@ def write_adoption_stamp(
                     continue
                 entry = {"role": role, "baseline": baseline}
         else:
-            template_hash = hash_path(TEMPLATES_ROOT / relative)
+            template_hash = hash_path(template_source(relative))
             if template_hash is None:
-                raise AdoptionError(f"template file does not exist: {TEMPLATES_ROOT / relative}")
+                raise AdoptionError(f"template file does not exist: {template_source(relative)}")
             if action != "skipped":
                 entry = {"role": role, "baseline": template_hash}
             else:
@@ -2479,7 +2493,7 @@ def apply_protocol_file(
     if role == "marker":
         return update_agent_entry_region(target, target_descriptor)
     return copy_file(
-        TEMPLATES_ROOT / relative,
+        template_source(relative),
         target / relative,
         target,
         force=force,
@@ -2561,7 +2575,7 @@ def render_proposal(target: Path, version: str, item: dict) -> str:
         except OSError:
             local_text = ""
     else:
-        upstream_text = (TEMPLATES_ROOT / relative).read_text(encoding="utf-8")
+        upstream_text = template_source(relative).read_text(encoding="utf-8")
         try:
             local_text = (target / relative).read_text(encoding="utf-8")
         except OSError:
@@ -2947,7 +2961,7 @@ def adopt_project(args: argparse.Namespace) -> int:
 
         for relative in TEMPLATE_FILES:
             result = copy_file(
-                TEMPLATES_ROOT / relative,
+                template_source(relative),
                 target / relative,
                 target,
                 force=args.force,

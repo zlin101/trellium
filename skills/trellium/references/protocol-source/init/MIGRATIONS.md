@@ -11,7 +11,8 @@
 
 - Added: `status` 的 `unresolved` 数组新增两类条目形态。①malformed 短行（少于四列）仅在消息文本中暴露其 task id、不产出 task-scoped finding 时，该 id 以实际 finding 码 `TASK_RUNTIME_INVALID` 物化进 `unresolved`——与 README"无法解析的任务显式列入 unresolved"承诺对齐，`check` 输出零变化；②`vault/` 或 `vault/tasks` 枚举被拒（`SYMLINK_INPUT`）时，输出显式 vault-scope 联合记录 `{"scope": "vault", "path": ..., "reason": "SYMLINK_INPUT"}`（无 `task_id`，不伪造任务 id，不携带 lifecycle/authority），`summary.unresolved` 计数与数组严格一致，消除"从未读取内容却报告 unresolved: 0"的 fail-open 表述。
 - Changed: runtime 行分裂出超过四列（如 Next Action 含未转义 `|`）时，该任务的 `runtime_projection` 被抑制（沿用重复行/枚举非法行的既有投影抑制模式），任务保留状态块 lifecycle 分类；此前投影会静默截断且 exit 0 无任何信号。文本渲染对 vault-scope 条目输出 `[vault] path=... reason=...`，与 JSON 同源。
-- Auto: 无模板变更；`check` 的发现、严重级与退出码字节级零变化；不新增 schema 版本（JSON 仍为 v1 增量）。
+- Changed（TASK-0011 No-Go 停止条件修复）: 控制包内项目模板源文件更名 `assets/templates/skills/agent-task/SKILL.md` → `AGENT_TASK_SKILL.template`——原文件名可被 Codex 等扫描器全局发现为 `agent-task` Skill（2026-09-15 实测复现）。adopt/upgrade 对目标项目仍渲染/刷新 `skills/agent-task/SKILL.md`，行为与输出不变。
+- Auto: 目标项目渲染内容无变化，仅发行包模板源文件名变化（TASK-0011 泄漏修复）；`check` 的发现、严重级与退出码字节级零变化；不新增 schema 版本（JSON 仍为 v1 增量）。
 
 ## 2026.09.5 — 只读 status 状态摘要
 

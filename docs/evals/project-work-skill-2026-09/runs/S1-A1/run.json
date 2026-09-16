@@ -1,0 +1,12 @@
+{
+  "session_id": "S1-A1",
+  "material_bytes": 932,
+  "tool_calls": 9,
+  "visible_output_bytes": 4588,
+  "wall_clock_first_answer_s": 117.882,
+  "cli_exit_code": 0,
+  "is_error": false,
+  "answer_bytes": 6532,
+  "cli_session_id_redacted": "<session-uuid>",
+  "transcript_redacted": "<removed from repository; original in owner-side raw archive>"
+}

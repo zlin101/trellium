@@ -1,0 +1,12 @@
+{
+  "session_id": "S3-A0",
+  "material_bytes": 786,
+  "tool_calls": 7,
+  "visible_output_bytes": 1920,
+  "wall_clock_first_answer_s": 101.975,
+  "cli_exit_code": 0,
+  "is_error": false,
+  "answer_bytes": 6055,
+  "cli_session_id_redacted": "<session-uuid>",
+  "transcript_redacted": "<removed from repository; original in owner-side raw archive>"
+}
