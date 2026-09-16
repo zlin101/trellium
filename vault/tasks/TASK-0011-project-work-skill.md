@@ -6,7 +6,7 @@
   "task_id": "TASK-0011",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "active"
+  "lifecycle": "ready_for_review"
 }
 -->
 
@@ -316,4 +316,5 @@ Next action:
 - 泄漏修复（No-Go 停止条件授权的唯一实现）：两控制包模板源更名 `AGENT_TASK_SKILL.template`；`trellium.py` 增加 `TEMPLATE_SOURCE_OVERRIDE`/`template_source()`，adopt/upgrade 对目标项目仍渲染/刷新 `skills/agent-task/SKILL.md`（独立 reviewer 实测 adopt 渲染与两包模板及 canonical 逐字节一致；diff/upgrade/--apply exit 0）。`TemplatePackagingTest` 运行时断言包内无可发现 SKILL.md。
 - 独立复审 **APPROVE**：消融完整性（冻结提交 e2fe146 先于 934e892 评分提交、单变量纪律、计量逐位重算）、判定忠实（No-Go 无越级表述）、修复正确性、范围干净全部 PASS。
 - P2 勘误：results.md 成本表 material_bytes 行初版误记 1,966/2,109（不可重算）→ 以 run.json 原值更正为 786/932（+18.6%）。
-- owner review REQUEST_CHANGES（2026-09-16，4 阻断）：任务**保持 active**（曾误提前登记 ready_for_review 投影与转换，已撤销）；P1-1 实验记录隐私违规待历史脱敏授权；P1-3 验收清单未闭合；P1-4 Codex 结论越权已收回；P2 已改。R2/项目 Skill 实现按 No-Go 不做。
+- owner review REQUEST_CHANGES（2026-09-16，4 阻断）：P1-1 实验记录隐私违规 → 历史重写已获 owner 批准并执行（8 提交收敛为单提交、12 份敏感文件从历史移除、原始证据仓库外归档+清单、全历史扫描 0 命中、force-with-lease push、远端 CI 全绿）；P1-2 提前登记的转换已撤销，修复完成后按正确顺序重新转换（本条目即）；P1-3 验收清单/Verification 已闭合；P1-4 Codex 结论越权已收回（unverified）；P2 已改。
+- owner 复核通过（同日）→ 任务转 `ready_for_review` 等 owner 验收。R2/项目 Skill 实现按 No-Go 不做。
