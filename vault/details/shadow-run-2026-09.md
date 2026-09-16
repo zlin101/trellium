@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-16（TASK-0011 ready_for_review），审计基准为当前 HEAD；2026-09-16 owner review 对账：K1 表原 22 行漏计 TASK-0006/0007 两笔 active→ready_for_review 转换（已补记），此前快照的 22 系漏计后与行数的巧合一致**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 11 个（TASK-0001…0011；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0011 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 24 次（含 2026-09-16 对账补记的 2 笔；此前快照曾长期误记 22，原因即上述漏计）（历史明细保留在下方 K1 append-only 事件行；TASK-0011 直接创建为 active，不新增转换），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-16（TASK-0011 ready_for_review），审计基准（固定锚点）：TASK-0006 的 rfr 提交为 `bf3f84b`（2026-09-08）、TASK-0007 的 rfr 提交为 `430de35`（2026-09-09）、TASK-0011 的 rfr 提交为 `aa8038e`（2026-09-16）；对账补记提交为 `703b140`。2026-09-16 owner review 对账：K1 表原 22 行漏计 TASK-0006/0007 两笔 active→ready_for_review 转换（已补记），此前快照的 22 系漏计后与行数的巧合一致**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 11 个（TASK-0001…0011；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0011 为 owner 立项的真实任务，创建时直接为 active，不伪造 draft→active 转换；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 24 次（含 2026-09-16 对账补记的 2 笔；此前快照曾长期误记 22，原因即上述漏计）（历史明细保留在下方 K1 append-only 事件行；TASK-0011 直接创建为 active，不新增转换），blocked→active 1 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -64,7 +64,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-08 | active → ready_for_review（M1 计数单源化 + M2 Protocol v2 完成） | TASK-0005 | 2（状态块 + runtime 行） | 0 | 待 owner 最终验收 |
 | 2026-09-08 | draft → active（owner 下发非 Context 优化计划开始指令） | TASK-0006 | 2（状态块 + runtime 行） | 0 | Level C 消融实验任务；实验样本 synthetic，不计入本试点覆盖 |
 | 2026-09-09 | ready_for_review → accepted（owner 复核 6a2043e 通过，正式验收） | TASK-0005 | 2（状态块 + runtime 行） | 0 | 六项 round-2 finding 已闭合 |
-| 2026-09-09 | active → ready_for_review（M0-M2 消融完成；**owner review 2026-09-16 对账补记**——该转换发生时未记录事件行） | TASK-0006 | 2（状态块 + runtime 行） | 0 |
+| 2026-09-08 | active → ready_for_review（M0-M2 消融完成，即提交 bf3f84b；**owner review 2026-09-16 对账补记**——该转换发生时未记录事件行） | TASK-0006 | 2（状态块 + runtime 行） | 0 |
 | 2026-09-09 | ready_for_review → accepted（owner 验收，结论严格限定：E2 No-Go / E1 Inconclusive / v0 本周期不实现） | TASK-0006 | 2（状态块 + runtime 行） | 0 | 方向未证伪；其余候选等待真实证据 |
 | 2026-09-09 | active → ready_for_review（2026.09.4 实现完成；**owner review 2026-09-16 对账补记**——该转换发生时未记录事件行） | TASK-0007 | 2（状态块 + runtime 行） | 0 |
 | 2026-09-09 | ready_for_review → accepted（owner 验收通过；2026.09.4 实现闭环） | TASK-0007 | 2（状态块 + runtime 行） | 0 | tag 随验收推送；Release 对象由 owner 创建（D-0003：元数据可选） |
