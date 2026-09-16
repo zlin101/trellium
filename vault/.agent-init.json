@@ -2,7 +2,7 @@
   "adopted_at": "2026-09-04",
   "files": {
     "AGENTS.md": {
-      "baseline": "e5a8fa3759a050be27a77001d8e745cae258e3db0a9abc2cbc5dac5286ec8d30",
+      "baseline": "cefd41563aa65d27a03936dfae3f4919c257adc2e1168cac5f4e1ade2a2b4c7a",
       "role": "merge"
     },
     "skills/agent-task/SKILL.md": {
@@ -49,8 +49,10 @@
       "role": "template"
     }
   },
-  "last_upgrade": "2026-09-09",
-  "protocol_version": "2026.09.4",
-  "schema_version": 1,
+  "last_upgrade": "2026-09-16",
+  "profiles": [],
+  "protocol_version": "2026.09.7",
+  "schema_version": 2,
+  "target_version": "2026.09.7",
   "trust": "versioned"
 }
