@@ -2640,24 +2640,16 @@ class TemplatePackagingTest(TargetTestCase):
             self.assertNotIn("vault/index.md ->", agents)
 
 
-class AdoptionDurabilityTest(TargetTestCase):
-    """TASK-0013 M0 red tests (prereg: docs/evals/adoption-durability-2026-09/).
+class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
+    """TASK-0013 adoption-durability contract tests (prereg:
+    docs/evals/adoption-durability-2026-09/, severity matrix section 9).
 
-    Replays the confirmed adoption-durability reproduction against 2026.09.7:
-    a fresh `adopt` leaves the collaboration core outside Git HEAD while check
-    still reports zero findings. The expectedFailure markers below are the
-    committed red state; the M2 HEAD-persistence check turns them green and
-    must remove the markers in the same change. Fixture expectations are
-    frozen in the prereg protocol section 9 (severity matrix).
+    These replay the confirmed 2026.09.7 false-health reproduction (fresh
+    `adopt` leaving the collaboration core outside Git HEAD while check
+    reported zero findings). The red-first state was committed at M0 with
+    expectedFailure markers; the M2/M3 HEAD-persistence and local-boundary
+    checks turned them green and removed the markers in the same change.
     """
-
-    def init_git_repo(self, target: Path) -> None:
-        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
-        subprocess.run(["git", "config", "user.name", "test"], cwd=target, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=target, check=True)
-
-    def git(self, target: Path, *arguments: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["git", *arguments], cwd=target, check=False, capture_output=True)
 
     def adopted_repo(self) -> Path:
         target = self.root / "project"
@@ -2682,7 +2674,6 @@ class AdoptionDurabilityTest(TargetTestCase):
     def reported_paths(findings: list[dict]) -> str:
         return " ".join(str(finding.get("path", "")) for finding in findings)
 
-    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_UNCOMMITTED
     def test_untracked_core_after_adopt_is_reported(self) -> None:
         target = self.adopted_repo()
 
@@ -2695,7 +2686,6 @@ class AdoptionDurabilityTest(TargetTestCase):
         for core in ("AGENTS.md", "vault/index.md", agent_init.STAMP_RELATIVE, "skills/agent-task/SKILL.md"):
             self.assertIn(core, reported)
 
-    @unittest.expectedFailure  # staged-only must not count as durable
     def test_staged_only_core_is_still_uncommitted(self) -> None:
         target = self.adopted_repo()
         self.git(target, "add", "-A")
@@ -2705,7 +2695,6 @@ class AdoptionDurabilityTest(TargetTestCase):
         self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
         self.assertTrue(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), payload["findings"])
 
-    @unittest.expectedFailure  # committing only the stamp must not fake durability
     def test_stamp_only_partial_commit_still_reports_missing_core(self) -> None:
         target = self.adopted_repo()
         self.git(target, "add", agent_init.STAMP_RELATIVE)
@@ -2720,7 +2709,6 @@ class AdoptionDurabilityTest(TargetTestCase):
         self.assertIn("AGENTS.md", reported)
         self.assertNotIn(agent_init.STAMP_RELATIVE, reported)
 
-    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_IGNORED
     def test_ignored_core_is_reported_with_path(self) -> None:
         target = self.root / "project"
         target.mkdir()
@@ -2741,7 +2729,6 @@ class AdoptionDurabilityTest(TargetTestCase):
         self.assertIn("AGENTS.md", reported)
         self.assertIn("skills/agent-task/SKILL.md", reported)
 
-    @unittest.expectedFailure  # no HEAD commit means nothing is durable yet
     def test_repository_without_head_reports_uncommitted_core(self) -> None:
         target = self.root / "project"
         target.mkdir()
@@ -2769,7 +2756,123 @@ class AdoptionDurabilityTest(TargetTestCase):
         self.assertEqual(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), [])
         self.assertEqual(self.findings_with(payload, "CORE_STORAGE_IGNORED"), [])
 
-    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_UNVERIFIED
+    def make_local_project(self, gitignore: str | None) -> Path:
+        files = {} if gitignore is None else {".gitignore": gitignore}
+        target = self.make_project(policy=local_policy(), files=files, runtime=build_runtime(focus="TASK-0000"))
+        self.init_git_repo(target)
+        self.git(target, "add", "-A")
+        return target
+
+    def test_local_boundary_good_rules_pass_clean(self) -> None:
+        # Prereg §9 #9 (good): narrow private journal rules leave the durable
+        # namespaces tracked and produce zero boundary findings.
+        target = self.make_local_project(
+            "vault/tasks/TASK-*.md\nvault/tasks/*-review.md\nvault/tasks/archive/\n"
+        )
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(
+            [finding for finding in payload["findings"] if finding["code"].startswith("LOCAL_BOUNDARY")],
+            [],
+        )
+
+    def test_local_boundary_overreach_reports_rule_and_path(self) -> None:
+        # Prereg §9 #9 (bad): broad rules silently capture durable namespaces;
+        # the error names the sentinel path and the offending rule.
+        target = self.make_local_project("vault/tasks/*\nvault/decisions/\nvault/details/\n")
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        overreach = self.findings_with(payload, "LOCAL_BOUNDARY_OVERREACH")
+        reported = self.reported_paths(overreach)
+        self.assertIn("vault/tasks/README.md", reported)
+        self.assertIn("vault/decisions/D-0000-sentinel.md", reported)
+        self.assertIn("vault/details/sentinel.md", reported)
+        self.assertIn("vault/tasks/*", " ".join(finding["message"] for finding in overreach))
+
+    def test_local_boundary_missing_rules_warn(self) -> None:
+        # local policy without any ignore rules must not stay silent: future
+        # private journals would otherwise enter Git unguarded.
+        target = self.make_local_project(None)
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(len(self.findings_with(payload, "LOCAL_BOUNDARY_UNCONFIGURED")), 1)
+
+    def test_whitelist_gitignore_is_not_reported_as_ignored(self) -> None:
+        # A `/*` + negated-whitelist .gitignore (this repository's own style)
+        # must not read as "core ignored": check-ignore -v reports the
+        # negated match too, and a leading "!" means the path stays tracked.
+        repo = self.root / "project"
+        repo.mkdir()
+        (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+        (repo / ".gitignore").write_text(
+            "/*\n!README.md\n!AGENTS.md\n!/skills/\n!/skills/**\n!/vault/\n!/vault/**\n",
+            encoding="utf-8",
+        )
+        self.init_git_repo(repo)
+        self.git(repo, "add", "-A")
+        self.git(repo, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(repo)
+        self.assertEqual(code, 0, err)
+        self.git(repo, "add", "-A")
+        self.git(repo, "commit", "-q", "-m", "adopt trellium")
+
+        check_code, payload = self.check_payload(repo)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_IGNORED"), [])
+
+    def test_monorepo_child_uncommitted_core_is_reported_with_target_paths(self) -> None:
+        # Prereg §9 #7: paths must resolve against the real Git root so a
+        # monorepo child adoption is judged (and reported) without crossing
+        # outside its own directory.
+        repo = self.root / "monorepo"
+        app = repo / "packages" / "app"
+        app.mkdir(parents=True)
+        (app / "README.md").write_text("# App\n", encoding="utf-8")
+        self.init_git_repo(repo)
+        self.git(repo, "add", "packages/app/README.md")
+        self.git(repo, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(app)
+        self.assertEqual(code, 0, err)
+
+        check_code, payload = self.check_payload(app)
+
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertTrue(uncommitted, payload["findings"])
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        for finding in uncommitted:
+            self.assertFalse(finding["path"].startswith("packages/"), finding["path"])
+            self.assertTrue((app / finding["path"]).exists(), finding["path"])
+        for core in ("AGENTS.md", "vault/index.md", agent_init.STAMP_RELATIVE):
+            self.assertIn(core, self.reported_paths(uncommitted))
+
+    def test_monorepo_child_committed_core_passes(self) -> None:
+        # Control (prereg §9 #7): a fully committed monorepo child adoption
+        # must produce zero core findings.
+        repo = self.root / "monorepo"
+        app = repo / "packages" / "app"
+        app.mkdir(parents=True)
+        (app / "README.md").write_text("# App\n", encoding="utf-8")
+        self.init_git_repo(repo)
+        self.git(repo, "add", "packages/app/README.md")
+        self.git(repo, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(app)
+        self.assertEqual(code, 0, err)
+        self.git(repo, "add", "-A")
+        self.git(repo, "commit", "-q", "-m", "adopt trellium")
+
+        check_code, payload = self.check_payload(app)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), [])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_IGNORED"), [])
+
     def test_non_git_target_reports_unverified_core(self) -> None:
         # Prereg §9 #8: silence on an adopted non-Git target is the same
         # false-health pattern; check must say durability was not verified,

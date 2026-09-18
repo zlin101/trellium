@@ -236,3 +236,25 @@ TASK-0011 按预注册 A0/A1 消融（三场景 × 两臂 × 独立首答）验�
 ### Impact
 
 新项目接入只产出 AGENTS.md+vault；不安装第二项目 Skill；`agent-task` 名称不再以可发现形态存在于发行包。
+
+## D-0010 - 接入完成契约与 Git 持久性 Gate（2026-09-18）
+
+Status: Active
+
+### Background
+
+TASK-0013 确认 2026.09.7 存在接入假健康：`adopt` 生成完整协作层后核心未进 Git `HEAD`，fresh clone 全部丢失，`check` 仍报 0/0。owner 批准 Level C 立项并把"核心未进 HEAD"定为 error。修复采用"语义提示 + 机械 Gate"双层：P0/P1 预注册消融（4 无历史会话，合同 Gate 裁决 Go）确认提示词收益，checker 承担机械阻断。
+
+### Decision
+
+1. 接入完成定义为五要件（语义配置、核心进 `HEAD`、提交后 check 0 error、local/生产 fresh-clone 一次性复验、runtime 记录），逐字落入双语 Skill"接入完成契约 / Adoption Completion Contract"节与 `adopt` 结束输出；`generated ≠ durable`。
+2. checker 以安装版本戳派生协作核心集合，机械核对 `HEAD`：未提交报 `CORE_STORAGE_UNCOMMITTED` error、被 ignore 规则误伤报 `CORE_STORAGE_IGNORED` error、非 Git 报 `CORE_STORAGE_UNVERIFIED` warning；local 模式以无写入 sentinel 验证边界（`LOCAL_BOUNDARY_UNCONFIGURED` warning / `LOCAL_BOUNDARY_OVERREACH` error）。checker 只读：不自动 `git add`/commit/push、不改 `.gitignore`、不运行 clone；fresh clone 是验收动作，不进入日常 check。
+3. 版本控制动作永远归属用户：工具与 Agent 不得自动 commit/push。
+
+### Rationale
+
+仅提示词无法防止漏步骤（场景 A 中 P0 臂 2 项关键遗漏 vs P1 臂 0 项；但两臂在 local 边界认知上各有 1 次 durable namespace 误分类，提示词层不声称修复边界），仅 checker 又无法引导语义接入；HEAD 事实与 fresh clone 可见性等价且成本低（M0 fixture 矩阵与 fresh-clone 对照冻结）。
+
+### Impact
+
+已 adopted 且核心未提交的项目升级到 2026.09.8 后 `check` 从 0/0 转为 error——真实缺陷暴露而非回归，修复动作是用户提交核心文件（本仓库 `docs/engineering/` 未提交核心即首个真实样本）。Orion 升级与 fresh-clone 验收留给 TASK-0004。消融材料、投放偏差登记与逐格评分见 `docs/evals/adoption-durability-2026-09/`。

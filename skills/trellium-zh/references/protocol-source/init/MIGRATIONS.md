@@ -7,6 +7,14 @@
 - `Added` / `Removed` / `Breaking` / `Auto`：模板与文件层面的机械变化，由 `trellium.py diff` 报告、`upgrade --apply` 执行；
 - `Agent migration`：需要 Agent 语义执行、用户确认的迁移动作。数据文件（runtime、handoff、decisions 等）的格式迁移一律属于此类：只做内容搬运，不丢事实，不做"判断不重要然后丢弃"。
 
+## 2026.09.8 — 接入持久性 Gate、local Git 边界与接入完成契约
+
+- Added: `check` 新增接入持久性 Gate：从安装版本戳 `vault/.agent-init.json` 的受管路径派生协作核心集合（含 stamp 自身），逐路径核对 Git `HEAD`——未提交报 `CORE_STORAGE_UNCOMMITTED` error（合并式 AGENTS.md 的 HEAD 副本还须含受管区块；HEAD 中的 stamp 须可读且含 `protocol_version`），被 ignore 规则命中报 `CORE_STORAGE_IGNORED` error 并给出规则来源。非 Git 目标报 `CORE_STORAGE_UNVERIFIED` warning，明示无法验证持久性。检查只读：读取 HEAD 快照与 `check-ignore --no-index` 规则，不写文件、不改 index、不 commit、不运行 clone；monorepo 子目录按 Git root 相对路径判定。
+- Added: `task_storage=local` 项目的边界检查：用固定 sentinel 路径经 `git check-ignore --no-index` 无写入验证未来 TASK（`vault/tasks/TASK-*.md`）、review 台账、`vault/tasks/archive/` 会被忽略，未覆盖报 `LOCAL_BOUNDARY_UNCONFIGURED` warning；`vault/tasks/README.md`、`vault/decisions/`、`vault/details/` 等 durable namespace 被宽泛规则误伤时报 `LOCAL_BOUNDARY_OVERREACH` error（附命中规则与修复方向）。不自动修改任何 `.gitignore`。
+- Added: `adopt` 结束输出明确"generated ≠ durable"，给出"语义配置 → 用户提交 → 复跑 check → fresh clone 验收"次序；双语 Skill 新增"接入完成契约 / Adoption Completion Contract"节。提示词收益经 TASK-0013 P0/P1 预注册消融裁决（Go），材料见 `docs/evals/adoption-durability-2026-09/`。
+- Breaking: 无工具自动 `git add`/commit/push。未 adopted（无版本戳）的项目不触发核心 Gate，check 行为与 2026.09.7 相同。已 adopted 且核心未提交的项目升级后 `check` 会从 0/0 转为 error——这是真实缺陷暴露，不是回归。
+- Agent migration: 升级后首次 `check` 若出现 `CORE_STORAGE_UNCOMMITTED` / `CORE_STORAGE_IGNORED`，向用户报告并协助其提交对应核心文件或收窄 ignore 规则，不得代用户执行 Git 提交；`LOCAL_BOUNDARY_UNCONFIGURED` 按提示补窄规则；`LOCAL_BOUNDARY_OVERREACH` 按消息修复 `.gitignore` 后复跑 check 至 0 error，并在 local/生产接入完成时做一次 fresh-clone 复验。
+
 ## 2026.09.7 — Profile-aware 代码注释规范与一跳路由
 
 - Added: `adopt --profile PROFILE[=ROOT]` 可重复选择 `go-backend` / `python-backend` 及一个或多个项目相对根目录。选择后只生成一个项目工程文档 `docs/engineering/code-comments.md`，内容为语言无关公共原则加所选语言适配；未选语言不进入文档。`AGENTS.md` 新增源码、公共 API、注释、TODO/FIXME 任务的一跳条件路由，非源码任务无需加载正文，工程规范不写入 Vault。

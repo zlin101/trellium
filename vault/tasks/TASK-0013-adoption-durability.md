@@ -198,20 +198,20 @@ Forbidden:
 
 ## Acceptance Criteria
 
-- [ ] 预注册提交早于任何产品、模板、Skill 或 checker 修改，Git DAG 可证。
-- [ ] Confirmed Reproduction 成为自动红测：adopt 后核心未入 HEAD 时不得再报告 0/0。
-- [ ] untracked、staged-only 与 stamp-only partial commit 均产生 `CORE_STORAGE_UNCOMMITTED` error；完整聚焦 commit 后消失。
-- [ ] 被 ignore 的核心产生 `CORE_STORAGE_IGNORED` error，并指出实际路径/规则。
-- [ ] target 位于 monorepo 子目录时相对路径正确，无越界或假阴性。
-- [ ] 非 Git 目标行为明确、兼容且不声称 durable 已验证。
-- [ ] local sentinel 证明 TASK/review/archive 私有；tasks README、decisions、details 与核心文件保持 durable。
-- [ ] checker 不写文件、不改 index、不 commit、不 push、不运行 clone。
-- [ ] P0/P1 首答原文和评分可复核；Skill 变更严格服从预注册 Gate。
-- [ ] `adopt` 结束输出不再把“文件生成”暗示为“接入完成”。
-- [ ] check/status 既有行为、退出码契约与其他 finding 不回归。
-- [ ] 全量测试、self-check、snapshot、whitespace 通过。
+- [x] 预注册提交早于任何产品、模板、Skill 或 checker 修改，Git DAG 可证。（M0 提交 c284557，实现均在其后）
+- [x] Confirmed Reproduction 成为自动红测：adopt 后核心未入 HEAD 时不得再报告 0/0。（M0 以 6 expectedFailure 提交红态，M2 同变更转绿并移除标注）
+- [x] untracked、staged-only 与 stamp-only partial commit 均产生 `CORE_STORAGE_UNCOMMITTED` error；完整聚焦 commit 后消失。
+- [x] 被 ignore 的核心产生 `CORE_STORAGE_IGNORED` error，并指出实际路径/规则。（附 `-v` 规则来源；取反白名单模式不误报，见白名单回归测试）
+- [x] target 位于 monorepo 子目录时相对路径正确，无越界或假阴性。（`ls-tree --full-name` + Git root 前缀；未提交/已提交两格测试）
+- [x] 非 Git 目标行为明确、兼容且不声称 durable 已验证。（`CORE_STORAGE_UNVERIFIED` warning，exit 0；仅 adopted 目标触发）
+- [x] local sentinel 证明 TASK/review/archive 私有；tasks README、decisions、details 与核心文件保持 durable。（good/bad/unconfigured 三格）
+- [x] checker 不写文件、不改 index、不 commit、不 push、不运行 clone。
+- [x] P0/P1 首答原文和评分可复核；Skill 变更严格服从预注册 Gate。（runs/ 逐字存档 + results.md 逐格评分；合同 Gate Go，§7 字面读法差异与 H3 保留已并列存档）
+- [x] `adopt` 结束输出不再把“文件生成”暗示为“接入完成”。
+- [x] check/status 既有行为、退出码契约与其他 finding 不回归。（148→149 tests 全绿；status 输出契约不变）
+- [x] 全量测试、self-check、snapshot、whitespace 通过。（149 OK；self-check 唯一 error 为 owner 未提交 `docs/engineering/` 核心的真实暴露，owner 提交后归零）
 - [ ] 独立 review 无 open P0/P1/P2；owner 决定 accepted、版本与发布。
-- [ ] Orion 外部验证明确留给 TASK-0004，不在本任务伪造完成。
+- [x] Orion 外部验证明确留给 TASK-0004，不在本任务伪造完成。（Orion 全程未触碰）
 
 ## Verification
 
@@ -228,6 +228,7 @@ Required:
 Completed:
 
 - 2026-09-18：owner 批准立项方向与 error 严重级别；独立最小复现确认当前 2026.09.7 存在假健康。
+- 2026-09-18：M0-M5 完成——预注册 + 红测独立提交（c284557）后，P0/P1 消融 4 会话完成（合同 Gate Go）、checker 核心持久性 Gate 与 local 边界检查落地（149 tests）、双语契约与 adopt 输出落地、2026.09.8 版本/迁移/README/snapshot 同步、D-0010 记录。待独立 review 与 owner 验收。
 
 ## Required Memory Updates
 
@@ -293,3 +294,32 @@ Review and reflection:
 Next action:
 
 - owner 批准 M0 独立提交后进入 M1：按 protocol §4 ABBA 顺序运行 4 个无历史会话，先冻结全部首答再评分，Gate 裁决回填本文件；随后 M2/M3 checker。不修 Orion。
+
+### 2026-09-18 - Agent: Claude Code (GLM) — M1 消融 Go、M2-M5 实现与验证
+
+Context read:
+
+- 冻结的预注册与四格材料、`scripts/trellium.py` checker 现场（git helpers、finding 结构、`collect_vault_state` 装配）、双语 Skill 接入段、README/MIGRATIONS/VERSION。
+
+Changes made:
+
+- M1：附录 v1.1（owner 批准的子 Agent 投放偏差：白名单无法机械强制，降级为 prompt 指令 + 事后污染筛查）先于任何会话登记；ABBA 串行投放 4 个无历史子 Agent 会话，逐格存档 prompt/answer/run.json；污染筛查 4/4 PASS。按冻结 golden 评分：P0 臂关键遗漏 3 / H3 1，P1 臂遗漏 2 / H3 1，H1/H2 全 0——任务合同 Gate **Go**（§7 字面读法差异与场景 B H3 保留并列存档于 results.md）。场景 A 遗漏 2→0；场景 B 两臂各 1，提示词不声称修复边界。
+- M2/M3：`check` 新增核心持久性 Gate——stamp 派生核心集合、`ls-tree --full-name` HEAD 对照、`check-ignore --no-index -v` 规则归因、合并式 AGENTS 受管区块与 HEAD stamp 可读性校验、monorepo Git-root 前缀；local 边界 sentinel 检查（`LOCAL_BOUNDARY_UNCONFIGURED` warning / `LOCAL_BOUNDARY_OVERREACH` error）；未 adopted（无 stamp）项目不触发，行为与 2026.09.7 相同。M0 红测同变更移除 `expectedFailure` 标注转绿；新增 monorepo 两格、local 边界三格、白名单 `.gitignore` 回归一格。
+- M4：按 Go 裁决把冻结候选逐字落入双语 Skill"接入完成契约 / Adoption Completion Contract"节与 `adopt` 结束输出（`generated ≠ durable` + 语义配置 → 用户提交 → 复跑 check → fresh clone 验收）。
+- M5：VERSION 2026.09.8、MIGRATIONS 2026.09.8 节、README check 章节新码文档、双语 snapshot 再生、D-0010 决策记录、runtime/handoff 投影同步。
+
+Checks run:
+
+- 全量 `python3 -m unittest scripts.test_trellium scripts.test_sync_skills scripts.test_install_sh` → **149 tests OK**（其中本任务契约测试 13 项）。
+- `sync-skills.py --check` → in sync；`git diff --check` → 干净。
+- 本仓库 self-check：1 error = `docs/engineering/code-comments.md` 未进 Git `HEAD`——checker 对真实缺陷的首个自捕获（owner 既有改动，owner 提交后归零），非回归。
+
+Review and reflection:
+
+- 红测先行两次抓到实现陷阱：`git ls-tree` 默认输出 cwd 相对路径（需 `--full-name`）；`check-ignore -v` 对取反模式（`!pattern`）也输出匹配行（需按 `!` 前缀过滤，否则白名单式 `.gitignore` 被整体误报）。两者都超出 M0 fixture 矩阵预设，由实现现场暴露并已固化为回归测试。
+- 场景 B 提示词消融未能消除 durable namespace 误分类（两臂各 1 次），与"提示词不声称修复边界"的范围控制一致；边界由 M3 机械 Gate 兜底——双层设计按预期分工。
+- 消融 n=1/格，场景 A 差值（2→0）为单格证据；Go 严格按任务合同 Gate 条文（遗漏更少 + 硬指标无退化）给出，owner review 可依 §7 更严读法改判，两种读法已并列存档。
+
+Next action:
+
+- 独立 review（P0/P1/P2 全闭合）→ owner 验收 / 版本 / 发布 → TASK-0004 的 Orion 升级与 fresh-clone 验收（M6，owner 授权后执行）。

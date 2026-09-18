@@ -8,12 +8,12 @@
 ## TASK-0013 - 2026-09-18
 
 - Objective: 修复 `adopt` 后协作核心未进入 Git `HEAD`、checker 却报告 0/0 的假健康；同时收紧 local ignore 边界，并用最小提示词帮助 Agent 完成语义接入。
-- Completed: owner 已批准 Level C 范围与 error 严重级别；独立复现已确认；状态块 `draft → active`（2026-09-18，K1 已记）；M0 完成——预注册冻结于 `docs/evals/adoption-durability-2026-09/`（P0/P1 材料、场景 fixture 快照、评分、污染规则、停止条件、checker severity 矩阵含非 Git `CORE_STORAGE_UNVERIFIED` warning），红测 7 例（6 expectedFailure 红 + 1 committed+dirty 绿控制）143 tests OK，证据存档 `runs/red-run-2026-09-18.md`。
-- In progress: 无；等待 M0 提交授权，之后进入 M1。
-- Failed attempts: SuperBizAgent 早期三臂实验不能作为正式对照（保留为 exploratory）；红测撰写发现非 Git 目标现状为全静默而非显式 warning，已在预注册 v1 内冻结为 `CORE_STORAGE_UNVERIFIED` warning 契约并设为红格。
-- Blockers: M0 产出尚未提交——需 owner 批准独立提交，不得混入 owner 既有改动（`vault/.agent-init.json`、`docs/engineering/`）。
-- Next best action: owner 批准后独立提交 M0（prereg + 红测 + 状态转换投影，早于任何 `scripts/`/`init/`/`skills/` 产品修改）；随后按 protocol §4 ABBA 顺序运行 P0/P1 四个无历史会话（工具 {Read}，先冻结全部首答再评分），Gate 裁决回填任务文件后进入 M2/M3 checker。不修 Orion。
-- Files to read first: `docs/evals/adoption-durability-2026-09/protocol.md`、`vault/tasks/TASK-0013-adoption-durability.md`、`scripts/test_trellium.py`（AdoptionDurabilityTest）、`scripts/trellium.py`。
+- Completed: M0 预注册 + 红测已独立提交（c284557，早于全部产品修改）；M1 消融 4 个无历史会话完成（ABBA、污染筛查 PASS、合同 Gate **Go**，§7 更严读法与场景 B H3 保留已存档）；M2/M3 checker 落地（核心持久性 Gate 三码 + local 边界两码，149 tests，红测同变更转绿）；M4 双语"接入完成契约"与 `adopt` `generated ≠ durable` 输出落地；M5 2026.09.8 版本/迁移/README/snapshot 同步、D-0010 记录、验收项回填。
+- In progress: 无；实现完毕，等待独立 review。
+- Failed attempts: checker 实现两次踩坑并由红测/自检暴露——`ls-tree` 需 `--full-name`（cwd 相对导致 monorepo 全漏报）；`check-ignore -v` 对取反模式也输出（本仓库白名单式 ignore 被整体误报 13 error，已按 `!` 前缀过滤并加回归测试）。
+- Blockers: M1-M5 产出未提交（owner 批准后分两笔提交：evals 记录、协议实现+vault 记录）；self-check 当前 1 error 为 owner 未提交 `docs/engineering/` 核心的真实暴露。
+- Next best action: owner 批准提交后跑独立 review（P0/P1/P2 闭合）→ owner 验收 / tag / Release（版本 2026.09.8 已就绪）→ TASK-0004 的 Orion 升级与 fresh-clone 验收（M6，需 owner 授权）。不自动 push。
+- Files to read first: `docs/evals/adoption-durability-2026-09/results.md`、`vault/tasks/TASK-0013-adoption-durability.md`、`scripts/trellium.py`（check_core_storage/check_local_boundary）、`scripts/test_trellium.py`（AdoptionDurabilityTest）。
 
 ## TASK-0004 - 2026-09-18
 

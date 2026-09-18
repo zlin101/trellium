@@ -1668,6 +1668,245 @@ def git_ignored_files(target: Path, relatives: list[str]) -> set[str] | None:
     }
 
 
+def git_ignored_rules(target: Path, relatives: list[str]) -> dict[str, tuple[str, str]] | None:
+    """Map each Git-ignored relative path to its (source, pattern); None on failure.
+
+    `--no-index` gives pure rule semantics so the answer does not depend on
+    what happens to be staged right now.
+    """
+    if not relatives:
+        return {}
+    input_bytes = b"".join(
+        relative.encode("utf-8", "surrogateescape") + b"\0" for relative in relatives
+    )
+    result = git_run(
+        target, ["check-ignore", "-z", "-v", "--no-index", "--stdin", "--"], input_bytes=input_bytes
+    )
+    if result is None or result.returncode not in (0, 1):
+        return None
+    fields = [name.decode("utf-8", "surrogateescape") for name in result.stdout.split(b"\0")]
+    if fields and fields[-1] == "":
+        fields.pop()
+    rules: dict[str, tuple[str, str]] = {}
+    for index in range(0, len(fields) - 3, 4):
+        source, _line, pattern, pathname = fields[index : index + 4]
+        # With -v git also reports negated matches ("!pattern") for paths the
+        # rules explicitly un-ignore; those paths are NOT ignored.
+        if pattern.startswith("!"):
+            continue
+        rules[pathname] = (source, pattern)
+    return rules
+
+
+def adoption_core_paths(target: Path) -> set[str] | None:
+    """Adoption core derived from the installed stamp; None when not adopted.
+
+    The stamp is the single inventory of managed collaboration files, so the
+    core set follows it instead of a second, drift-prone file list.
+    """
+    try:
+        stamp = json.loads((target / STAMP_RELATIVE).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return None
+    if not isinstance(stamp, dict):
+        return None
+    core: set[str] = {STAMP_RELATIVE}
+    files = stamp.get("files")
+    if isinstance(files, dict):
+        core.update(
+            relative
+            for relative in files
+            if isinstance(relative, str) and relative and not relative.endswith("/")
+        )
+    return core
+
+
+def git_head_files(target: Path) -> tuple[set[str], str | None]:
+    """Names committed in HEAD (repo-root relative) plus an operational error."""
+    probe = git_run(target, ["rev-parse", "--verify", "HEAD"])
+    if probe is None:
+        return set(), "git is unavailable"
+    if probe.returncode != 0:
+        # A repository without any commit: nothing is durable yet.
+        return set(), None
+    result = git_run(target, ["ls-tree", "-r", "-z", "--name-only", "--full-name", "HEAD"])
+    if result is None or result.returncode != 0:
+        return set(), "git ls-tree failed"
+    return (
+        {name.decode("utf-8", "surrogateescape") for name in result.stdout.split(b"\0") if name},
+        None,
+    )
+
+
+def git_root_prefix(target: Path) -> str:
+    """Target prefix inside its Git root ('' when the target is the root)."""
+    result = git_run(target, ["rev-parse", "--show-toplevel"])
+    if result is None or result.returncode != 0:
+        return ""
+    try:
+        root = Path(result.stdout.decode("utf-8", "surrogateescape").strip())
+        relative = os.path.relpath(target.resolve(), root.resolve())
+    except (OSError, ValueError):
+        return ""
+    if relative == ".":
+        return ""
+    return Path(relative).as_posix() + "/"
+
+
+def head_blob_text(target: Path, anchored: str) -> str | None:
+    result = git_run(target, ["cat-file", "blob", f"HEAD:{anchored}"])
+    if result is None or result.returncode != 0:
+        return None
+    return result.stdout.decode("utf-8", "surrogateescape")
+
+
+def worktree_agents_is_merged(target: Path) -> bool:
+    """True when the installed AGENTS.md carries the managed appended section.
+
+    A freshly created AGENTS.md is entirely template-owned and carries no
+    marker, so the HEAD compatibility requirement only applies to the merged
+    form; staleness of created files stays the upgrade flow's job.
+    """
+    try:
+        return AGENTS_MARKER_START in (target / "AGENTS.md").read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return False
+
+
+def check_core_storage(run: VaultCheckRun, core: set[str] | None) -> None:
+    """Mechanical durability gate: the adoption core must be present in Git HEAD.
+
+    HEAD facts are the cheap equivalent of fresh-clone visibility; the checker
+    stays read-only and never runs git add/commit/clone itself.
+    """
+    if core is None:
+        return  # not an adopted installation; nothing to verify
+    if not git_in_worktree(run.target):
+        run.add(
+            "storage",
+            "CORE_STORAGE_UNVERIFIED",
+            "warning",
+            STAMP_RELATIVE,
+            "not a Git worktree or Git is unavailable; adoption durability was not verified and generated files are not durable on their own",
+        )
+        return
+    head, error = git_head_files(run.target)
+    if error is not None:
+        run.add(
+            "storage",
+            "CORE_STORAGE_UNVERIFIED",
+            "warning",
+            STAMP_RELATIVE,
+            f"{error}; adoption durability was not verified",
+        )
+        return
+    prefix = git_root_prefix(run.target)
+    rules = git_ignored_rules(run.target, sorted(core)) or {}
+    for relative in sorted(core):
+        rule = rules.get(relative)
+        if rule is not None:
+            source, pattern = rule
+            run.add(
+                "storage",
+                "CORE_STORAGE_IGNORED",
+                "error",
+                relative,
+                f"{relative} is excluded by Git ignore rule {pattern} ({source}); a fresh clone would not contain it",
+            )
+            continue
+        anchored = prefix + relative
+        if anchored not in head:
+            run.add(
+                "storage",
+                "CORE_STORAGE_UNCOMMITTED",
+                "error",
+                relative,
+                f"{relative} is not committed to Git HEAD; a fresh clone would lose it (commit the collaboration core)",
+            )
+            continue
+        blob = head_blob_text(run.target, anchored)
+        if relative == "AGENTS.md" and worktree_agents_is_merged(run.target) and (
+            blob is None or AGENTS_MARKER_START not in blob
+        ):
+            run.add(
+                "storage",
+                "CORE_STORAGE_UNCOMMITTED",
+                "error",
+                relative,
+                "AGENTS.md in Git HEAD lacks the managed Trellium section; a fresh clone would not receive the routed entry",
+            )
+        elif relative == STAMP_RELATIVE:
+            stamp = None
+            if blob is not None:
+                try:
+                    stamp = json.loads(blob)
+                except ValueError:
+                    stamp = None
+            if not isinstance(stamp, dict) or not isinstance(stamp.get("protocol_version"), str):
+                run.add(
+                    "storage",
+                    "CORE_STORAGE_UNCOMMITTED",
+                    "error",
+                    relative,
+                    "vault/.agent-init.json in Git HEAD is not a readable adoption stamp; a fresh clone would not be recognized as adopted",
+                )
+
+
+LOCAL_PRIVATE_SENTINELS = (
+    "vault/tasks/TASK-0000-sentinel.md",
+    "vault/tasks/TASK-0000-sentinel-review.md",
+    "vault/tasks/archive/TASK-0000-sentinel.md",
+)
+LOCAL_DURABLE_SENTINELS = (
+    "vault/tasks/README.md",
+    "vault/decisions.md",
+    "vault/decisions/D-0000-sentinel.md",
+    "vault/details/sentinel.md",
+)
+
+
+def check_local_boundary(run: VaultCheckRun, policy: dict | None, core: set[str] | None) -> None:
+    """Local storage boundary: future TASKs stay private, durable namespaces public.
+
+    Sentinel paths are queried through `git check-ignore --no-index`; nothing
+    is written and no `.gitignore` is ever modified by the checker.
+    """
+    if policy is None or policy.get("task_storage") != "local":
+        return
+    if not git_in_worktree(run.target):
+        return  # CORE_STORAGE_UNVERIFIED already reports non-Git targets
+    durable = [
+        relative
+        for relative in LOCAL_DURABLE_SENTINELS
+        if core is None or relative not in core  # stamp-managed paths are judged above
+    ]
+    rules = git_ignored_rules(run.target, [*LOCAL_PRIVATE_SENTINELS, *durable])
+    if rules is None:
+        return  # check_task_storage already reports the check-ignore failure
+    uncovered = [relative for relative in LOCAL_PRIVATE_SENTINELS if relative not in rules]
+    if uncovered:
+        run.add(
+            "storage",
+            "LOCAL_BOUNDARY_UNCONFIGURED",
+            "warning",
+            "vault/tasks",
+            "task_storage=local but future local TASK files are not covered by ignore rules: "
+            + ", ".join(uncovered)
+            + "; add narrow rules (vault/tasks/TASK-*.md, vault/tasks/*-review.md, vault/tasks/archive/) so private journals never enter Git",
+        )
+    for relative in durable:
+        rule = rules.get(relative)
+        if rule is not None:
+            source, pattern = rule
+            run.add(
+                "storage",
+                "LOCAL_BOUNDARY_OVERREACH",
+                "error",
+                relative,
+                f"{relative} durable namespace is captured by Git ignore rule {pattern} ({source}); narrow local rules to TASK journals, review ledgers, and vault/tasks/archive/, and keep decisions/details/tasks README tracked",
+            )
+
+
 class VaultCheckRun:
     """Accumulates findings and measurements for one read-only check run."""
 
@@ -2174,6 +2413,9 @@ def collect_vault_state(target: Path) -> tuple[VaultCheckRun, dict[str, str], li
     check_budgets(run, policy)
     check_task_budget(run, policy, tasks, ledgers, archive)
     check_task_storage(run, policy, tasks, ledgers, archive)
+    core = adoption_core_paths(run.target)
+    check_core_storage(run, core)
+    check_local_boundary(run, policy, core)
     return run, texts, tasks
 
 
@@ -3253,7 +3495,12 @@ def adopt_project(args: argparse.Namespace) -> int:
         print(f"skipped existing files: {len(skipped)}")
         for item in skipped:
             print(f"  - {item}")
-    print("next: ask your Agent to read AGENTS.md, vault/index.md (cheat sheet), and vault/runtime.md; read vault/governance.md in full for Level B/C work")
+    print("not durable yet: none of the generated files is committed to Git, so a fresh clone would lose all of them; generated does not mean adopted")
+    print("to finish adoption (in order):")
+    print("  1. review the generated files with the user and finish semantic configuration: mode choice, TASK storage decision, merging any existing agent entry")
+    print("  2. get the generated core committed to Git (AGENTS.md, vault/, skills/agent-task/SKILL.md, vault/.agent-init.json); adopt never runs git add/commit/push - commits stay under the user's control")
+    print("  3. after the commit, re-run: python3 trellium.py check <target> - adoption is complete only with 0 errors (core paths present in Git HEAD, not ignored)")
+    print("  4. for local or production adoptions, verify a fresh clone of the repository passes check too")
     print("later upgrades: python3 trellium.py diff <target>")
     return 0
 
