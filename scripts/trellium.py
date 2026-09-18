@@ -1698,27 +1698,51 @@ def git_ignored_rules(target: Path, relatives: list[str]) -> dict[str, tuple[str
     return rules
 
 
-def adoption_core_paths(target: Path) -> set[str] | None:
-    """Adoption core derived from the installed stamp; None when not adopted.
+class AdoptionCoreState:
+    def __init__(self, stamp: dict | None, paths: set[str] | None, error: str | None) -> None:
+        self.stamp = stamp
+        self.paths = paths
+        self.error = error
 
-    The stamp is the single inventory of managed collaboration files, so the
-    core set follows it instead of a second, drift-prone file list.
-    """
-    try:
-        stamp = json.loads((target / STAMP_RELATIVE).read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, ValueError):
-        return None
-    if not isinstance(stamp, dict):
-        return None
-    core: set[str] = {STAMP_RELATIVE}
+
+def stamp_core_paths(stamp: dict) -> tuple[set[str] | None, str | None]:
+    """Validate the durability-facing stamp schema and derive its core paths."""
+    schema_version = stamp.get("schema_version")
+    if type(schema_version) is not int or schema_version not in (1, 2):
+        return None, "schema_version must be the integer 1 or 2"
+    version = stamp.get("protocol_version")
+    if not isinstance(version, str) or not version.strip():
+        return None, "protocol_version must be a non-empty string"
     files = stamp.get("files")
-    if isinstance(files, dict):
-        core.update(
-            relative
-            for relative in files
-            if isinstance(relative, str) and relative and not relative.endswith("/")
-        )
-    return core
+    if not isinstance(files, dict) or not files:
+        return None, "files must be a non-empty object"
+    paths: set[str] = {STAMP_RELATIVE}
+    for relative, entry in files.items():
+        path = PurePosixPath(relative) if isinstance(relative, str) else None
+        if (
+            path is None
+            or not relative
+            or path.is_absolute()
+            or ".." in path.parts
+            or relative.endswith("/")
+        ):
+            return None, f"files contains an invalid managed path: {relative!r}"
+        if not isinstance(entry, dict):
+            return None, f"files[{relative!r}] must be an object"
+        paths.add(relative)
+    return paths, None
+
+
+def adoption_core_paths(target: Path) -> AdoptionCoreState:
+    """Read the installed stamp without conflating absence with corruption."""
+    try:
+        stamp = read_stamp(target)
+    except (AdoptionError, UnicodeError) as exc:
+        return AdoptionCoreState(None, None, str(exc))
+    if stamp is None:
+        return AdoptionCoreState(None, None, None)
+    paths, error = stamp_core_paths(stamp)
+    return AdoptionCoreState(stamp, paths, error)
 
 
 def git_head_files(target: Path) -> tuple[set[str], str | None]:
@@ -1773,15 +1797,35 @@ def worktree_agents_is_merged(target: Path) -> bool:
         return False
 
 
-def check_core_storage(run: VaultCheckRun, core: set[str] | None) -> None:
+def check_core_storage(run: VaultCheckRun, state: AdoptionCoreState) -> None:
     """Mechanical durability gate: the adoption core must be present in Git HEAD.
 
     HEAD facts are the cheap equivalent of fresh-clone visibility; the checker
     stays read-only and never runs git add/commit/clone itself.
     """
+    if state.error is not None:
+        run.add(
+            "storage",
+            "CORE_STORAGE_INVALID",
+            "error",
+            STAMP_RELATIVE,
+            f"the adoption stamp exists but is invalid: {state.error}; durability cannot be verified",
+        )
+        return
+    core = state.paths
     if core is None:
         return  # not an adopted installation; nothing to verify
-    if not git_in_worktree(run.target):
+    worktree = git_run(run.target, ["rev-parse", "--show-toplevel"])
+    if worktree is None:
+        run.add(
+            "storage",
+            "CORE_STORAGE_UNVERIFIED",
+            "error",
+            STAMP_RELATIVE,
+            "git rev-parse could not be executed; adoption durability was not verified",
+        )
+        return
+    if worktree.returncode != 0:
         run.add(
             "storage",
             "CORE_STORAGE_UNVERIFIED",
@@ -1795,13 +1839,22 @@ def check_core_storage(run: VaultCheckRun, core: set[str] | None) -> None:
         run.add(
             "storage",
             "CORE_STORAGE_UNVERIFIED",
-            "warning",
+            "error",
             STAMP_RELATIVE,
             f"{error}; adoption durability was not verified",
         )
         return
     prefix = git_root_prefix(run.target)
-    rules = git_ignored_rules(run.target, sorted(core)) or {}
+    rules = git_ignored_rules(run.target, sorted(core))
+    if rules is None:
+        run.add(
+            "storage",
+            "CORE_STORAGE_UNVERIFIED",
+            "error",
+            STAMP_RELATIVE,
+            "git check-ignore failed; adoption durability was not verified",
+        )
+        return
     for relative in sorted(core):
         rule = rules.get(relative)
         if rule is not None:
@@ -1836,19 +1889,37 @@ def check_core_storage(run: VaultCheckRun, core: set[str] | None) -> None:
                 "AGENTS.md in Git HEAD lacks the managed Trellium section; a fresh clone would not receive the routed entry",
             )
         elif relative == STAMP_RELATIVE:
-            stamp = None
+            head_stamp = None
             if blob is not None:
                 try:
-                    stamp = json.loads(blob)
+                    head_stamp = json.loads(blob)
                 except ValueError:
-                    stamp = None
-            if not isinstance(stamp, dict) or not isinstance(stamp.get("protocol_version"), str):
+                    head_stamp = None
+            head_paths = None
+            head_error = None
+            if isinstance(head_stamp, dict):
+                head_paths, head_error = stamp_core_paths(head_stamp)
+            if not isinstance(head_stamp, dict) or head_error is not None:
                 run.add(
                     "storage",
                     "CORE_STORAGE_UNCOMMITTED",
                     "error",
                     relative,
                     "vault/.agent-init.json in Git HEAD is not a readable adoption stamp; a fresh clone would not be recognized as adopted",
+                )
+            elif (
+                state.stamp is not None
+                and (
+                    head_stamp.get("protocol_version") != state.stamp.get("protocol_version")
+                    or head_paths != core
+                )
+            ):
+                run.add(
+                    "storage",
+                    "CORE_STORAGE_UNCOMMITTED",
+                    "error",
+                    relative,
+                    "vault/.agent-init.json in Git HEAD does not match the installed protocol_version and managed core file set; commit the current complete stamp",
                 )
 
 
@@ -1865,7 +1936,9 @@ LOCAL_DURABLE_SENTINELS = (
 )
 
 
-def check_local_boundary(run: VaultCheckRun, policy: dict | None, core: set[str] | None) -> None:
+def check_local_boundary(
+    run: VaultCheckRun, policy: dict | None, state: AdoptionCoreState
+) -> None:
     """Local storage boundary: future TASKs stay private, durable namespaces public.
 
     Sentinel paths are queried through `git check-ignore --no-index`; nothing
@@ -1875,6 +1948,7 @@ def check_local_boundary(run: VaultCheckRun, policy: dict | None, core: set[str]
         return
     if not git_in_worktree(run.target):
         return  # CORE_STORAGE_UNVERIFIED already reports non-Git targets
+    core = state.paths
     durable = [
         relative
         for relative in LOCAL_DURABLE_SENTINELS
@@ -1882,7 +1956,14 @@ def check_local_boundary(run: VaultCheckRun, policy: dict | None, core: set[str]
     ]
     rules = git_ignored_rules(run.target, [*LOCAL_PRIVATE_SENTINELS, *durable])
     if rules is None:
-        return  # check_task_storage already reports the check-ignore failure
+        run.add(
+            "storage",
+            "LOCAL_BOUNDARY_UNVERIFIED",
+            "error",
+            "vault/tasks",
+            "git check-ignore failed; the task_storage=local Git boundary was not verified",
+        )
+        return
     uncovered = [relative for relative in LOCAL_PRIVATE_SENTINELS if relative not in rules]
     if uncovered:
         run.add(
@@ -3495,10 +3576,10 @@ def adopt_project(args: argparse.Namespace) -> int:
         print(f"skipped existing files: {len(skipped)}")
         for item in skipped:
             print(f"  - {item}")
-    print("not durable yet: none of the generated files is committed to Git, so a fresh clone would lose all of them; generated does not mean adopted")
-    print("to finish adoption (in order):")
-    print("  1. review the generated files with the user and finish semantic configuration: mode choice, TASK storage decision, merging any existing agent entry")
-    print("  2. get the generated core committed to Git (AGENTS.md, vault/, skills/agent-task/SKILL.md, vault/.agent-init.json); adopt never runs git add/commit/push - commits stay under the user's control")
+    print("generated does not mean durable: whether the collaboration core is persisted is a Git HEAD fact, decided by a commit and confirmed by check, not by this run")
+    print("adoption durability checklist (apply applicable steps in order):")
+    print("  1. review the proposed or existing collaboration files with the user and finish semantic configuration: mode choice, TASK storage decision, merging any existing agent entry")
+    print("  2. ensure the collaboration core is present in Git HEAD (AGENTS.md, vault/, skills/agent-task/SKILL.md, vault/.agent-init.json); adopt never runs git add/commit/push - commits stay under the user's control")
     print("  3. after the commit, re-run: python3 trellium.py check <target> - adoption is complete only with 0 errors (core paths present in Git HEAD, not ignored)")
     print("  4. for local or production adoptions, verify a fresh clone of the repository passes check too")
     print("later upgrades: python3 trellium.py diff <target>")

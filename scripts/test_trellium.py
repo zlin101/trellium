@@ -2651,8 +2651,8 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
     checks turned them green and removed the markers in the same change.
     """
 
-    def adopted_repo(self) -> Path:
-        target = self.root / "project"
+    def adopted_repo(self, name: str = "project") -> Path:
+        target = self.root / name
         target.mkdir()
         (target / "README.md").write_text("# Demo\n", encoding="utf-8")
         self.init_git_repo(target)
@@ -2708,6 +2708,95 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
         reported = self.reported_paths(uncommitted)
         self.assertIn("AGENTS.md", reported)
         self.assertNotIn(agent_init.STAMP_RELATIVE, reported)
+
+    def test_invalid_json_stamp_is_an_error_not_unadopted(self) -> None:
+        target = self.adopted_repo()
+        (target / agent_init.STAMP_RELATIVE).write_text("{not-json\n", encoding="utf-8")
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        invalid = self.findings_with(payload, "CORE_STORAGE_INVALID")
+        self.assertEqual(len(invalid), 1, payload["findings"])
+        self.assertIn("not valid JSON", invalid[0]["message"])
+
+    def test_wrong_stamp_schema_is_an_error_not_unadopted(self) -> None:
+        target = self.adopted_repo()
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps({"schema_version": 2, "protocol_version": "2026.09.8", "files": []}),
+            encoding="utf-8",
+        )
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        self.assertEqual(len(self.findings_with(payload, "CORE_STORAGE_INVALID")), 1)
+
+    def test_unsupported_or_non_integer_stamp_schema_version_is_invalid(self) -> None:
+        for index, schema_version in enumerate((999, True, "2")):
+            with self.subTest(schema_version=schema_version):
+                target = self.adopted_repo(name=f"invalid-schema-version-{index}")
+                stamp = self.read_stamp(target)
+                stamp["schema_version"] = schema_version
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
+
+                check_code, payload = self.check_payload(target)
+
+                self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+                invalid = self.findings_with(payload, "CORE_STORAGE_INVALID")
+                self.assertEqual(len(invalid), 1, payload["findings"])
+                self.assertIn("schema_version", invalid[0]["message"])
+
+    def test_legacy_v1_stamp_schema_remains_supported(self) -> None:
+        target = self.adopted_repo()
+        stamp = self.read_stamp(target)
+        stamp["schema_version"] = 1
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt trellium with legacy stamp")
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_INVALID"), [])
+
+    def test_worktree_stamp_cannot_shrink_head_managed_files(self) -> None:
+        target = self.adopted_repo()
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt trellium")
+        stamp = self.read_stamp(target)
+        stamp["files"].pop("vault/governance.md")
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertIn(agent_init.STAMP_RELATIVE, self.reported_paths(uncommitted))
+        self.assertIn("managed core file set", " ".join(item["message"] for item in uncommitted))
+
+    def test_worktree_stamp_protocol_must_match_head(self) -> None:
+        target = self.adopted_repo()
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt trellium")
+        stamp = self.read_stamp(target)
+        stamp["protocol_version"] = "9999.99.99"
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertIn(agent_init.STAMP_RELATIVE, self.reported_paths(uncommitted))
+        self.assertIn("protocol_version", " ".join(item["message"] for item in uncommitted))
 
     def test_ignored_core_is_reported_with_path(self) -> None:
         target = self.root / "project"
@@ -2802,6 +2891,79 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
 
         self.assertEqual(check_code, 0, payload["findings"])
         self.assertEqual(len(self.findings_with(payload, "LOCAL_BOUNDARY_UNCONFIGURED")), 1)
+
+    def test_check_ignore_failure_is_error_for_adopted_local_project_without_tasks(self) -> None:
+        target = self.adopted_repo()
+        index = target / "vault/index.md"
+        index.write_text(
+            index.read_text(encoding="utf-8").replace(
+                '"task_storage": "tracked"', '"task_storage": "local"'
+            ),
+            encoding="utf-8",
+        )
+        (target / ".gitignore").write_text(
+            "vault/tasks/TASK-*.md\nvault/tasks/*-review.md\nvault/tasks/archive/\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(list((target / "vault/tasks").glob("TASK-*.md")), [])
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt local trellium")
+        real_git_run = agent_init.git_run
+
+        def failing_check_ignore(
+            cwd: Path, arguments: list[str], input_bytes: bytes | None = None
+        ) -> subprocess.CompletedProcess | None:
+            if arguments and arguments[0] == "check-ignore":
+                return subprocess.CompletedProcess(["git", *arguments], 128, b"", b"failure")
+            return real_git_run(cwd, arguments, input_bytes)
+
+        with patch.object(agent_init, "git_run", side_effect=failing_check_ignore):
+            check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        core = self.findings_with(payload, "CORE_STORAGE_UNVERIFIED")
+        boundary = self.findings_with(payload, "LOCAL_BOUNDARY_UNVERIFIED")
+        self.assertEqual([(item["severity"], item["path"]) for item in core], [("error", agent_init.STAMP_RELATIVE)])
+        self.assertEqual([(item["severity"], item["path"]) for item in boundary], [("error", "vault/tasks")])
+
+    def test_adopt_output_never_claims_commit_facts(self) -> None:
+        # Review finding: the ending block must not assert Git facts ("none
+        # of the generated files is committed") that are false for dry-run,
+        # idempotent repeats on committed projects, partial changes, or
+        # non-Git targets. Durability is decided by HEAD and confirmed by
+        # check, never by the adopt run itself.
+        committed = self.adopted_repo()
+        self.git(committed, "add", "-A")
+        self.git(committed, "commit", "-q", "-m", "adopt trellium")
+        plain = self.root / "plain"
+        plain.mkdir()
+
+        scenarios: dict[str, tuple[Path, tuple[str, ...]]] = {
+            "dry-run": (self.adopted_repo(name="dry-run-target"), ("--dry-run",)),
+            "idempotent-committed": (committed, ()),
+            "non-git": (plain, ()),
+        }
+        for name, (target, extra) in scenarios.items():
+            code, out, err = self.run_agent_init("adopt", str(target), *extra)
+            self.assertEqual(code, 0, err)
+            with self.subTest(scenario=name):
+                self.assertNotIn("none of the generated files is committed", out)
+                self.assertNotIn("not durable yet", out)
+                self.assertNotIn("to finish adoption", out)
+                self.assertIn("generated does not mean durable", out)
+                self.assertIn(
+                    "adoption durability checklist (apply applicable steps in order):", out
+                )
+
+        # Partial change: one core file missing, everything else skipped.
+        (committed / "AGENTS.md").unlink()
+        code, out, err = self.run_agent_init("adopt", str(committed))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("none of the generated files is committed", out)
+        self.assertNotIn("not durable yet", out)
+        self.assertNotIn("to finish adoption", out)
+        self.assertIn("generated does not mean durable", out)
+        self.assertIn("adoption durability checklist (apply applicable steps in order):", out)
 
     def test_whitelist_gitignore_is_not_reported_as_ignored(self) -> None:
         # A `/*` + negated-whitelist .gitignore (this repository's own style)

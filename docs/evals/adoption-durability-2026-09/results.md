@@ -21,20 +21,20 @@
 
 ## Gate 裁决
 
-任务合同 Gate（"P1 只有在关键遗漏少于 P0 且硬指标无退化时才进入 Skill"）逐条对照：
+按冻结协议 §7 的 Gate 逐条对照：
 
 1. 关键遗漏：P1 = 2 < P0 = 3 ✓（差值全部来自场景 A：2 → 0；场景 B 两臂同为 1，项不同）。
-2. 硬指标无退化：H1 0→0 ✓；H2 0→0 ✓；H3 1→1（实例 2→1，未增加）✓。
+2. Go 所需硬指标：P1 H1=0 ✓；H2=0 ✓；H3=1 ✗（把 `vault/details/` 归入 local）。
 
-**裁决：Go（按任务合同 Gate）。** 依据合同文本，两处条件均满足。
+**正式裁决：Inconclusive。** P1 虽减少关键遗漏，但没有满足冻结协议明确要求的 H1=H2=H3=0，因此不足以授权 Skill 变更。按 §8 停止条件，本轮不追加会话、不改写冻结材料或原始回答；双语 Skill 撤回候选“接入完成契约”，checker 修复与场景无关的 `adopt` 输出修复保留。
 
-必须如实记录的两点保留：
+解释边界：
 
-- **§7 字面更严**：本协议 §7 把"无退化"括注为"P1 的 H1=H2=H3=0"，按该字面读法 P1 的 H3=1 不满足，应记 Inconclusive。任务合同文本（owner 批准版）只要求"无退化"，合同优先；本裁决按合同给出 Go，同时把两种读法并列存档，owner review 时可改判。
-- **场景 B 的 H3 未被任何臂消掉**（n=1，两臂各 1）：P1 契约文本未枚举 decisions/details 的 durable 属性，提示词没有教会边界。**本次 Go 只覆盖"接入完成契约 + adopt 输出"在场景 A 上的行为收益，不声称修复场景 B 的边界误判**；后者由 M3 的机械检查（`LOCAL_BOUNDARY_OVERREACH` error）兜底——这正是"语义提示 + 机械 Gate"双层设计的预期分工。若将来要在提示词层修复边界认知，须另立冻结材料重新消融，不得在本次材料上追加文本。
+- 先前把 H3 的 1→1 解释为“无退化”并据此判 Go，违反冻结协议 §7；owner review 已纠正。任务合同摘要不能降低预注册 Gate，正式结果以冻结协议为准。
+- **场景 B 的 H3 未被任何臂消掉**（n=1，两臂各 1）：P1 契约文本未枚举 decisions/details 的 durable 属性，提示词没有教会边界。场景 A 的遗漏改善只是记录性结果，不足以授权 Skill；场景 B 的边界误判由 M3 的机械检查（`LOCAL_BOUNDARY_OVERREACH` error）兜底。若将来要在提示词层修复边界认知，须另立冻结材料重新消融，不得在本次材料上追加文本。
 
-## 对 M4 的约束（随裁决生效）
+## 对 M4 的约束（随正式裁决生效）
 
-- 双语 Skill：逐字落入 `materials/p1-skill-contract-zh.md` / `p1-skill-contract-en.md` 的契约段（插入"既有项目接入/Existing Project Adoption"节之后），不做其他措辞改动。
-- `adopt` 结束输出：逐字落入 `materials/p1-adopt-output.txt` 的引导文本（create 行与 changed 清单不动）。
+- 双语 Skill：保持 P0，不纳入 `materials/p1-skill-contract-zh.md` / `p1-skill-contract-en.md` 的候选契约。
+- `adopt` 结束输出：保留不虚构 Git 现场事实的 `generated != durable` 提醒；该直接修复按冻结 §8 不依赖 Skill 裁决。
 - 消融会话载体偏差（附录 v1.1）随结果一并存档，owner review 时一并复核。

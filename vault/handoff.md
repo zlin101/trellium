@@ -7,12 +7,12 @@
 
 ## TASK-0013 - 2026-09-18
 
-- Objective: 修复 `adopt` 后协作核心未进入 Git `HEAD`、checker 却报告 0/0 的假健康；同时收紧 local ignore 边界，并用最小提示词帮助 Agent 完成语义接入。
-- Completed: M0 预注册 + 红测已独立提交（c284557，早于全部产品修改）；M1 消融 4 个无历史会话完成（ABBA、污染筛查 PASS、合同 Gate **Go**，§7 更严读法与场景 B H3 保留已存档）；M2/M3 checker 落地（核心持久性 Gate 三码 + local 边界两码，149 tests，红测同变更转绿）；M4 双语"接入完成契约"与 `adopt` `generated ≠ durable` 输出落地；M5 2026.09.8 版本/迁移/README/snapshot 同步、D-0010 记录、验收项回填。
-- In progress: 无；实现完毕，等待独立 review。
+- Objective: 修复 `adopt` 后协作核心未进入 Git `HEAD`、checker 却报告 0/0 的假健康；同时收紧 local ignore 边界，并以冻结 Gate 决定提示词是否进入 Skill。
+- Completed: M0 预注册 + 红测已独立提交（c284557，早于全部产品修改）；M1 四格原始结果保留，owner review 按冻结 §7 正式改判 Inconclusive（P1 H3=1），双语候选契约已撤回；M2/M3 checker 主体、场景无关 `adopt` 提醒与 2026.09.8 文档保留。当前分支已有三笔 TASK-0013 本地提交（c284557、3eaa9d6、7b27cb6），均未 push/tag/release。
+- In progress: owner review 修复已实现并经 Codex 主 Agent 三轮独立复审通过（无 open P0/P1/P2）；任务仅因 owner 核心文件尚未进入 HEAD 而保持 active。
 - Failed attempts: checker 实现两次踩坑并由红测/自检暴露——`ls-tree` 需 `--full-name`（cwd 相对导致 monorepo 全漏报）；`check-ignore -v` 对取反模式也输出（本仓库白名单式 ignore 被整体误报 13 error，已按 `!` 前缀过滤并加回归测试）。
-- Blockers: M1-M5 产出未提交（owner 批准后分两笔提交：evals 记录、协议实现+vault 记录）；self-check 当前 1 error 为 owner 未提交 `docs/engineering/` 核心的真实暴露。
-- Next best action: owner 批准提交后跑独立 review（P0/P1/P2 闭合）→ owner 验收 / tag / Release（版本 2026.09.8 已就绪）→ TASK-0004 的 Orion 升级与 fresh-clone 验收（M6，需 owner 授权）。不自动 push。
+- Blockers: 加固后的 self-check 当前 2 errors：owner 未提交 `docs/engineering/code-comments.md`，且 owner 工作区 stamp 的核心集合与 HEAD stamp 不同；两者均属禁止触碰的 owner 状态，不能据此勾选全量 self-check 通过。
+- Next best action: owner 决定并提交既有 `docs/engineering/code-comments.md` 与 `vault/.agent-init.json`，复跑 self-check 0/0 后转 ready_for_review；当前不 push/tag/release。TASK-0004 的 Orion 升级仍需后续 owner 授权。
 - Files to read first: `docs/evals/adoption-durability-2026-09/results.md`、`vault/tasks/TASK-0013-adoption-durability.md`、`scripts/trellium.py`（check_core_storage/check_local_boundary）、`scripts/test_trellium.py`（AdoptionDurabilityTest）。
 
 ## TASK-0004 - 2026-09-18

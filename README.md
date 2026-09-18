@@ -265,8 +265,8 @@ python3 scripts/trellium.py check /path/to/project --format json  # 稳定 JSON
 - runtime 投影：`runtime.md` Active Tasks 行与状态块 lifecycle 的一致性；`local` 项目中指向不存在任务文件的 open 行报 clone-safe warning `TASK_RUNTIME_LOCAL_UNRESOLVED`（说明可能是 fresh clone 或本地误删、恢复动作，且该摘要不授予 Authority），closed local 行残留报 `TASK_RUNTIME_CLOSED_LOCAL` error；
 - 预算测量：热文件行数、UTF-8 字节、最大单行、条目数始终报告；只有策略块显式配置的阈值会触发超限错误；
 - TASK storage：按策略对比 Git 实际状态（tracked/local）；
-- 接入持久性（2026.09.8）：从安装版本戳派生协作核心集合（含 stamp 自身）并逐路径核对 Git `HEAD`——未提交报 `CORE_STORAGE_UNCOMMITTED` error，被 ignore 规则误伤报 `CORE_STORAGE_IGNORED` error（附命中规则）；非 Git 目标报 `CORE_STORAGE_UNVERIFIED` warning，不伪造 durable。fresh clone 是 local/生产接入的一次性验收动作，不进入日常 check；
-- local 边界（2026.09.8）：`task_storage=local` 时用无写入 sentinel 验证未来 TASK/review/archive 会被忽略（未覆盖报 `LOCAL_BOUNDARY_UNCONFIGURED` warning），并验证 `vault/tasks/README.md`、`vault/decisions/`、`vault/details/` 等 durable namespace 不被宽泛规则误伤（命中报 `LOCAL_BOUNDARY_OVERREACH` error，附规则与修复方向）；不自动修改任何 `.gitignore`。
+- 接入持久性（2026.09.8）：从安装版本戳派生协作核心集合（含 stamp 自身）并逐路径核对 Git `HEAD`——当前 stamp 损坏报 `CORE_STORAGE_INVALID` error，未提交或 HEAD stamp 与当前协议版本/核心集合不相容报 `CORE_STORAGE_UNCOMMITTED` error，被 ignore 规则误伤报 `CORE_STORAGE_IGNORED` error（附命中规则）；Git 验证失败报 `CORE_STORAGE_UNVERIFIED` error，非 Git 目标报同码 warning。fresh clone 是 local/生产接入的一次性验收动作，不进入日常 check；
+- local 边界（2026.09.8）：`task_storage=local` 时用无写入 sentinel 验证未来 TASK/review/archive 会被忽略（未覆盖报 `LOCAL_BOUNDARY_UNCONFIGURED` warning），并验证 `vault/tasks/README.md`、`vault/decisions/`、`vault/details/` 等 durable namespace 不被宽泛规则误伤（命中报 `LOCAL_BOUNDARY_OVERREACH` error，附规则与修复方向）；Git 边界命令失败报 `LOCAL_BOUNDARY_UNVERIFIED` error，不自动修改任何 `.gitignore`。
 
 退出码：发现 error 退出 `2`；只有 warning 退出 `0`，但 summary 必须显示 warning，不会显示无条件 PASS；目标无效等操作错误退出 `1`。`check` 不会自动修复任何文件、不写入目标项目、不访问网络、不执行文档中出现的命令。
 
