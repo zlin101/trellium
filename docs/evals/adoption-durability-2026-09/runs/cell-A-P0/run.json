@@ -1,0 +1,11 @@
+{
+  "cell": "A-P0",
+  "carrier": "host-subagent (general-purpose, same model as host); fresh context, no chat history",
+  "deployed_at": "2026-09-18 (ABBA position 1)",
+  "material_bytes": 5822,
+  "tool_uses": 4,
+  "tool_scope": "Read within fixture-a only (per final answer self-report; post-hoc contamination screen applied)",
+  "wall_clock_seconds": 208,
+  "answer_bytes": 4026,
+  "contamination_screen": "pass — mechanical scan hits were the session self-reporting the fixture directory name (given verbatim in its own prompt); no scoring/golden/protocol/arm-hypothesis content. See results.md contamination section."
+}

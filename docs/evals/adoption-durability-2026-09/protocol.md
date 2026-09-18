@@ -87,3 +87,12 @@ P1（候选"接入完成契约"+ 候选 `adopt` 结束输出）相对 P0（2026.
 
 - checker 保持只读：不写文件、不改 index、不 commit、不 push、不运行 clone；fresh clone 仅作为 fixture 验证的离线 oracle（HEAD 判定等价性对照），不进入日常 check。
 - 红测提交形态：M0 提交含 fixture #1-#6 与 #8 的自动测试，以 `unittest.expectedFailure` 显式标注"红至 M2 落地"；M2 实现使红测转绿并在同一变更中移除标注。#4（committed + dirty worktree）为唯一即时绿格：M2 不得使正常已接入的 dirty 工作树转红。红测首跑输出（6 expected failures + 1 control 通过）作为 M0 证据存档于本目录 runs 记录。
+
+## 10. Addendum v1.1 — 投放形态登记（2026-09-18，先于任何会话）
+
+- 偏差：投放载体由专用 headless CLI runner 改为宿主会话内的子 Agent（全新上下文、无聊天历史、与宿主同模型）。原因：本环境无独立 runner 进程；owner 已批准该形态（2026-09-18 投放方式选择）。
+- 工具白名单 {Read} 无法机械强制，降级为：prompt 内逐条禁止指令 + 事后污染筛查——首答中出现 scoring.md 判定语、本协议正文、任务文件内容、P0/P1 臂假设词汇（"实验/消融/候选/Go-NoGo"等框架词）、golden 违规码（H1/H2/H3/K-a 等），或任何 fixture 之外文件的内容，即 void 并同格顺延重跑，至多 2 次（§8）。
+- run.json 计量降级：tool_calls 记 `n/a`；material_bytes 由宿主从材料文件机械计算；wall_clock 记宿主观察近似值。
+- 投放顺序不变（§4 ABBA 串行）；四格全部完成并冻结首答后，评分者才逐条评分。golden 自预注册提交（c284557）后未改动；评分逐条引用首答原文，可复核。
+- 存档 prompt.md 中 fixture 目录的本机路径前缀脱敏为 `<host>/`；与实际发予会话的 prompt 仅差该前缀。首答筛查同时检查本机路径泄漏。
+- 其余纪律（单变量、污染即 void、Gate 对照）不变。

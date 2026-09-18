@@ -1,0 +1,11 @@
+{
+  "cell": "B-P1",
+  "carrier": "host-subagent (general-purpose, same model as host); fresh context, no chat history",
+  "deployed_at": "2026-09-18 (ABBA position 3)",
+  "material_bytes": 7809,
+  "tool_uses": 0,
+  "tool_scope": "answered from prompt materials only",
+  "wall_clock_seconds": 224,
+  "answer_bytes": 4389,
+  "contamination_screen": "pass — mechanical scan hits were the session self-reporting the fixture directory name (given verbatim in its own prompt); no scoring/golden/protocol/arm-hypothesis content. See results.md contamination section."
+}
