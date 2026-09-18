@@ -1,0 +1,27 @@
+create <target>/AGENTS.md
+create <target>/vault/index.md
+create <target>/vault/governance.md
+create <target>/vault/decisions.md
+create <target>/vault/handoff.md
+create <target>/vault/parked.md
+create <target>/vault/collaboration.md
+create <target>/vault/tasks/README.md
+create <target>/skills/agent-task/SKILL.md
+create <target>/vault/project.md
+create <target>/vault/runtime.md
+
+adoption target: <target>
+changed: 11
+  - AGENTS.md
+  - vault/index.md
+  - vault/governance.md
+  - vault/decisions.md
+  - vault/handoff.md
+  - vault/parked.md
+  - vault/collaboration.md
+  - vault/tasks/README.md
+  - skills/agent-task/SKILL.md
+  - vault/project.md
+  - vault/runtime.md
+next: ask your Agent to read AGENTS.md, vault/index.md (cheat sheet), and vault/runtime.md; read vault/governance.md in full for Level B/C work
+later upgrades: python3 trellium.py diff <target>

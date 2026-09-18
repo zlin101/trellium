@@ -6,7 +6,7 @@ Self-hosting pilot: the collaboration layer now maintains the Trellium repositor
 
 ## Focus
 
-- TASK-0001
+- TASK-0013
 
 ## Active Tasks
 
@@ -18,7 +18,7 @@ table holds pointers only.
 | TASK-0001 | Run the self-hosting pilot and collect K1-K4 shadow evidence. | active | Next Agent continues pilot work; log transitions in `vault/details/shadow-run-2026-09.md`. |
 | TASK-0002 | Publish the existing 2026.09.3 tag as a GitHub Release. | accepted | Closed 2026-09-08: release is live and latest resolves; title/notes demoted to optional by owner decision (D-0003). |
 | TASK-0003 | Execute the 2026-09-08 next-cycle plan: calibrate K1-K4 and add the self-hosting CI check. | accepted | Closed 2026-09-08 after review round 2 and a green first CI run (34181086563). |
-| TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | blocked | M3 No-Go adopted as D-0004; resumes (blocked -> active) when the owner provides a second real project in local mode. |
+| TASK-0004 | Post-release validation: cold-start baseline, second-project pilot, Context Go/No-Go. | active | Orion supplied the first real local-project observation; close its local runtime row and tracked durability boundary, rerun check 0/0, then decide M2. |
 | TASK-0007 | Local TASK lifecycle close-out and clone-safe projection (2026.09.4). | accepted | Closed 2026-09-09; 2026.09.4 tag and Release published. |
 | TASK-0005 | Vault evidence quality: converge coverage counts to a single source and fix cold-start methodology. | accepted | Closed 2026-09-09 after owner review round 2 (final gate closed, six findings fixed). |
 | TASK-0006 | Non-Context optimization: ablation experiments and per-candidate Go/No-Go; Evidence Receipt v0 only if M2 experiments pass. | accepted | Closed 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified). |
@@ -27,6 +27,7 @@ table holds pointers only.
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | accepted | Closed 2026-09-15: three status-layer fixes (check byte-identical), 3 red-first tests (121 total), independent review APPROVE, CI green (34927880245). MIGRATIONS Unreleased section post-09.5-tag. |
 | TASK-0011 | Test whether a thin project-scoped `trellium-work` adds value beyond `AGENTS.md + vault`; only an ablation Go authorizes replacing `agent-task` with a project-scoped skill. | accepted | Closed 2026-09-18: verdict No-Go (zero observable gain over AGENTS.md+vault; A1 costs more; Codex project-discovery unverified); leak fix landed; direction closed per owner acceptance. |
 | TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | accepted | Closed 2026-09-16; develop/tag pushed, CI run 35076645891 green, Release 2026.09.7 live with empty body, and releases/latest resolves to it. |
+| TASK-0013 | Close the adoption durability and local Git-boundary false-health gap. | active | M0 done: prereg frozen at `docs/evals/adoption-durability-2026-09/` with 6 red tests; next run the P0/P1 ablation (M1), then the checker layers (M2-M3). |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -36,6 +37,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
+- TASK-0013: active — M0 complete (2026-09-18): prereg frozen at `docs/evals/adoption-durability-2026-09/` (P0/P1 arms, scenes A/B, scoring, pollution rules, stop conditions, checker severity matrix incl. non-Git `CORE_STORAGE_UNVERIFIED` warning); reproduction replayed as 6 red tests + 1 green control (143 tests OK, 6 expected failures). Next: M1 ablation, then M2/M3 checker layers.
 - TASK-0012: accepted and released 2026-09-16 — develop and lightweight tag `2026.09.7` are pushed at `cf7e06a`; CI run 35076645891 success. Release is non-draft/non-prerelease, titled `Trellium 2026.09.7` with an empty body; `releases/latest` resolves to it.
 - TASK-0011: ready_for_review 2026-09-16 — M1 verdict **No-Go** (both arms zero key omissions/violations across three scenarios; A1 costs more; Codex project-discovery unverified). No-Go stop-condition leak fix landed (packages sanitized, adopt/upgrade unchanged); privacy history rewrite executed per owner authorization. Independent review APPROVE. Awaiting owner acceptance.
 - TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
@@ -43,7 +45,7 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 - TASK-0001: self-hosting pilot continues on real work. Coverage facts live solely in `vault/details/shadow-run-2026-09.md` (append-only event rows; dated derived snapshot — D-0005). Numeric coverage gate is met; remaining work is M2 second project, canonical cross-project evidence, and the five-question review.
 - TASK-0002: 2026.09.3 Release published (tag `97d5506`, non-draft, non-prerelease) and `releases/latest` resolves to it. Accepted after the owner demoted the empty title/notes to an optional, non-gating improvement (D-0003).
 - TASK-0003: M1 reconciled the K1-K4 contract (append-only, canonical K3/K4 observation tables opened); M2 re-verified the release blocker (latest still 2026.09.2); M3 wired the read-only self-hosting check into CI (write permission confined to the PR self-heal job). Accepted 2026-09-08 after review round 2 and a green first CI run.
-- TASK-0004: M1 complete — S1-S7 in 7 independent cold sessions, 7/7 correct, 0 overreach, 0 stale-evidence misuse. Owner adopted the No-Go as D-0004 (no M4, no context implementation; reopen only via its three conditions). Task blocked pending a second real project for M2.
+- TASK-0004: active — Orion is the second real local project and produced a genuine `TASK_RUNTIME_CLOSED_LOCAL` finding. M2 remains Partial until the closed runtime pointer is removed, the core collaboration layer has an explicit tracked boundary/stamp, and Orion check reaches 0/0. D-0004 remains in force; no Context implementation is authorized.
 - TASK-0005: coverage counts single-sourced into the shadow ledger (D-0005); cold-start Protocol v2 isolated under `docs/evals/cold-start-v2/`. Accepted 2026-09-09 after owner review round 2 (final gate closed, six findings fixed).
 - TASK-0007: local lifecycle disposition gate + clone-safe projection implemented, ablation-driven (W1 carrier; C0/C1/C2 characterization), 12 focused tests, 2026.09.4 shipped with migrations and bilingual docs. Accepted 2026-09-09; tag and Release published.
 - TASK-0006: M0-M2 complete — preregistration frozen before results; E0/E1/E2 ablation run (E0 4/4, E1 4/4, E2 3/4 with the designed false-positive causing the only error). Accepted 2026-09-09 with strictly scoped conclusions: E2 No-Go, E1 Inconclusive, v0 not implemented this cycle (direction not falsified); M3 Blocked, M4 rules draft (no numeric threshold), M5 Blocked + D0-sufficient, M6 deferred.
@@ -57,6 +59,9 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- TASK-0013 draft → active (2026-09-18): M0 preregistration frozen at `docs/evals/adoption-durability-2026-09/` and the reproduction replayed as 6 expected-failure red tests plus a committed+dirty control; no `scripts/`, `init/`, or `skills/` product files touched yet.
+- Opened TASK-0013 draft (2026-09-18): fix the reproducible adoption false-health state with a preregistered prompt ablation plus deterministic HEAD/ignore-boundary checks; no automatic Git mutations and no Orion changes in scope.
+- Resumed TASK-0004 (2026-09-18) with Orion as the second real local project: first observation is Partial, with one actionable closed-local runtime error and an unclosed tracked durability boundary.
 - Owner accepted TASK-0011 (2026-09-18): project work skill No-Go confirmed, direction closed; self-hosting protocol upgraded to 2026.09.7 and pushed (7583707). Focus returns to TASK-0001.
 - Released `2026.09.7`: exact-SHA CI run 35076645891 succeeded; tag and Release are public, title-only with empty body, and `releases/latest` resolves to 2026.09.7.
 - Owner accepted TASK-0012 by explicit self-acceptance instruction (2026-09-16); Focus returned to TASK-0001. Remote ref lookup was unavailable due execution-platform capacity, so the record relies on owner push confirmation plus local post-commit gates and does not invent remote CI evidence.
@@ -125,9 +130,10 @@ git diff --check ee4f223..HEAD -- . ':(exclude)docs/evals/review-pack-2026-09/pa
 
 ## Next Steps
 
+- GLM/Claude starts TASK-0013 by changing its state block draft → active, freezing and committing M0 preregistration before any checker/Skill implementation.
 - Owner runs the incremental re-review of TASK-0011's record closure (M0/M1 done, No-Go verdict + leak fix landed, privacy rewrite executed and CI green); then owner acceptance.
 - Plan B executed and pushed; remote gate green after the Actions incident recovery; pre-rewrite bundle deleted per the owner gate (file archive + SHA-256 manifest retained locally).
 - Owner creates the GitHub Release from the pushed `2026.09.5` tag (local `gh` unavailable, 2026-09-04 precedent); afterwards confirm `releases/latest` resolves to `2026.09.5` (D-0003 gate).
 - Continue TASK-0001 only as background shadow evidence; it is not the product-development mainline.
-- Provide a second real project (local mode) to resume TASK-0004 M2; its blocked -> active transition will also complete TASK-0001's missing coverage sample.
+- After TASK-0013 is accepted and released, upgrade Orion, remove the accepted TASK runtime row/Focus, establish the tracked core/stamp boundary, run a fresh-clone check to 0/0, and record the final TASK-0004 M2 observation.
 - Context implementation stays closed per D-0004; any reopen requires the owner-approved Level C task first.

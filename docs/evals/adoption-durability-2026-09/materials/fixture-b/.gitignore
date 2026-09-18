@@ -1,0 +1,7 @@
+build/
+*.log
+# Trellium: local TASK storage is private
+vault/tasks/*
+# personal working notes
+vault/decisions/
+vault/details/

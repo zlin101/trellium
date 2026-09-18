@@ -1,0 +1,54 @@
+{
+  "adopted_at": "2026-09-18",
+  "files": {
+    "AGENTS.md": {
+      "baseline": "cefd41563aa65d27a03936dfae3f4919c257adc2e1168cac5f4e1ade2a2b4c7a",
+      "role": "merge"
+    },
+    "skills/agent-task/SKILL.md": {
+      "baseline": "bd927b6185ea52aef9164687fe58640d18cee21a7537d0a3fc41182c8d5188f1",
+      "role": "template"
+    },
+    "vault/collaboration.md": {
+      "baseline": "dbcdb8f28a0c4c83da7954c8414ded636897b9e20c22f8f4d425deb1a271c849",
+      "role": "data"
+    },
+    "vault/decisions.md": {
+      "baseline": "4a83249646bbef13d004f1750ad6b607cd647cf1f5db2d9eb9a660ef3c1d08ad",
+      "role": "data"
+    },
+    "vault/governance.md": {
+      "baseline": "350f46aea659891d2fe4eef40310dcb9bc02e04cd9f4f762e541a97b6975165d",
+      "role": "merge"
+    },
+    "vault/handoff.md": {
+      "baseline": "aa954f8dd8deb52ef293f18c9499450d3ed27050a5f82a7ca144342983211eba",
+      "role": "data"
+    },
+    "vault/index.md": {
+      "baseline": "a13d4fd80e41b52a4b5eb520661e09a6eefa8bc410f480b69a9cce0e8c8aa998",
+      "role": "merge"
+    },
+    "vault/parked.md": {
+      "baseline": "f27c86ab28c1cff38fe99387d842c009a5f8d9d48710e0ee89def55d4efa0b27",
+      "role": "data"
+    },
+    "vault/project.md": {
+      "baseline": "03a15c9a245cbd96782f3793a3fd53a260a56a4aa9c69c33f7f88b9a6d505574",
+      "role": "data"
+    },
+    "vault/runtime.md": {
+      "baseline": "3d383c394f0d02a5de1e6651a350014f768735d383c22c70a1e72bafc0a136d9",
+      "role": "data"
+    },
+    "vault/tasks/README.md": {
+      "baseline": "44ecd77b3ce3b4f649e13dddf3cf84c5405434d661a845ead2a27690637eb8fb",
+      "role": "template"
+    }
+  },
+  "last_upgrade": null,
+  "profiles": [],
+  "protocol_version": "2026.09.7",
+  "schema_version": 2,
+  "trust": "versioned"
+}

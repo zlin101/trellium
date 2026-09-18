@@ -2640,5 +2640,152 @@ class TemplatePackagingTest(TargetTestCase):
             self.assertNotIn("vault/index.md ->", agents)
 
 
+class AdoptionDurabilityTest(TargetTestCase):
+    """TASK-0013 M0 red tests (prereg: docs/evals/adoption-durability-2026-09/).
+
+    Replays the confirmed adoption-durability reproduction against 2026.09.7:
+    a fresh `adopt` leaves the collaboration core outside Git HEAD while check
+    still reports zero findings. The expectedFailure markers below are the
+    committed red state; the M2 HEAD-persistence check turns them green and
+    must remove the markers in the same change. Fixture expectations are
+    frozen in the prereg protocol section 9 (severity matrix).
+    """
+
+    def init_git_repo(self, target: Path) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.name", "test"], cwd=target, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=target, check=True)
+
+    def git(self, target: Path, *arguments: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", *arguments], cwd=target, check=False, capture_output=True)
+
+    def adopted_repo(self) -> Path:
+        target = self.root / "project"
+        target.mkdir()
+        (target / "README.md").write_text("# Demo\n", encoding="utf-8")
+        self.init_git_repo(target)
+        self.git(target, "add", "README.md")
+        self.git(target, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        return target
+
+    def check_payload(self, target: Path) -> tuple[int, dict]:
+        code, out, err = self.run_agent_init("check", str(target), "--format", "json")
+        return code, json.loads(out)
+
+    @staticmethod
+    def findings_with(payload: dict, code: str) -> list[dict]:
+        return [finding for finding in payload["findings"] if finding["code"] == code]
+
+    @staticmethod
+    def reported_paths(findings: list[dict]) -> str:
+        return " ".join(str(finding.get("path", "")) for finding in findings)
+
+    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_UNCOMMITTED
+    def test_untracked_core_after_adopt_is_reported(self) -> None:
+        target = self.adopted_repo()
+
+        check_code, payload = self.check_payload(target)
+
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertTrue(uncommitted, payload["findings"])
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        reported = self.reported_paths(uncommitted)
+        for core in ("AGENTS.md", "vault/index.md", agent_init.STAMP_RELATIVE, "skills/agent-task/SKILL.md"):
+            self.assertIn(core, reported)
+
+    @unittest.expectedFailure  # staged-only must not count as durable
+    def test_staged_only_core_is_still_uncommitted(self) -> None:
+        target = self.adopted_repo()
+        self.git(target, "add", "-A")
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        self.assertTrue(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), payload["findings"])
+
+    @unittest.expectedFailure  # committing only the stamp must not fake durability
+    def test_stamp_only_partial_commit_still_reports_missing_core(self) -> None:
+        target = self.adopted_repo()
+        self.git(target, "add", agent_init.STAMP_RELATIVE)
+        self.git(target, "commit", "-q", "-m", "stamp only")
+
+        check_code, payload = self.check_payload(target)
+
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertTrue(uncommitted, payload["findings"])
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        reported = self.reported_paths(uncommitted)
+        self.assertIn("AGENTS.md", reported)
+        self.assertNotIn(agent_init.STAMP_RELATIVE, reported)
+
+    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_IGNORED
+    def test_ignored_core_is_reported_with_path(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        (target / "README.md").write_text("# Demo\n", encoding="utf-8")
+        (target / ".gitignore").write_text("AGENTS.md\nskills/\n", encoding="utf-8")
+        self.init_git_repo(target)
+        self.git(target, "add", "README.md", ".gitignore")
+        self.git(target, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+
+        check_code, payload = self.check_payload(target)
+
+        ignored = self.findings_with(payload, "CORE_STORAGE_IGNORED")
+        self.assertTrue(ignored, payload["findings"])
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        reported = self.reported_paths(ignored)
+        self.assertIn("AGENTS.md", reported)
+        self.assertIn("skills/agent-task/SKILL.md", reported)
+
+    @unittest.expectedFailure  # no HEAD commit means nothing is durable yet
+    def test_repository_without_head_reports_uncommitted_core(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        self.init_git_repo(target)
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        self.assertTrue(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), payload["findings"])
+
+    def test_committed_core_passes_despite_dirty_worktree(self) -> None:
+        # Control (must stay green): normal daily edits after a focused commit
+        # are exactly the state the checker must keep accepting (prereg §9 #4).
+        target = self.adopted_repo()
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt trellium")
+        runtime = target / "vault/runtime.md"
+        runtime.write_text(runtime.read_text(encoding="utf-8") + "\n- normal daily edit\n", encoding="utf-8")
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), [])
+        self.assertEqual(self.findings_with(payload, "CORE_STORAGE_IGNORED"), [])
+
+    @unittest.expectedFailure  # red until TASK-0013 M2 lands CORE_STORAGE_UNVERIFIED
+    def test_non_git_target_reports_unverified_core(self) -> None:
+        # Prereg §9 #8: silence on an adopted non-Git target is the same
+        # false-health pattern; check must say durability was not verified,
+        # as a warning (exit 0) so non-Git adoption stays usable.
+        target = self.root / "plain"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, 0, payload["findings"])
+        unverified = self.findings_with(payload, "CORE_STORAGE_UNVERIFIED")
+        self.assertTrue(unverified, payload["findings"])
+        self.assertEqual(unverified[0]["severity"], "warning")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,7 +6,7 @@
   "task_id": "TASK-0004",
   "level": "B",
   "authority_level": 2,
-  "lifecycle": "blocked"
+  "lifecycle": "active"
 }
 -->
 
@@ -73,7 +73,7 @@ M1：
 
 M2：
 
-- [ ] 第二个真实项目以 local 模式接入并产生真实观测；**如实记录：owner 尚未提供第二个项目，本项未满足，不降标准**。
+- [ ] 第二个真实项目以 local 模式接入并产生真实观测；**Orion 已产生首条真实观测，但本项仅为 Partial：checker 捕获了 closed local TASK 的 runtime 残留；核心协作层尚未形成 tracked durable boundary，安装 stamp 缺失且 check 尚有 1 error，完成收尾前不勾选**。
 
 M3：
 
@@ -215,6 +215,59 @@ Risks:
 Next action:
 
 - 等 owner 提供第二个真实 local 项目；期间 canonical K1-K4 证据由真实工作继续累积（TASK-0001）。
+
+### 2026-09-18 - Agent: Codex — M2 恢复与 Orion 首条真实观测
+
+Context read:
+
+- Trellium 的 TASK-0004、runtime、handoff、shadow ledger 与 D-0004；Orion 的 `AGENTS.md`、Vault 状态、local TASK-0001、runtime、decisions 及 Git 现场。
+
+Observed evidence:
+
+- Orion 已明确配置 `task_storage: local`，并用真实 Level C 任务完成业务代码修改；TASK-0001 为 `accepted`，Durable Knowledge Disposition 已写入项目真相位置 `vault/decisions.md` D-0002，但该协作层当前尚未被 Git 跟踪。
+- 对 Orion 运行 `trellium.py check --format json` 返回 exit 2、1 error / 0 warning：`TASK_RUNTIME_CLOSED_LOCAL`，准确指出关闭后的 local TASK 仍残留于 runtime 投影，真实修复动作为删除该行并清理 Focus。
+- Orion 的协作层（`AGENTS.md`、`vault/`、`skills/`、工程文档）仍整体未跟踪，且 `.agent-init.json` 缺失；因此 local TASK 本身虽工作，private journal → tracked project truth 的发布边界尚未闭合。
+
+Changes made:
+
+- Owner 确认以 Orion 作为第二个真实 local 项目并同意恢复任务；TASK-0004 `blocked → active`，runtime、handoff 与 shadow ledger 同步。
+- M2 保持未勾选并标记 Partial，不把“出现真实样本”等同于“通过跨项目验收”。
+
+Checks run:
+
+- Trellium：`check --format json` 0 error / 0 warning；`status --format json` 显示 TASK-0004 active 且 Focus resolved；136/136 tests；双 snapshot in sync；`git diff --check` clean。
+
+Review and reflection:
+
+- 本次 finding 是 canonical K3 的真实正样本：无需解析任意 Markdown 即定位到明确、可执行的 lifecycle 修复。
+- canonical K2 尚不能判定通过：整个协作层未跟踪会让 durable truth 与 private task 一起丢失，不能据此声称 tracked/local 边界已被真实项目证明。
+- Orion 在 `AGENTS.md → vault` 路径下完成真实 Level C 流程，给 K4 增加定性证据；但未记录 bytes/耗时，不能推翻 D-0004 的 Context No-Go，也不触发 Context 实现。
+
+Next action:
+
+- 在 Orion 自身仓库完成 local 收尾：移除 accepted TASK 的 runtime 行与 Focus，明确并落地核心协作文件的 tracked boundary/安装 stamp，重跑 check 至 0/0；随后回填最终跨项目观测并决定 M2 是否满足。
+
+### 2026-09-18 - Agent: Codex — 接入持久性缺陷独立复现与依赖拆分
+
+Context read:
+
+- Owner 对归因的纠正：若新 repo 的标准接入仍产生同类缺口，应先修 Trellium，而不是让 Orion 手工补齐后把产品缺陷隐藏。
+
+Evidence:
+
+- 在 `/tmp` 的独立 Git clone 重放 2026.09.7 `adopt`：生成的 `AGENTS.md`、`skills/`、`vault/` 全部 untracked，但 check 返回 exit 0、0 error / 0 warning。
+- 从该仓库再次 fresh clone 后，`AGENTS.md`、`vault/index.md`、`vault/.agent-init.json`、`skills/agent-task/SKILL.md` 全部缺失，check exit 1（无 `vault/`）。
+- 该复现不依赖 Orion，也不依赖此前目录交叉污染的 SuperBizAgent 三臂实验，确认 checker 存在可独立复现的假健康缺陷。
+
+Decision boundary:
+
+- Owner 批准另立 TASK-0013（Level C / Authority 3），并批准把核心协作文件未进入 Git `HEAD` 定为 error。
+- TASK-0004 保持 active / M2 Partial；在 TASK-0013 accepted/release 前不要求 Orion 用手工规则掩盖缺陷。
+- profile 不属于本轮阻塞；D-0004 Context No-Go 不变。
+
+Next action:
+
+- 先完成 TASK-0013；发布后升级 Orion，再完成 runtime 清理、tracked core/stamp 与 fresh-clone 0/0 验证。
 
 ## Memory Updates
 

@@ -1,0 +1,34 @@
+[P1 候选 adopt 结束输出 — 实验材料，非实现。前 11 行 create 输出与 P0 逐字相同，仅替换末尾两行引导文本。]
+
+create <target>/AGENTS.md
+create <target>/vault/index.md
+create <target>/vault/governance.md
+create <target>/vault/decisions.md
+create <target>/vault/handoff.md
+create <target>/vault/parked.md
+create <target>/vault/collaboration.md
+create <target>/vault/tasks/README.md
+create <target>/skills/agent-task/SKILL.md
+create <target>/vault/project.md
+create <target>/vault/runtime.md
+
+adoption target: <target>
+changed: 11
+  - AGENTS.md
+  - vault/index.md
+  - vault/governance.md
+  - vault/decisions.md
+  - vault/handoff.md
+  - vault/parked.md
+  - vault/collaboration.md
+  - vault/tasks/README.md
+  - skills/agent-task/SKILL.md
+  - vault/project.md
+  - vault/runtime.md
+not durable yet: none of the generated files is committed to Git, so a fresh clone would lose all of them; generated does not mean adopted
+to finish adoption (in order):
+  1. review the generated files with the user and finish semantic configuration: mode choice, TASK storage decision, merging any existing agent entry
+  2. get the generated core committed to Git (AGENTS.md, vault/, skills/agent-task/SKILL.md, vault/.agent-init.json); adopt never runs git add/commit/push - commits stay under the user's control
+  3. after the commit, re-run: python3 trellium.py check <target> - adoption is complete only with 0 errors (core paths present in Git HEAD, not ignored)
+  4. for local or production adoptions, verify a fresh clone of the repository passes check too
+later upgrades: python3 trellium.py diff <target>
