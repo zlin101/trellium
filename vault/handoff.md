@@ -5,16 +5,6 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0011 - 2026-09-15
-
-- Objective: 验证项目级工作 Skill 是否比 `AGENTS.md + vault` 有独立价值；仅在消融 Go 后把 `agent-task` 最小迁移为项目限定、语言无关 ID 的 `trellium-work`。
-- Completed: M0 预注册冻结（`docs/evals/project-work-skill-2026-09/`，先于任何实现）+ M1 消融与结构测试。**判定 No-Go**：两臂全场景 0 关键遗漏/0 需要纠正/0 硬指标违规（A0 的 AGENTS.md+vault 底座充分，地板效应），A1 唯一差异是成本更高（visible +79%）；结构记录：经 `.claude/skills` 的项目级 trellium-work 未被 Codex 发现（其项目级发现位置 unverified）；`agent-task` 全局泄漏在 Codex 复现（与合同 Baseline 一致）。独立材料：`docs/evals/project-work-skill-2026-09/results.md`。
-- In progress: 无——4 阻断闭合（历史重写经授权执行、CI 绿；Codex 结论收回为 unverified；P2 已改）；验收清单/Verification 于本轮补闭合（owner review 指出此前未闭合、且存在过早的"owner 复核通过"表述——已更正），任务以 ready_for_review 等 owner 复核。
-- Failed attempts: 无。已知反例是 `AGENTS.md` 可能已经足够；若 A1 无关键遗漏或成本改善，必须 No-Go，不以架构整洁为由开发第二 Skill。
-- Blockers: none。消融 Gate 已裁决 No-Go（`AGENTS.md` 底座充分的假设成立）；Codex 的项目级发现位置 unverified，未来任何项目 Skill 方案需先验证。
-- Next best action: owner 验收 TASK-0011（ready_for_review）；2026.09.5 Release 对象（UI）仍待创建。原始归档与本地备份引用保留至 owner 验收后处置。
-- Files to read first: `vault/tasks/TASK-0011-project-work-skill.md`、`vault/runtime.md`、`scripts/trellium.py`、`skills/agent-task/SKILL.md`、`scripts/install.sh`。
-
 ## TASK-0004 - 2026-09-08
 
 - Objective: 执行 `docs/superpowers/plans/2026-09-08-post-release-validation-plan.md` 的 M1-M3（冷启动基线、第二个真实项目试点、Context Go/No-Go）；M4 已被 D-0004 关闭，仅在重开条件触发后另立 Level C 任务。

@@ -76,6 +76,7 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-14 | active → ready_for_review（三缺陷修复 + red-first 测试 + 独立复审 APPROVE + 远端 CI 全绿） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 中途 71c64b3 被远端 gate 以 snapshot 漂移拦截（本地管道遮蔽退出码），regen 后修复 |
 | 2026-09-15 | ready_for_review → accepted（owner 验收：Focus/记录一致性修正闭合，远端 gate run 34927880245 success） | TASK-0010 | 2（状态块 + runtime 行） | 0 | 落实 D-0007 既有 status 契约，不新增决策；MIGRATIONS Unreleased 节位于 09.5 tag 之后，不改动既有 tag |
 | 2026-09-16 | active → ready_for_review（A0/A1 消融 No-Go 判定落地 + 泄漏修复 + 隐私历史重写；**owner 复核发现遗漏后补记**——转换实际发生于远端 CI run success 后，投影文字曾过早声称 rfr，且本行初稿误混入 TASK-0010 内容，已更正） | TASK-0011 | 2（状态块 + runtime 行） | 1 | 修复完成、CI 绿后按正确顺序转换；此前该行曾与撤销注记混写，本轮重写为纯事件行 |
+| 2026-09-18 | ready_for_review → accepted（owner 最终验收通过；隐私历史重写与泄漏修复均经 CI 绿确认） | TASK-0011 | 2（状态块 + runtime 行） | 0 | 项目 Skill 方向正式关闭（D-0009）；归档与备份引用待 owner 验收后处置 |
 | 2026-09-16 | active → ready_for_review（R1 路由消融通过；2026.09.7 profile-aware 注释规范实现与结构化 review 闭合） | TASK-0012 | 2（状态块 + runtime 行） | 0 | 实现锚点 `bbae794`；136 tests、check 0/0、snapshot/whitespace 通过；待 owner accepted，不代发 |
 | 2026-09-16 | ready_for_review → accepted（owner 确认已 push，并明确指示 Codex 自行验收） | TASK-0012 | 2（状态块 + runtime 行） | 0 | 本地提交后终验 136 tests、check 0/0、status 0 unresolved；远端实时查询因平台容量未返回，不伪造 CI 证据；tag/Release 另行决定 |
 

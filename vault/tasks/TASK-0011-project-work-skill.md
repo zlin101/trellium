@@ -6,7 +6,7 @@
   "task_id": "TASK-0011",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -322,3 +322,4 @@ Next action:
 - P2 勘误：results.md 成本表 material_bytes 行初版误记 1,966/2,109（不可重算）→ 以 run.json 原值更正为 786/932（+18.6%）。
 - owner review REQUEST_CHANGES（2026-09-16，4 阻断）：P1-1 实验记录隐私违规 → 历史重写已获 owner 批准并执行（8 提交收敛为单提交、12 份敏感文件从历史移除、原始证据仓库外归档+清单、全历史扫描 0 命中、force-with-lease push、远端 CI 全绿）；P1-2 提前登记的转换已撤销，修复完成后按正确顺序重新转换（本条目即）；P1-3 验收清单/Verification 的闭合实际发生于后续的记录修正提交（本行书写时点尚未来得及闭合——时序如实更正）；P1-4 Codex 结论越权已收回（unverified）；P2 已改。
 - owner review REQUEST_CHANGES（记录闭合项）：验收清单与 Verification 此前未闭合、投影与 ledger 曾误提前登记 rfr——本轮全部修正（见上与 handoff）；记录修正后任务保持 ready_for_review，等 owner 复核与验收。R2/项目 Skill 实现按 No-Go 不做。
+- **owner 验收（2026-09-18）：accepted**。项目 Skill 方向正式关闭（No-Go 维持）；AGENTS.md+vault 为既有项目标准底座；控制面保持用户级 trellium/trellium-zh。原始归档与本地备份引用按门线保留至验收后处置。
