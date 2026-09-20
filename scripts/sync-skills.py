@@ -19,6 +19,8 @@ DEFAULT_TARGETS = (
 )
 EMBEDDED_SCRIPT_SOURCE = REPO_ROOT / "scripts" / "trellium.py"
 EMBEDDED_SCRIPT_RELATIVE = "assets/trellium.py"
+ZH_PACKAGE_ROOT = REPO_ROOT / "skills/trellium-zh"
+ZH_PROFILE_TEMPLATE_ROOT = ZH_PACKAGE_ROOT / "assets/templates/docs/engineering/profiles"
 MANIFEST_NAME = "manifest.json"
 
 
@@ -148,10 +150,38 @@ def embedded_script_drift(package_root: Path) -> list[str]:
     return []
 
 
+def derived_profile_drift(package_root: Path) -> list[str]:
+    """Keep Chinese durable-profile templates byte-identical to canonical init profiles."""
+    if package_root != ZH_PACKAGE_ROOT:
+        return []
+    messages: list[str] = []
+    source_root = DEFAULT_SOURCE / "protocol/profiles"
+    for profile_id in ("go-backend", "python-backend"):
+        source = source_root / f"{profile_id}.md"
+        destination = ZH_PROFILE_TEMPLATE_ROOT / f"{profile_id}.md"
+        try:
+            if destination.read_bytes() != source.read_bytes():
+                messages.append(f"changed assets/templates/docs/engineering/profiles/{profile_id}.md")
+        except OSError:
+            messages.append(f"missing assets/templates/docs/engineering/profiles/{profile_id}.md")
+    return messages
+
+
 def write_embedded_script(package_root: Path) -> None:
     destination = package_root / EMBEDDED_SCRIPT_RELATIVE
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(EMBEDDED_SCRIPT_SOURCE.read_bytes())
+
+
+def write_derived_profiles(package_root: Path) -> None:
+    if package_root != ZH_PACKAGE_ROOT:
+        return
+    ZH_PROFILE_TEMPLATE_ROOT.mkdir(parents=True, exist_ok=True)
+    for profile_id in ("go-backend", "python-backend"):
+        shutil.copyfile(
+            DEFAULT_SOURCE / "protocol/profiles" / f"{profile_id}.md",
+            ZH_PROFILE_TEMPLATE_ROOT / f"{profile_id}.md",
+        )
 
 
 def sync(source: Path, targets: list[Path], check: bool) -> int:
@@ -163,6 +193,7 @@ def sync(source: Path, targets: list[Path], check: bool) -> int:
         drift = describe_drift(expected, collect_target_files(target))
         package_root = target.parents[1]
         drift.extend(embedded_script_drift(package_root))
+        drift.extend(derived_profile_drift(package_root))
         if check:
             if drift:
                 drift_found = True
@@ -175,6 +206,7 @@ def sync(source: Path, targets: list[Path], check: bool) -> int:
 
         write_snapshot(target, expected)
         write_embedded_script(package_root)
+        write_derived_profiles(package_root)
         print(f"synced {len(expected) - 1} source files and the updater script to {target}")
 
     if check and drift_found:

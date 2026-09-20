@@ -10,7 +10,7 @@ Trellium 为软件项目添加持久的协作层。它不是业务框架、角�
 
 ## 分层
 
-- 入口层：`AGENTS.md`、`CLAUDE.md`、`CODEX.md`、`GEMINI.md` 或类似项目级 Agent 指令。
+- 入口层：共享的 `AGENTS.md`，以及目标工具仍明确需要时的专属兼容文件；Claude Code 直接读取 `AGENTS.md`。
 - 上下文层：`vault/index.md`、`vault/project.md`、`vault/runtime.md` 和可选 `vault/details/*`。
 - 治理层：`vault/governance.md` 和 `vault/tasks/*`。
 - 决策层：`vault/decisions.md`。

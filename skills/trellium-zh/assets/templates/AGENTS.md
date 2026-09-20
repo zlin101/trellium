@@ -25,7 +25,7 @@
 
 追踪任务或治理任务读取 `vault/tasks/` 下的活跃任务文件。
 
-修改、生成或评审源码、公共 API、注释或 TODO/FIXME 时，如果 `docs/engineering/code-comments.md` 存在，直接读取它，并只应用与当前路径匹配的语言章节。
+修改、生成或评审源码、公共 API、依赖、构建、并发、生命周期、注释或 TODO/FIXME 时，读取 `docs/engineering/profiles/` 下 root 与当前路径匹配的 profile；只应用当前文件实际语言的 profile，不读取未匹配语言。兼容项目若存在 `docs/engineering/code-comments.md`，处理注释/API 文档时也直接读取；重叠的注释/API 规则以该兼容文档为项目定制优先，完整 profile 继续约束其余工程事项。
 
 ## Working Principles
 

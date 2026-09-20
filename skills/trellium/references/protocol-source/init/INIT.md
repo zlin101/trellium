@@ -40,7 +40,7 @@
 
 新项目初始化应创建或更新：
 
-- Agent 入口文件，例如 `AGENTS.md` 和 `CLAUDE.md`；
+- 统一的 Agent 入口文件 `AGENTS.md`；仅在目标工具仍有明确需要时添加工具专属兼容入口；
 - `vault/` 项目记忆系统；
 - `vault/governance.md` 协作治理规则；
 - `vault/tasks/` 任务契约规则；

@@ -207,7 +207,7 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/inst
 python3 scripts/trellium.py adopt /path/to/project
 ```
 
-项目语言已明确时，用可重复的 `--profile PROFILE[=ROOT]` 显式声明作用域；同语言可有多个 root，多语言共存于一个项目文档：
+项目语言已明确时，用可重复的 `--profile PROFILE[=ROOT]` 显式声明作用域；同语言可有多个 root，多语言各自使用独立项目文档：
 
 ```bash
 python3 scripts/trellium.py adopt /path/to/project \
@@ -215,7 +215,7 @@ python3 scripts/trellium.py adopt /path/to/project \
   --profile python-backend=services/model
 ```
 
-这会额外生成唯一的 `docs/engineering/code-comments.md`（公共原则 + 所选语言章节），并在 `AGENTS.md` 添加源码任务才触发的一跳路由。未选语言不进入文档，非源码任务不需读取正文。选择记录在 `vault/.agent-init.json` 供升级器重放，但工程规范正文不进入 Vault。已有规范即使使用 `--force` 也不覆盖；上游与本地同时变化时生成 upgrade proposal。
+这会为每个已选 profile 生成完整的 `docs/engineering/profiles/<profile>.md`（含 roots），并在 `AGENTS.md` 添加按当前路径和实际语言触发的一跳路由；未选 profile 不生成，后续会话不依赖再次发现 Trellium Skill。`docs/engineering/code-comments.md` 作为既有注释/API 规则兼容载体继续保留。选择、roots、完整源 hash 与项目路径记录在 `vault/.agent-init.json` 供升级器重放，但工程规范正文不进入 Vault。已有规范即使使用 `--force` 也不覆盖；上游与本地同时变化时生成 upgrade proposal。
 
 `adopt` 默认只新增缺失的 Agent 协作文件：
 

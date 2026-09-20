@@ -62,6 +62,9 @@ TEMPLATE_SOURCE_OVERRIDE = {
 
 PROFILE_RULES_RELATIVE = "docs/engineering/code-comments.md"
 PROFILE_RULES_TEMPLATE = "docs/engineering/CODE_COMMENTS.template"
+PROFILE_DOCUMENT_DIRECTORY = "docs/engineering/profiles"
+PROFILE_DOCUMENT_TEMPLATE_DIRECTORY = "docs/engineering/profiles"
+PROFILE_LOCALE_FILE = "PROFILE_LOCALE"
 PROFILE_IDS = ("go-backend", "python-backend")
 PROFILE_MARKER_PREFIX = "trellium-comment-policy"
 PROFILE_SCOPE_PLACEHOLDER = "{{PROFILE_SCOPE}}"
@@ -75,6 +78,68 @@ def template_source(relative: str) -> Path:
 def profile_template_source() -> Path:
     """Return the localized source used to render the project comment policy."""
     return TEMPLATES_ROOT / PROFILE_RULES_TEMPLATE
+
+
+def profile_document_relative(profile_id: str) -> str:
+    """Return the project-relative durable document for one selected profile."""
+    if profile_id not in PROFILE_IDS:
+        raise AdoptionError(f"unknown profile: {profile_id!r}")
+    return f"{PROFILE_DOCUMENT_DIRECTORY}/{profile_id}.md"
+
+
+def is_profile_document_relative(relative: str) -> bool:
+    """Return whether a path is one of the finite supported profile outputs."""
+    return relative in {
+        profile_document_relative(profile_id) for profile_id in PROFILE_IDS
+    }
+
+
+def profile_document_template_source(profile_id: str) -> Path:
+    """Return the localized complete-profile source distributed by this package."""
+    return TEMPLATES_ROOT / PROFILE_DOCUMENT_TEMPLATE_DIRECTORY / f"{profile_id}.md"
+
+
+def profile_for_relative(relative: str, profiles: list[dict]) -> dict | None:
+    """Resolve a durable project profile path to its selected profile metadata."""
+    for item in profiles:
+        if relative == profile_document_relative(item["id"]):
+            return item
+    return None
+
+
+def render_durable_profile(profile: dict) -> str:
+    """Render one complete localized profile with its project root contract."""
+    source = profile_document_template_source(profile["id"])
+    try:
+        body = source.read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise AdoptionError(f"complete profile template does not exist: {source}") from exc
+    if not body:
+        raise AdoptionError(f"complete profile template is empty: {source}")
+    scope = ", ".join(f"`{root}`" for root in profile["roots"])
+    try:
+        locale = (TEMPLATES_ROOT / PROFILE_LOCALE_FILE).read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise AdoptionError(
+            f"profile template locale metadata does not exist: {TEMPLATES_ROOT / PROFILE_LOCALE_FILE}"
+        ) from exc
+    if locale not in {"en", "zh"}:
+        raise AdoptionError(f"unsupported profile template locale: {locale!r}")
+    heading = "## 项目适用范围\n\n" if locale == "zh" else "## Project Scope\n\n"
+    instruction = (
+        "仅当当前文件位于上述任一 root 下时应用本 profile；roots 重叠时按文件实际语言选择规则。"
+        if locale == "zh"
+        else "Only apply this profile when the current file is under one of these roots. "
+        "When roots overlap, select rules by the file's actual language."
+    )
+    title, separator, remainder = body.partition("\n")
+    if not separator:
+        raise AdoptionError(f"complete profile template lacks a title/body boundary: {source}")
+    return (
+        f"<!-- trellium-durable-profile: {profile['id']} -->\n\n"
+        f"{title}\n\n{heading}- Profile: `{profile['id']}`\n- Roots: {scope}\n\n"
+        f"{instruction}\n{remainder.rstrip()}\n"
+    )
 
 
 def extract_profile_section(text: str, section: str) -> str:
@@ -153,6 +218,20 @@ def selections_from_stamp(stamp: dict | None) -> list[dict]:
         if profile_id in seen_ids:
             raise AdoptionError(f"adoption stamp contains duplicate profile: {profile_id}")
         seen_ids.add(profile_id)
+        project_rules = item.get("project_rules")
+        if project_rules is not None and project_rules != PROFILE_RULES_RELATIVE:
+            raise AdoptionError(
+                f"adoption stamp profile has an invalid project_rules path: {project_rules!r}"
+            )
+        project_profile = item.get("project_profile")
+        if project_profile is not None:
+            validate_managed_relative(project_profile)
+            expected_profile = profile_document_relative(profile_id)
+            if project_profile != expected_profile:
+                raise AdoptionError(
+                    "adoption stamp profile has an invalid project_profile path: "
+                    f"{project_profile!r}"
+                )
         roots = item.get("roots")
         if not isinstance(roots, list) or not roots:
             raise AdoptionError(f"adoption stamp profile roots must be a non-empty list: {profile_id}")
@@ -180,10 +259,15 @@ def profile_template_sections() -> dict[str, str]:
 
 
 def profile_source_hash(profile_id: str, sections: dict[str, str] | None = None) -> str:
-    """Hash the common policy plus one language adapter, independent of roots."""
-    loaded = sections or profile_template_sections()
-    material = f"{loaded['common']}\n\n{loaded[profile_id]}\n"
-    return sha256_hex(material.encode("utf-8"))
+    """Hash the complete localized engineering profile, independent of roots."""
+    del sections
+    try:
+        material = profile_document_template_source(profile_id).read_bytes()
+    except OSError as exc:
+        raise AdoptionError(
+            f"complete profile template does not exist: {profile_document_template_source(profile_id)}"
+        ) from exc
+    return sha256_hex(material)
 
 
 def render_profile_document(profiles: list[dict]) -> str:
@@ -202,13 +286,13 @@ def render_profile_document(profiles: list[dict]) -> str:
 
 def profile_metadata(profiles: list[dict]) -> list[dict]:
     """Build the durable, machine-readable selection metadata for the stamp."""
-    sections = profile_template_sections() if profiles else {}
     return [
         {
             "id": item["id"],
             "roots": list(item["roots"]),
-            "source_hash": profile_source_hash(item["id"], sections),
+            "source_hash": profile_source_hash(item["id"]),
             "project_rules": PROFILE_RULES_RELATIVE,
+            "project_profile": profile_document_relative(item["id"]),
         }
         for item in profiles
     ]
@@ -231,6 +315,10 @@ FILE_ROLES = {
     "vault/tasks/README.md": "template",
     "skills/agent-task/SKILL.md": "template",
 }
+# Paths removed from future releases stay here as an explicit retirement
+# allowlist until every supported stamp version can no longer contain them.
+# A stamp is evidence about state, not authority to touch arbitrary files.
+RETIRED_FILE_ROLES: dict[str, str] = {}
 WRITABLE_ROLES = frozenset({"marker", "merge", "template"})
 
 STAMP_RELATIVE = "vault/.agent-init.json"
@@ -918,12 +1006,161 @@ def hash_path(path: Path) -> str | None:
         return None
 
 
+def validate_managed_relative(relative: object) -> str:
+    """Validate one stamp-managed path without normalizing unsafe syntax."""
+    if not isinstance(relative, str):
+        raise AdoptionError(f"invalid managed path: {relative!r}")
+    components = relative.split("/")
+    path = PurePosixPath(relative)
+    if (
+        not relative
+        or "\\" in relative
+        or "\0" in relative
+        or path.is_absolute()
+        or any(component in {"", ".", ".."} for component in components)
+        or path.as_posix() != relative
+    ):
+        raise AdoptionError(f"invalid managed path: {relative!r}")
+    return relative
+
+
+def validate_stamp_file_paths(stamp: dict) -> None:
+    files = stamp.get("files")
+    if not isinstance(files, dict):
+        raise AdoptionError("adoption stamp files must be an object")
+    profiles = selections_from_stamp(stamp)
+    managed_roles = managed_upgrade_file_roles(profiles, include_retired=True)
+    for relative, entry in files.items():
+        validate_managed_relative(relative)
+        if (
+            relative == STAMP_RELATIVE
+            or relative == PROPOSAL_DIRECTORY
+            or relative.startswith(f"{PROPOSAL_DIRECTORY}/")
+            or relative == BACKUP_DIRECTORY
+            or relative.startswith(f"{BACKUP_DIRECTORY}/")
+        ):
+            raise AdoptionError(
+                f"managed path uses a reserved internal namespace: {relative!r}"
+            )
+        if relative == PROFILE_RULES_RELATIVE and not profiles:
+            raise AdoptionError(
+                f"adoption stamp tracks {PROFILE_RULES_RELATIVE} without profile metadata; "
+                "refusing to classify the project-owned policy as removable"
+            )
+        if relative not in managed_roles:
+            raise AdoptionError(
+                f"adoption stamp path is outside the explicit managed-file set: {relative!r}"
+            )
+        if not isinstance(entry, dict):
+            raise AdoptionError(f"adoption stamp file entry must be an object: {relative!r}")
+        role = entry.get("role")
+        allowed_roles = {managed_roles[relative]}
+        if relative == "AGENTS.md":
+            allowed_roles.add("merge")
+        if role is not None and role not in allowed_roles:
+            raise AdoptionError(
+                f"adoption stamp has an invalid role for {relative!r}: {role!r}"
+            )
+
+
+def managed_upgrade_file_roles(
+    profiles: list[dict], *, include_retired: bool = False
+) -> dict[str, str]:
+    """Return the finite file set this installation may inspect or mutate."""
+    roles = dict(RETIRED_FILE_ROLES) if include_retired else {}
+    roles.update(FILE_ROLES)
+    if profiles:
+        roles[PROFILE_RULES_RELATIVE] = "merge"
+        for profile in profiles:
+            roles[profile_document_relative(profile["id"])] = "merge"
+    return roles
+
+
+def managed_file_metadata(target: Path, relative: str) -> os.stat_result | None:
+    """Validate containment and metadata for an existing managed input."""
+    validate_managed_relative(relative)
+    path = target / relative
+    validate_output_paths(target, [path])
+    try:
+        metadata = path.lstat()
+    except FileNotFoundError:
+        return None
+    validate_output_metadata(metadata, path)
+    return metadata
+
+
+def read_managed_bytes(
+    target: Path,
+    relative: str,
+    target_descriptor: int | None = None,
+) -> bytes | None:
+    validate_managed_relative(relative)
+    path = target / relative
+    if target_descriptor is not None:
+        try:
+            with open_parent_directory(
+                target_descriptor, Path(relative), create=False
+            ) as (parent_descriptor, name):
+                metadata = output_metadata_at(parent_descriptor, name)
+                if metadata is None:
+                    return None
+                validate_output_metadata(metadata, path)
+                descriptor = os.open(name, FILE_READ_FLAGS, dir_fd=parent_descriptor)
+                try:
+                    validate_output_metadata(os.fstat(descriptor), path)
+                    with os.fdopen(descriptor, "rb") as handle:
+                        descriptor = -1
+                        return handle.read()
+                finally:
+                    if descriptor >= 0:
+                        os.close(descriptor)
+        except FileNotFoundError:
+            return None
+    metadata = managed_file_metadata(target, relative)
+    if metadata is None:
+        return None
+    descriptor = os.open(path, FILE_READ_FLAGS)
+    try:
+        validate_output_metadata(os.fstat(descriptor), path)
+        with os.fdopen(descriptor, "rb") as handle:
+            descriptor = -1
+            return handle.read()
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
+
+def read_managed_text(
+    target: Path,
+    relative: str,
+    target_descriptor: int | None = None,
+) -> str | None:
+    data = read_managed_bytes(target, relative, target_descriptor)
+    if data is None:
+        return None
+    try:
+        return data.decode("utf-8")
+    except UnicodeError as exc:
+        raise AdoptionError(f"managed file is not valid UTF-8: {target / relative}") from exc
+
+
 def marker_region(text: str) -> str | None:
     start = text.find(AGENTS_MARKER_START)
     if start < 0:
         return None
     end = text.find(AGENTS_MARKER_END, start)
     if end < 0:
+        return None
+    return text[start : end + len(AGENTS_MARKER_END)]
+
+
+def strict_marker_region(text: str) -> str | None:
+    """Return the marker only when both delimiters are unique and ordered."""
+    if text.count(AGENTS_MARKER_START) != 1 or text.count(AGENTS_MARKER_END) != 1:
+        return None
+    start = text.find(AGENTS_MARKER_START)
+    end = text.find(AGENTS_MARKER_END)
+    if start < 0 or end < start + len(AGENTS_MARKER_START):
         return None
     return text[start : end + len(AGENTS_MARKER_END)]
 
@@ -1000,13 +1237,15 @@ def stamp_path(target: Path) -> Path:
     return target / STAMP_RELATIVE
 
 
-def read_stamp(target: Path) -> dict | None:
+def read_stamp(target: Path, target_descriptor: int | None = None) -> dict | None:
     path = stamp_path(target)
     try:
-        raw = path.read_text(encoding="utf-8")
+        raw = read_managed_text(target, STAMP_RELATIVE, target_descriptor)
+        if raw is None:
+            return None
     except FileNotFoundError:
         return None
-    except OSError as exc:
+    except (AdoptionError, OSError, UnicodeError) as exc:
         raise AdoptionError(f"could not read adoption stamp: {path}: {exc}") from exc
     try:
         stamp = json.loads(raw)
@@ -1014,20 +1253,24 @@ def read_stamp(target: Path) -> dict | None:
         raise AdoptionError(f"adoption stamp is not valid JSON: {path}") from exc
     if not isinstance(stamp, dict) or not isinstance(stamp.get("files"), dict):
         raise AdoptionError(f"adoption stamp has an unexpected schema: {path}")
+    validate_stamp_file_paths(stamp)
     return stamp
 
 
-def assert_upgrade_writable(target: Path, relative: str) -> None:
+def assert_upgrade_writable(
+    target: Path,
+    relative: str,
+    profiles: list[dict] | None = None,
+) -> None:
     """Refuse writes outside the protocol-carrier scope during upgrades."""
-    if relative == STAMP_RELATIVE:
-        return
-    if relative.startswith(f"{PROPOSAL_DIRECTORY}/"):
-        return
-    if relative.startswith(f"{BACKUP_DIRECTORY}/"):
-        return
-    if relative == PROFILE_RULES_RELATIVE:
-        return
-    role = FILE_ROLES.get(relative)
+    validate_managed_relative(relative)
+    role = managed_upgrade_file_roles(
+        profiles or [], include_retired=True
+    ).get(relative)
+    if role is None:
+        raise AdoptionError(
+            f"refusing to write outside the explicit managed-file set: {relative}"
+        )
     if role in WRITABLE_ROLES:
         return
     if role == "data" and not (target / relative).exists():
@@ -1038,13 +1281,18 @@ def assert_upgrade_writable(target: Path, relative: str) -> None:
     )
 
 
-def local_hash_for_role(target: Path, relative: str, role: str) -> str | None:
-    if role != "marker":
-        return hash_path(target / relative)
-    try:
-        text = (target / relative).read_text(encoding="utf-8")
-    except OSError:
+def local_hash_for_role(
+    target: Path,
+    relative: str,
+    role: str,
+    target_descriptor: int | None = None,
+) -> str | None:
+    data = read_managed_bytes(target, relative, target_descriptor)
+    if data is None:
         return None
+    if role != "marker":
+        return sha256_hex(data)
+    text = data.decode("utf-8")
     region = marker_region(text)
     if region is None:
         return None
@@ -1060,6 +1308,9 @@ def upstream_hash_for_role(
         if not profiles:
             return None
         return sha256_hex(render_profile_document(profiles).encode("utf-8"))
+    profile = profile_for_relative(relative, profiles or [])
+    if profile is not None:
+        return sha256_hex(render_durable_profile(profile).encode("utf-8"))
     if role == "marker":
         return sha256_hex(upstream_marker_region().encode("utf-8"))
     return hash_path(template_source(relative))
@@ -1098,6 +1349,7 @@ def write_stamp_file(target: Path, stamp: dict, target_descriptor: int | None) -
             atomic_write_text_at(parent_descriptor, name, content, mode)
         return
     destination = target / STAMP_RELATIVE
+    validate_output_paths(target, [destination])
     destination.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_text(destination, content)
 
@@ -1109,7 +1361,7 @@ def write_adoption_stamp(
     profiles: list[dict],
     target_descriptor: int | None,
 ) -> None:
-    previous = read_stamp(target) or {}
+    previous = read_stamp(target, target_descriptor) or {}
     previous_files = previous.get("files", {}) if isinstance(previous, dict) else {}
     files: dict[str, dict] = {}
     for relative, role in FILE_ROLES.items():
@@ -1126,9 +1378,8 @@ def write_adoption_stamp(
             elif action == "updated":
                 entry = {"role": "marker", "baseline": sha256_hex(upstream_marker_region().encode("utf-8"))}
             else:
-                try:
-                    agents_text = (target / relative).read_text(encoding="utf-8")
-                except OSError:
+                agents_text = read_managed_text(target, relative, target_descriptor)
+                if agents_text is None:
                     continue
                 region = marker_region(agents_text)
                 if region is not None:
@@ -1139,7 +1390,9 @@ def write_adoption_stamp(
             if action != "skipped":
                 entry = {"role": role, "baseline": sha256_hex(rendered_files[relative].encode("utf-8"))}
             else:
-                baseline = local_hash_for_role(target, relative, role)
+                baseline = local_hash_for_role(
+                    target, relative, role, target_descriptor
+                )
                 if baseline is None:
                     continue
                 entry = {"role": role, "baseline": baseline}
@@ -1150,7 +1403,9 @@ def write_adoption_stamp(
             if action != "skipped":
                 entry = {"role": role, "baseline": template_hash}
             else:
-                baseline = local_hash_for_role(target, relative, role)
+                baseline = local_hash_for_role(
+                    target, relative, role, target_descriptor
+                )
                 if baseline is None:
                     entry = {"role": role, "baseline": template_hash}
                 else:
@@ -1168,7 +1423,9 @@ def write_adoption_stamp(
     if profiles:
         relative = PROFILE_RULES_RELATIVE
         action = actions.get(relative, "skipped")
-        local_hash = hash_path(target / relative)
+        local_hash = local_hash_for_role(
+            target, relative, "merge", target_descriptor
+        )
         if local_hash is None:
             raise AdoptionError(f"profile rule file does not exist after adoption: {target / relative}")
         entry = {"role": "merge", "baseline": local_hash}
@@ -1179,6 +1436,21 @@ def write_adoption_stamp(
             else:
                 entry["observed"] = True
         files[relative] = entry
+        for profile in profiles:
+            relative = profile_document_relative(profile["id"])
+            local_hash = local_hash_for_role(
+                target, relative, "merge", target_descriptor
+            )
+            if local_hash is None:
+                raise AdoptionError(f"durable profile does not exist after adoption: {target / relative}")
+            entry = {"role": "merge", "baseline": local_hash}
+            if actions.get(relative, "skipped") == "skipped":
+                preserved = previous_files.get(relative)
+                if preserved is not None and preserved.get("baseline") == local_hash:
+                    entry = dict(preserved)
+                else:
+                    entry["observed"] = True
+            files[relative] = entry
     stamp = {
         "schema_version": 2,
         "protocol_version": read_protocol_version(),
@@ -1192,6 +1464,7 @@ def write_adoption_stamp(
 
 
 def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
+    validate_stamp_file_paths(stamp)
     trust = stamp.get("trust", "versioned")
     entries: dict[str, dict] = stamp["files"]
     profiles = selections_from_stamp(stamp)
@@ -1200,9 +1473,7 @@ def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
             f"adoption stamp tracks {PROFILE_RULES_RELATIVE} without profile metadata; "
             "refusing to classify the project-owned policy as removable"
         )
-    desired_roles = dict(FILE_ROLES)
-    if profiles:
-        desired_roles[PROFILE_RULES_RELATIVE] = "merge"
+    desired_roles = managed_upgrade_file_roles(profiles)
     plan: dict[str, list[dict]] = {key: [] for key, _, _ in PLAN_SECTIONS}
 
     for relative, entry in sorted(entries.items()):
@@ -1257,11 +1528,10 @@ def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
     for relative, role in sorted(desired_roles.items()):
         if relative in entries or relative in RENDERED_FILES:
             continue
+        metadata = managed_file_metadata(target, relative)
         if role == "marker":
-            try:
-                text = (target / relative).read_text(encoding="utf-8")
-            except OSError:
-                text = ""
+            text = read_managed_text(target, relative) if metadata is not None else ""
+            assert text is not None
             if marker_region(text) is not None:
                 plan["add_skip"].append({"path": relative, "role": role, "reason": "marker region present but untracked; kept"})
             elif "vault/index.md" in text:
@@ -1269,7 +1539,15 @@ def build_upgrade_plan(target: Path, stamp: dict) -> dict[str, list[dict]]:
             else:
                 plan["add"].append({"path": relative, "role": role, "reason": "append the Trellium entry"})
             continue
-        if (target / relative).exists():
+        if metadata is not None and profile_for_relative(relative, profiles) is not None:
+            plan["conflict"].append(
+                {
+                    "path": relative,
+                    "role": role,
+                    "reason": "pre-existing complete profile is untracked; review and adopt it through a proposal",
+                }
+            )
+        elif metadata is not None:
             plan["add_skip"].append(
                 {"path": relative, "role": role, "reason": "exists locally but untracked; kept (run baseline to track it)"}
             )
@@ -1716,17 +1994,16 @@ def stamp_core_paths(stamp: dict) -> tuple[set[str] | None, str | None]:
     files = stamp.get("files")
     if not isinstance(files, dict) or not files:
         return None, "files must be a non-empty object"
+    try:
+        validate_stamp_file_paths(stamp)
+    except AdoptionError as exc:
+        return None, str(exc)
     paths: set[str] = {STAMP_RELATIVE}
     for relative, entry in files.items():
-        path = PurePosixPath(relative) if isinstance(relative, str) else None
-        if (
-            path is None
-            or not relative
-            or path.is_absolute()
-            or ".." in path.parts
-            or relative.endswith("/")
-        ):
-            return None, f"files contains an invalid managed path: {relative!r}"
+        try:
+            validate_managed_relative(relative)
+        except AdoptionError as exc:
+            return None, f"files contains an {exc}"
         if not isinstance(entry, dict):
             return None, f"files[{relative!r}] must be an object"
         paths.add(relative)
@@ -1782,19 +2059,6 @@ def head_blob_text(target: Path, anchored: str) -> str | None:
     if result is None or result.returncode != 0:
         return None
     return result.stdout.decode("utf-8", "surrogateescape")
-
-
-def worktree_agents_is_merged(target: Path) -> bool:
-    """True when the installed AGENTS.md carries the managed appended section.
-
-    A freshly created AGENTS.md is entirely template-owned and carries no
-    marker, so the HEAD compatibility requirement only applies to the merged
-    form; staleness of created files stays the upgrade flow's job.
-    """
-    try:
-        return AGENTS_MARKER_START in (target / "AGENTS.md").read_text(encoding="utf-8")
-    except (OSError, UnicodeError):
-        return False
 
 
 def check_core_storage(run: VaultCheckRun, state: AdoptionCoreState) -> None:
@@ -1855,6 +2119,19 @@ def check_core_storage(run: VaultCheckRun, state: AdoptionCoreState) -> None:
             "git check-ignore failed; adoption durability was not verified",
         )
         return
+    head_stamp_blob = head_blob_text(run.target, prefix + STAMP_RELATIVE)
+    head_stamp = None
+    if head_stamp_blob is not None:
+        try:
+            head_stamp = json.loads(head_stamp_blob)
+        except ValueError:
+            head_stamp = None
+    head_paths = None
+    head_error = None
+    if isinstance(head_stamp, dict):
+        head_paths, head_error = stamp_core_paths(head_stamp)
+    head_files = head_stamp.get("files") if isinstance(head_stamp, dict) else None
+    head_agents_entry = head_files.get("AGENTS.md", {}) if isinstance(head_files, dict) else {}
     for relative in sorted(core):
         rule = rules.get(relative)
         if rule is not None:
@@ -1878,27 +2155,20 @@ def check_core_storage(run: VaultCheckRun, state: AdoptionCoreState) -> None:
             )
             continue
         blob = head_blob_text(run.target, anchored)
-        if relative == "AGENTS.md" and worktree_agents_is_merged(run.target) and (
-            blob is None or AGENTS_MARKER_START not in blob
+        if (
+            relative == "AGENTS.md"
+            and isinstance(head_agents_entry, dict)
+            and head_agents_entry.get("role") == "marker"
+            and (blob is None or strict_marker_region(blob) is None)
         ):
             run.add(
                 "storage",
                 "CORE_STORAGE_UNCOMMITTED",
                 "error",
                 relative,
-                "AGENTS.md in Git HEAD lacks the managed Trellium section; a fresh clone would not receive the routed entry",
+                "AGENTS.md in Git HEAD lacks one complete, unique, well-formed managed Trellium section; a fresh clone would not receive the routed entry",
             )
         elif relative == STAMP_RELATIVE:
-            head_stamp = None
-            if blob is not None:
-                try:
-                    head_stamp = json.loads(blob)
-                except ValueError:
-                    head_stamp = None
-            head_paths = None
-            head_error = None
-            if isinstance(head_stamp, dict):
-                head_paths, head_error = stamp_core_paths(head_stamp)
             if not isinstance(head_stamp, dict) or head_error is not None:
                 run.add(
                     "storage",
@@ -2980,7 +3250,11 @@ def git_dirty_paths(target: Path, relatives: list[str]) -> list[str]:
 def selection_filter(args: argparse.Namespace):
     skip = set(args.skip or [])
     only = set(args.only or []) if args.only else None
-    known_paths = {*FILE_ROLES, PROFILE_RULES_RELATIVE}
+    known_paths = {
+        *FILE_ROLES,
+        PROFILE_RULES_RELATIVE,
+        *(profile_document_relative(profile_id) for profile_id in PROFILE_IDS),
+    }
     unknown = (skip | (only or set())) - known_paths
     if unknown:
         raise AdoptionError(f"unknown paths in --only/--skip: {', '.join(sorted(unknown))}")
@@ -3009,6 +3283,16 @@ def apply_protocol_file(
         return write_text_file(
             target / relative,
             render_profile_document(profiles),
+            target,
+            force=force,
+            dry_run=False,
+            target_descriptor=target_descriptor,
+        )
+    profile = profile_for_relative(relative, profiles or [])
+    if profile is not None:
+        return write_text_file(
+            target / relative,
+            render_durable_profile(profile),
             target,
             force=force,
             dry_run=False,
@@ -3056,12 +3340,20 @@ def update_agent_entry_region(target: Path, target_descriptor: int | None) -> st
 
 
 def remove_tracked_file(target: Path, relative: str, target_descriptor: int | None) -> None:
+    validate_managed_relative(relative)
     if target_descriptor is not None:
         with open_parent_directory(target_descriptor, Path(relative), create=False) as (
             parent_descriptor,
             name,
         ):
+            metadata = output_metadata_at(parent_descriptor, name)
+            if metadata is None:
+                return
+            validate_output_metadata(metadata, target / relative)
             unlink_at_if_present(parent_descriptor, name)
+        return
+    metadata = managed_file_metadata(target, relative)
+    if metadata is None:
         return
     try:
         (target / relative).unlink()
@@ -3075,10 +3367,11 @@ def backup_upgraded_file(
     version: str,
     target_descriptor: int | None,
 ) -> None:
-    source = target / relative
-    if not source.is_file():
+    if managed_file_metadata(target, relative) is None:
         return
+    source = target / relative
     backup = f"{BACKUP_DIRECTORY}/{version}/{relative}"
+    validate_managed_relative(backup)
     copy_file(source, target / backup, target, force=True, dry_run=False, target_descriptor=target_descriptor)
 
 
@@ -3097,24 +3390,20 @@ def render_proposal(
     reason = item.get("reason", "")
     if role == "marker":
         upstream_text = upstream_marker_region()
-        try:
-            local_text = marker_region((target / relative).read_text(encoding="utf-8")) or ""
-        except OSError:
-            local_text = ""
+        text = read_managed_text(target, relative)
+        local_text = marker_region(text) if text is not None else ""
+        local_text = local_text or ""
     elif relative == PROFILE_RULES_RELATIVE:
         if not profiles:
             raise AdoptionError("profile rule proposal has no selected profiles")
         upstream_text = render_profile_document(profiles)
-        try:
-            local_text = (target / relative).read_text(encoding="utf-8")
-        except OSError:
-            local_text = ""
+        local_text = read_managed_text(target, relative) or ""
+    elif (profile := profile_for_relative(relative, profiles or [])) is not None:
+        upstream_text = render_durable_profile(profile)
+        local_text = read_managed_text(target, relative) or ""
     else:
         upstream_text = template_source(relative).read_text(encoding="utf-8")
-        try:
-            local_text = (target / relative).read_text(encoding="utf-8")
-        except OSError:
-            local_text = ""
+        local_text = read_managed_text(target, relative) or ""
     diff = "\n".join(
         difflib.unified_diff(
             upstream_text.splitlines(),
@@ -3198,9 +3487,8 @@ def baseline_project(args: argparse.Namespace) -> int:
         files: dict[str, dict] = {}
         for relative, role in sorted(FILE_ROLES.items()):
             if relative == "AGENTS.md":
-                try:
-                    agents_text = (target / relative).read_text(encoding="utf-8")
-                except OSError:
+                agents_text = read_managed_text(target, relative)
+                if agents_text is None:
                     continue
                 region = marker_region(agents_text)
                 if region is not None:
@@ -3364,7 +3652,7 @@ def upgrade_project(args: argparse.Namespace) -> int:
 
     try:
         for item in (*apply_items, *add_items, *remove_items, *conflict_items):
-            assert_upgrade_writable(target, item["path"])
+            assert_upgrade_writable(target, item["path"], profiles)
         destinations = [target / item["path"] for item in (*apply_items, *add_items)]
         proposals = [
             (
@@ -3486,6 +3774,9 @@ def adopt_project(args: argparse.Namespace) -> int:
     destinations.extend(target / relative for relative in RENDERED_FILES)
     if profiles:
         destinations.append(target / PROFILE_RULES_RELATIVE)
+        destinations.extend(
+            target / profile_document_relative(profile["id"]) for profile in profiles
+        )
 
     target_descriptor: int | None = None
     if target_exists and not args.dry_run and ANCHORED_WRITES_SUPPORTED:
@@ -3498,6 +3789,8 @@ def adopt_project(args: argparse.Namespace) -> int:
         validate_template_sources(("AGENTS.md", *TEMPLATE_FILES))
         if profiles:
             profile_template_sections()
+            for profile in profiles:
+                render_durable_profile(profile)
         validate_output_paths(target, destinations)
     except (AdoptionError, OSError, RuntimeError) as exc:
         if target_descriptor is not None:
@@ -3524,6 +3817,8 @@ def adopt_project(args: argparse.Namespace) -> int:
     }
     if profiles:
         rendered_files[PROFILE_RULES_RELATIVE] = render_profile_document(profiles)
+        for profile in profiles:
+            rendered_files[profile_document_relative(profile["id"])] = render_durable_profile(profile)
 
     changed: list[str] = []
     skipped: list[str] = []
@@ -3552,7 +3847,9 @@ def adopt_project(args: argparse.Namespace) -> int:
                 target,
                 # Profile rules are project-owned engineering knowledge. Even
                 # `adopt --force` must not silently replace an existing file.
-                force=args.force and relative != PROFILE_RULES_RELATIVE,
+                force=args.force
+                and relative != PROFILE_RULES_RELATIVE
+                and not is_profile_document_relative(relative),
                 dry_run=args.dry_run,
                 target_descriptor=target_descriptor,
             )

@@ -7,12 +7,11 @@ Agent 入口文件是项目级 Agent 指令。
 常见文件名：
 
 - `AGENTS.md`
-- `CLAUDE.md`
 - `GEMINI.md`
 - `CURSOR.md`
 - `CODEX.md`
 
-默认生成 `AGENTS.md`。如果存在工具专属入口文件，它必须与 `AGENTS.md` 保持语义一致。
+默认只生成 `AGENTS.md`；Claude Code 等已支持该标准入口的工具直接读取它，不再创建独立 `CLAUDE.md`。如果其他工具仍需要专属入口文件，它必须与 `AGENTS.md` 保持语义一致。
 
 ## 原则
 
@@ -62,7 +61,7 @@ vault/parked.md
 vault/tasks/<task-id>.md
 ```
 
-修改、生成或评审源码、公共 API、注释或 TODO/FIXME 时，如果 `docs/engineering/code-comments.md` 存在，直接读取它，并只应用与当前文件路径匹配的语言章节。非源码任务不加载该正文。
+修改、生成或评审源码、公共 API、依赖、构建、并发、生命周期、注释或 TODO/FIXME 时，读取 `docs/engineering/profiles/` 下声明 root 与当前路径匹配的 profile，并只应用当前文件实际语言；不读取未匹配语言。兼容项目若存在 `docs/engineering/code-comments.md`，处理注释/API 文档时也直接读取；重叠的注释/API 规则以该兼容文档为项目定制优先，完整 profile 继续约束其余工程事项。非工程任务不加载这些正文。
 
 ## 必备工作规则
 

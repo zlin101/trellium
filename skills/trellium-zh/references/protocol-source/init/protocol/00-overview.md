@@ -19,7 +19,7 @@ Agent 不按身份获得信任，而是按任务契约获得授权，并按验�
 
 ## 设计分层
 
-- 入口层：`AGENTS.md`、`CLAUDE.md` 或其他工具入口文件。
+- 入口层：共享的 `AGENTS.md`，以及目标工具确有需要时的兼容入口文件。
 - 上下文层：`vault/index.md`、`vault/project.md`、`vault/runtime.md` 和 `vault/details/*`。
 - 治理层：`vault/governance.md` 和 `vault/tasks/*`。
 - 决策层：`vault/decisions.md`。

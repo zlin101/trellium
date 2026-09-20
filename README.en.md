@@ -207,7 +207,7 @@ To add the Agent collaboration layer to an existing project:
 python3 scripts/trellium.py adopt /path/to/project
 ```
 
-When project languages are known, declare their scopes explicitly with repeatable `--profile PROFILE[=ROOT]` arguments. A language may have multiple roots, and multiple languages share one project document:
+When project languages are known, declare their scopes explicitly with repeatable `--profile PROFILE[=ROOT]` arguments. A language may have multiple roots, and each selected language gets its own project document:
 
 ```bash
 python3 scripts/trellium.py adopt /path/to/project \
@@ -215,7 +215,7 @@ python3 scripts/trellium.py adopt /path/to/project \
   --profile python-backend=services/model
 ```
 
-This additionally creates one `docs/engineering/code-comments.md` containing the common policy and selected language sections, plus a one-hop AGENTS route that activates only for source-related work. Unselected languages are omitted and non-source tasks need not load the policy. The selection is recorded in `vault/.agent-init.json` for deterministic upgrades, but the engineering policy itself stays outside the Vault. An existing policy is preserved even with `--force`; simultaneous upstream and local changes produce an upgrade proposal.
+This creates a complete `docs/engineering/profiles/<profile>.md` for every selected profile, embeds its roots, and adds a one-hop AGENTS route scoped by current path and actual language. Unselected profiles are not generated, and later sessions do not need to rediscover the Trellium Skill. `docs/engineering/code-comments.md` remains as a compatibility carrier for the existing comment/API rules. The stamp records selections, roots, complete-source hashes, and project paths for deterministic upgrades; engineering policy stays outside Vault. Existing documents are preserved even with `--force`, and simultaneous upstream/local changes produce proposals.
 
 `adopt` only adds Agent collaboration files that are missing, by default:
 

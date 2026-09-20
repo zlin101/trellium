@@ -42,7 +42,7 @@ description: 用于为新项目或既有软件项目添加或升级持久的 Age
 
 本包自带确定性安装/升级脚本 `assets/trellium.py`，优先使用；Agent 语义迁移在脚本之上叠加。
 
-- 新项目或既有项目接入：`python3 assets/trellium.py adopt <target>`。默认只补缺失文件；已有 `AGENTS.md` 时追加标记区块，不覆盖。语言已明确时重复传入 `--profile go-backend=<root>` / `--profile python-backend=<root>`；只生成一个项目工程规范并由 AGENTS 一跳路由，不自动猜测语言。
+- 新项目或既有项目接入：`python3 assets/trellium.py adopt <target>`。默认只补缺失文件；已有 `AGENTS.md` 时追加标记区块，不覆盖。语言已明确时重复传入 `--profile go-backend=<root>` / `--profile python-backend=<root>`；每个已选 profile 在 `docs/engineering/profiles/` 生成完整项目文档，并由 AGENTS 按 root 一跳路由，不自动猜测语言。
 - 协议内容更新无需重装本 Skill：任何命令加 `--fetch` 即从 GitHub 拉取最新 tag release 并以该版本的脚本与模板执行（缓存于 `~/.cache/trellium/`，降级会被拒绝）。重装 Skill 仅在 SKILL 工作流或脚本自身变化时需要。
 - 已接入项目的升级：
   1. `python3 assets/trellium.py diff <target>`——只读报告：会动什么、绝不动什么、待执行迁移手册。

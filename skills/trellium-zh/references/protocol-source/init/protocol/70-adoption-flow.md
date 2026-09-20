@@ -15,7 +15,7 @@
 ## 适用场景
 
 - 已有项目希望引入 `vault/` 项目记忆系统。
-- 已有项目希望引入 `AGENTS.md`、`CLAUDE.md` 等 Agent 入口规则。
+- 已有项目希望引入由 Claude Code 等兼容工具共享的 `AGENTS.md` 入口规则。
 - 已有项目希望引入任务契约、授权等级、验收门和 handoff 机制。
 - 已有项目希望规范多 Agent 接力，但不调整代码结构。
 
@@ -24,7 +24,7 @@
 默认只允许创建或更新 Agent 协作层文件：
 
 - `AGENTS.md`
-- `CLAUDE.md`、`CODEX.md`、`GEMINI.md` 等工具入口文件，按项目需要创建
+- `CODEX.md`、`GEMINI.md` 等仍有明确需要的工具兼容入口，按项目需要创建；Claude Code 直接使用 `AGENTS.md`
 - `vault/`
 - `vault/index.md`
 - `vault/project.md`
@@ -37,7 +37,8 @@
 - `vault/details/*`，仅在已有项目确实需要时创建
 - `skills/`
 - `skills/agent-task/SKILL.md`
-- `docs/engineering/code-comments.md`，仅在 owner 显式选择语言 profile 时生成；它是项目工程文档，不是 Vault 数据
+- `docs/engineering/profiles/<profile>.md`，仅在 owner 显式选择语言 profile 时生成；每个已选 profile 一份完整工程规范
+- `docs/engineering/code-comments.md`，作为 2026.09.7 注释/API 规则的兼容载体保留；它与完整 profile 都是项目工程文档，不是 Vault 数据
 
 可选修改：
 
@@ -63,7 +64,7 @@
 Agent 执行接入前，应只做只读扫描：
 
 1. 查看根目录文件。
-2. 查找既有 Agent 入口文件：`AGENTS.md`、`CLAUDE.md`、`CODEX.md`、`GEMINI.md`、`.cursor/rules`。
+2. 查找既有 Agent 入口文件：`AGENTS.md`、`CODEX.md`、`GEMINI.md`、`.cursor/rules`。
 3. 查找既有项目文档：`README.md`、`docs/`、`CONTRIBUTING.md`。
 4. 查找既有记忆或任务目录：`vault/`、`memory/`、`docs/adr/`、`decisions/`。
 5. 识别项目类型和技术栈，但不改依赖或代码。
@@ -85,7 +86,7 @@ Agent 执行接入前，应只做只读扫描：
 3. 在不削弱原规则的前提下，加入 vault 和 governance 读取规则。
 4. 如规则冲突，先指出冲突并请求确认。
 
-### 已存在 CLAUDE.md / CODEX.md / GEMINI.md
+### 已存在 CODEX.md / GEMINI.md 等工具兼容入口
 
 保持与 `AGENTS.md` 语义一致。
 
@@ -166,7 +167,7 @@ python3 trellium.py adopt <target> \
   --profile python-backend=services/model
 ```
 
-工具只把公共核心和所选语言适配合并为一个 `docs/engineering/code-comments.md`，并让 `AGENTS.md` 一跳直达。选择及 root 记录在 `.agent-init.json`，便于确定性升级；人类可读规范仍以项目文档为准。已有规范（包括 `adopt --force`）不静默覆盖，后续上游与本地同时变化时走 proposal。改变既有 profile 集属于显式评审迁移，不由重复 adopt 偷偷改写。
+工具为每个已选 profile 生成完整的 `docs/engineering/profiles/<profile>.md`，把该 profile 的全部 roots 写入文件，并让 `AGENTS.md` 一跳按当前路径与实际语言读取；多语言不共享正文，也不加载未匹配 profile。`docs/engineering/code-comments.md` 继续作为兼容载体生成/保留，避免 2026.09.7 项目定制丢失；两者同时存在时，仅在注释/API 规则重叠处由兼容文档作为项目定制优先，完整 profile 继续约束其他工程事项。选择、roots、完整源 hash 和项目文件路径记录在 `.agent-init.json`，便于确定性升级；人类可读规范仍以项目文档为准。已有规范（包括 `adopt --force`）不静默覆盖，后续上游与本地同时变化时走 proposal。改变既有 profile 集属于显式评审迁移，不由重复 adopt 偷偷改写。
 
 ### 文件两分法
 
@@ -175,9 +176,11 @@ python3 trellium.py adopt <target> \
 | 类 | 文件 | 升级权限 |
 | --- | --- | --- |
 | 项目数据 | `runtime.md`、`handoff.md`、`decisions.md`、`decisions/`、`tasks/*`、`project.md`、`collaboration.md`、`details/*` | 只读。写入范围是硬编码白名单，数据文件不在其中，不依赖 Agent 自觉 |
-| 协议文件 | `governance.md`、`index.md`、`tasks/README.md`、`skills/agent-task/`、`AGENTS.md`、显式选择后生成的 `docs/engineering/code-comments.md` | 可写。本地未改的跟进上游；本地改过且上游也改过的出冲突提案 |
+| 协议文件 | `governance.md`、`index.md`、`tasks/README.md`、`skills/agent-task/`、`AGENTS.md`、显式选择后生成的 `docs/engineering/profiles/*.md` 与兼容 `code-comments.md` | 可写。本地未改的跟进上游；本地改过且上游也改过的出冲突提案 |
 
 `vault/.agent-init.json` 是升级器的版本戳：记录每个文件上次安装时的内容 hash，用于区分"项目自己改的"和"上游旧模板"。`AGENTS.md` 有两种形态：从模板整文件创建的按整文件对比；追加到用户已有文件的，只管理 marker 标记区域。
+
+stamp 不是文件权限来源：可读写或删除的路径必须属于当前协议的精确 managed-file 集合；profile 文件只包含当前项目显式选择的 profile，退役文件必须由发布侧逐项登记。合法目录前缀、stamp 自报 role 或存在于项目内都不能扩大权限；所有路径与文件类型校验在 dirfd 和 portable fallback 两条路径上都 fail closed。
 
 ### 铁律
 

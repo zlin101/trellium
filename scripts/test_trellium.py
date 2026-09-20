@@ -167,6 +167,23 @@ class AgentInitTest(TargetTestCase):
         self.assertIn("`go-backend`: `.`", policy)
         agents = (target / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("docs/engineering/code-comments.md", agents)
+        durable_path = target / "docs/engineering/profiles/go-backend.md"
+        self.assertTrue(durable_path.is_file())
+        durable = durable_path.read_text(encoding="utf-8")
+        for heading in (
+            "## 模块和依赖管理",
+            "## 推荐结构",
+            "## 分层和依赖方向",
+            "## 错误处理",
+            "## 资源生命周期",
+            "## Context 和并发",
+            "## HTTP 和服务生命周期",
+            "## 测试",
+            "## Go 风格",
+        ):
+            self.assertIn(heading, durable)
+        self.assertIn("- Roots: `.`", durable)
+        self.assertIn("docs/engineering/profiles/", agents)
 
         stamp = self.read_stamp(target)
         self.assertEqual(stamp["schema_version"], 2)
@@ -175,6 +192,7 @@ class AgentInitTest(TargetTestCase):
             [
                 {
                     "id": "go-backend",
+                    "project_profile": "docs/engineering/profiles/go-backend.md",
                     "project_rules": "docs/engineering/code-comments.md",
                     "roots": ["."],
                     "source_hash": stamp["profiles"][0]["source_hash"],
@@ -210,6 +228,22 @@ class AgentInitTest(TargetTestCase):
         self.assertEqual([item["id"] for item in stamp["profiles"]], ["go-backend", "python-backend"])
         self.assertEqual(stamp["profiles"][0]["roots"], ["cmd/operator", "services/api"])
         self.assertEqual(stamp["profiles"][1]["roots"], ["services/model"])
+        go_profile = (target / "docs/engineering/profiles/go-backend.md").read_text(encoding="utf-8")
+        python_profile = (target / "docs/engineering/profiles/python-backend.md").read_text(encoding="utf-8")
+        self.assertIn("`cmd/operator`, `services/api`", go_profile)
+        self.assertNotIn("services/model", go_profile)
+        self.assertIn("`services/model`", python_profile)
+        self.assertNotIn("cmd/operator", python_profile)
+
+    def test_adopt_without_profile_adds_no_engineering_profile_files(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+
+        code, _, err = self.adopt(target)
+
+        self.assertEqual(code, 0, err)
+        self.assertFalse((target / "docs/engineering").exists())
+        self.assertEqual(self.read_stamp(target)["profiles"], [])
 
     def test_adopt_rejects_invalid_or_duplicate_profile_selection_before_writes(self) -> None:
         invalid = (
@@ -492,9 +526,15 @@ class AgentInitTest(TargetTestCase):
         target.mkdir(parents=True)
         redirected_target.mkdir(parents=True)
         original_validate = agent_init.validate_output_paths
+        redirected_once = False
 
         def validate_then_redirect(*args: object, **kwargs: object) -> None:
+            nonlocal redirected_once
             original_validate(*args, **kwargs)
+            destinations = args[1]
+            if redirected_once or target / "AGENTS.md" not in destinations:
+                return
+            redirected_once = True
             container.rename(moved_container)
             container.symlink_to(redirected, target_is_directory=True)
 
@@ -624,6 +664,41 @@ class UpgradeMechanismTest(TargetTestCase):
         self.assertEqual(code, 1)
         self.assertIn("profiles must be a list", err)
 
+    def test_diff_rejects_malformed_profile_paths_and_file_roles(self) -> None:
+        cases = (
+            ("project_rules", "/outside.md", "invalid project_rules path"),
+            ("project_profile", "../outside.md", "invalid managed path"),
+            ("project_profile", "docs/engineering/profiles/python-backend.md", "invalid project_profile path"),
+        )
+        for index, (field, value, expected) in enumerate(cases):
+            with self.subTest(field=field, value=value):
+                target = self.root / f"profile-path-{index}"
+                target.mkdir()
+                code, _, err = self.adopt(target, "--profile", "go-backend=.")
+                self.assertEqual(code, 0, err)
+                stamp = self.read_stamp(target)
+                stamp["profiles"][0][field] = value
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp), encoding="utf-8"
+                )
+
+                code, _, err = self.run_agent_init("diff", str(target))
+
+                self.assertEqual(code, 1)
+                self.assertIn(expected, err)
+
+        target = self.make_adopted_target()
+        stamp = self.read_stamp(target)
+        stamp["files"]["vault/index.md"]["role"] = "marker"
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp), encoding="utf-8"
+        )
+
+        code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 1)
+        self.assertIn("invalid role", err)
+
     def test_upgrade_preserves_local_edits_and_data_files(self) -> None:
         target = self.make_adopted_target()
         (target / "vault/runtime.md").write_text("# Evolved runtime\n", encoding="utf-8")
@@ -652,6 +727,9 @@ class UpgradeMechanismTest(TargetTestCase):
         proposal_text = proposals[0].read_text(encoding="utf-8")
         self.assertIn("new governance template", proposal_text)
         self.assertIn("Keep this local rule.", proposal_text)
+        backup = target / agent_init.BACKUP_DIRECTORY / version / "vault/index.md"
+        self.assertTrue(backup.is_file())
+        self.assertNotEqual(backup.read_text(encoding="utf-8"), "new index template\n")
 
         stamp = self.read_stamp(target)
         self.assertEqual(
@@ -722,6 +800,170 @@ class UpgradeMechanismTest(TargetTestCase):
         text = proposal.read_text(encoding="utf-8")
         self.assertIn("上游新增规则。", text)
         self.assertIn("Keep this.", text)
+
+    def test_upgrade_refreshes_pristine_complete_profile(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=services/api")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+        profile_path = target / relative
+        before = profile_path.read_text(encoding="utf-8")
+
+        with self.patched_templates() as templates:
+            source = templates / agent_init.PROFILE_DOCUMENT_TEMPLATE_DIRECTORY / "go-backend.md"
+            source.write_text(source.read_text(encoding="utf-8") + "\nUpstream lifecycle rule.\n", encoding="utf-8")
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertNotEqual(profile_path.read_text(encoding="utf-8"), before)
+        self.assertIn("Upstream lifecycle rule.", profile_path.read_text(encoding="utf-8"))
+
+    def test_upgrade_proposes_complete_profile_without_overwriting_customization(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+        profile_path = target / relative
+        profile_path.write_text(profile_path.read_text(encoding="utf-8") + "\nProject-owned rule.\n", encoding="utf-8")
+
+        with self.patched_templates() as templates:
+            source = templates / agent_init.PROFILE_DOCUMENT_TEMPLATE_DIRECTORY / "go-backend.md"
+            source.write_text(source.read_text(encoding="utf-8") + "\nUpstream rule.\n", encoding="utf-8")
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertIn("Project-owned rule.", profile_path.read_text(encoding="utf-8"))
+        proposal = target / agent_init.PROPOSAL_DIRECTORY / agent_init.read_protocol_version() / "docs__engineering__profiles__go-backend.md.proposal.md"
+        self.assertTrue(proposal.is_file())
+        proposal_text = proposal.read_text(encoding="utf-8")
+        self.assertIn("Upstream rule.", proposal_text)
+        self.assertIn("Project-owned rule.", proposal_text)
+
+    def test_legacy_v2_profile_stamp_adds_complete_profile_on_upgrade(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+        (target / relative).unlink()
+        stamp = self.read_stamp(target)
+        stamp["files"].pop(relative)
+        for item in stamp["profiles"]:
+            item.pop("project_profile", None)
+        (target / agent_init.STAMP_RELATIVE).write_text(json.dumps(stamp), encoding="utf-8")
+
+        code, out, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"create {relative}", out)
+        self.assertTrue((target / relative).is_file())
+        self.assertEqual(self.read_stamp(target)["profiles"][0]["project_profile"], relative)
+
+    def test_legacy_v2_preexisting_custom_profile_requires_proposal_then_is_tracked(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+        profile_path = target / relative
+        custom = "# Project-owned Go profile\n\nKeep this local rule.\n"
+        profile_path.write_text(custom, encoding="utf-8")
+        stamp = self.read_stamp(target)
+        stamp["files"].pop(relative)
+        for item in stamp["profiles"]:
+            item.pop("project_profile", None)
+        (target / agent_init.STAMP_RELATIVE).write_text(json.dumps(stamp), encoding="utf-8")
+
+        code, out, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, agent_init.EXIT_CONFLICT, err)
+        self.assertIn(f"proposal {agent_init.proposal_relative(agent_init.read_protocol_version(), relative)}", out)
+        self.assertEqual(profile_path.read_text(encoding="utf-8"), custom)
+        pending_stamp = self.read_stamp(target)
+        self.assertTrue(pending_stamp["files"][relative]["pending"])
+        proposal = target / agent_init.proposal_relative(agent_init.read_protocol_version(), relative)
+        self.assertIn("Keep this local rule.", proposal.read_text(encoding="utf-8"))
+
+        code, _, err = self.run_agent_init("upgrade", str(target), "--complete")
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(profile_path.read_text(encoding="utf-8"), custom)
+        completed_stamp = self.read_stamp(target)
+        self.assertEqual(completed_stamp["profiles"][0]["project_profile"], relative)
+        self.assertFalse(completed_stamp["files"][relative]["pending"])
+        self.assertTrue(completed_stamp["files"][relative]["observed"])
+        core_paths, core_error = agent_init.stamp_core_paths(completed_stamp)
+        self.assertIsNone(core_error)
+        self.assertIn(relative, core_paths)
+
+    def test_legacy_v2_preexisting_profile_symlink_is_rejected_without_leaking(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+        profile_path = target / relative
+        profile_path.unlink()
+        secret = self.root / "secret.txt"
+        secret.write_text("outside-secret-must-not-leak\n", encoding="utf-8")
+        profile_path.symlink_to(secret)
+        stamp = self.read_stamp(target)
+        stamp["files"].pop(relative)
+        for item in stamp["profiles"]:
+            item.pop("project_profile", None)
+        (target / agent_init.STAMP_RELATIVE).write_text(json.dumps(stamp), encoding="utf-8")
+
+        code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 1)
+        self.assertIn("symbolic link", err)
+        proposal_root = target / agent_init.PROPOSAL_DIRECTORY
+        proposal_text = "".join(
+            path.read_text(encoding="utf-8")
+            for path in proposal_root.rglob("*")
+            if path.is_file()
+        ) if proposal_root.exists() else ""
+        self.assertNotIn("outside-secret-must-not-leak", proposal_text)
+
+    def test_legacy_v2_preexisting_profile_rejects_special_and_hardlinked_files(self) -> None:
+        for kind in ("hardlink", "fifo"):
+            with self.subTest(kind=kind):
+                target = self.root / f"project-{kind}"
+                target.mkdir()
+                code, _, err = self.adopt(target, "--profile", "go-backend=.")
+                self.assertEqual(code, 0, err)
+                relative = agent_init.profile_document_relative("go-backend")
+                profile_path = target / relative
+                profile_path.unlink()
+                secret = self.root / f"secret-{kind}.txt"
+                secret.write_text(f"outside-{kind}-secret-must-not-leak\n", encoding="utf-8")
+                if kind == "hardlink":
+                    os.link(secret, profile_path)
+                    expected_error = "multiple hard links"
+                else:
+                    os.mkfifo(profile_path)
+                    expected_error = "not a regular file"
+                stamp = self.read_stamp(target)
+                stamp["files"].pop(relative)
+                for item in stamp["profiles"]:
+                    item.pop("project_profile", None)
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp), encoding="utf-8"
+                )
+
+                code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+                self.assertEqual(code, 1)
+                self.assertIn(expected_error, err)
+                proposal_root = target / agent_init.PROPOSAL_DIRECTORY
+                proposal_text = "".join(
+                    path.read_text(encoding="utf-8")
+                    for path in proposal_root.rglob("*")
+                    if path.is_file()
+                ) if proposal_root.exists() else ""
+                self.assertNotIn(f"outside-{kind}-secret-must-not-leak", proposal_text)
 
     def test_upgrade_complete_marks_merged_files_observed(self) -> None:
         target = self.make_adopted_target()
@@ -875,6 +1117,11 @@ class UpgradeMechanismTest(TargetTestCase):
             "vault/tasks/TASK-0001.md",
             "vault/decisions/D-0001-x.md",
             "src/app.py",
+            "docs/engineering/profiles/ruby-backend.md",
+            "docs/engineering/profiles/../outside.md",
+            agent_init.STAMP_RELATIVE,
+            "vault/.upgrade/2026.08.0/vault__index.md.proposal.md",
+            ".agent-init-backup/2026.08.0/vault/index.md",
         ):
             with self.assertRaises(agent_init.AdoptionError):
                 agent_init.assert_upgrade_writable(target, relative)
@@ -892,9 +1139,176 @@ class UpgradeMechanismTest(TargetTestCase):
         with patch.dict(agent_init.FILE_ROLES, {"vault/parked.md": "data"}):
             agent_init.assert_upgrade_writable(target, "vault/parked.md")
 
-        agent_init.assert_upgrade_writable(target, agent_init.STAMP_RELATIVE)
-        agent_init.assert_upgrade_writable(target, "vault/.upgrade/2026.08.0/vault__index.md.proposal.md")
-        agent_init.assert_upgrade_writable(target, ".agent-init-backup/2026.08.0/vault/index.md")
+    def test_upgrade_rejects_unselected_supported_profile_before_removal(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target, "--profile", "go-backend=.")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("python-backend")
+        path = target / relative
+        content = "project-owned Python profile\n"
+        path.write_text(content, encoding="utf-8")
+        stamp = self.read_stamp(target)
+        stamp["files"][relative] = {
+            "role": "merge",
+            "baseline": agent_init.sha256_hex(content.encode("utf-8")),
+        }
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp), encoding="utf-8"
+        )
+
+        with patch.object(agent_init, "ANCHORED_WRITES_SUPPORTED", False):
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 1)
+        self.assertIn("outside the explicit managed-file set", err)
+        self.assertEqual(path.read_text(encoding="utf-8"), content)
+
+    def test_fallback_stamp_write_rejects_symlinked_parent_and_hardlink(self) -> None:
+        stamp = {"schema_version": 2, "files": {}}
+
+        symlink_target = self.root / "symlink-project"
+        symlink_target.mkdir()
+        external_vault = self.root / "external-vault"
+        external_vault.mkdir()
+        (symlink_target / "vault").symlink_to(external_vault, target_is_directory=True)
+        with self.assertRaises(agent_init.AdoptionError):
+            agent_init.write_stamp_file(symlink_target, stamp, None)
+        self.assertFalse((external_vault / ".agent-init.json").exists())
+
+        hardlink_target = self.root / "hardlink-project"
+        (hardlink_target / "vault").mkdir(parents=True)
+        external_stamp = self.root / "external-stamp.json"
+        external_stamp.write_text("keep\n", encoding="utf-8")
+        os.link(external_stamp, hardlink_target / agent_init.STAMP_RELATIVE)
+        with self.assertRaises(agent_init.AdoptionError):
+            agent_init.write_stamp_file(hardlink_target, stamp, None)
+        self.assertEqual(external_stamp.read_text(encoding="utf-8"), "keep\n")
+
+    def test_upgrade_rejects_unmanaged_profile_paths_without_anchored_writes(self) -> None:
+        for index, relative in enumerate(
+            (
+                "docs/engineering/profiles/ruby-backend.md",
+                "docs/engineering/profiles/../outside.md",
+            )
+        ):
+            with self.subTest(relative=relative):
+                target = self.root / f"project-{index}"
+                target.mkdir()
+                code, _, err = self.adopt(target)
+                self.assertEqual(code, 0, err)
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                content = f"project-owned {index}\n"
+                path.write_text(content, encoding="utf-8")
+                stamp = self.read_stamp(target)
+                stamp["files"][relative] = {
+                    "role": "merge",
+                    "baseline": agent_init.sha256_hex(content.encode("utf-8")),
+                }
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp), encoding="utf-8"
+                )
+
+                with patch.object(agent_init, "ANCHORED_WRITES_SUPPORTED", False):
+                    code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+                self.assertEqual(code, 1)
+                expected_error = (
+                    "invalid managed path"
+                    if ".." in relative
+                    else "outside the explicit managed-file set"
+                )
+                self.assertIn(expected_error, err)
+                self.assertEqual(path.read_text(encoding="utf-8"), content)
+
+    def test_upgrade_rejects_traversal_stamp_key_before_fallback_removal(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        victim = self.root / "victim.txt"
+        content = "must survive\n"
+        victim.write_text(content, encoding="utf-8")
+        stamp = self.read_stamp(target)
+        stamp["files"][".agent-init-backup/../../victim.txt"] = {
+            "role": "merge",
+            "baseline": agent_init.sha256_hex(content.encode("utf-8")),
+        }
+        (target / agent_init.STAMP_RELATIVE).write_text(json.dumps(stamp), encoding="utf-8")
+
+        with patch.object(agent_init, "ANCHORED_WRITES_SUPPORTED", False):
+            code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 1)
+        self.assertIn("invalid managed path", err)
+        self.assertEqual(victim.read_text(encoding="utf-8"), content)
+
+    def test_upgrade_rejects_internal_namespace_entries_before_fallback_removal(self) -> None:
+        for index, relative in enumerate(
+            (
+                ".agent-init-backup/important.txt",
+                "vault/.upgrade/manual.md",
+            )
+        ):
+            with self.subTest(relative=relative):
+                target = self.root / f"internal-namespace-{index}"
+                target.mkdir()
+                code, _, err = self.adopt(target)
+                self.assertEqual(code, 0, err)
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                content = f"project-owned {index}\n"
+                path.write_text(content, encoding="utf-8")
+                stamp = self.read_stamp(target)
+                stamp["files"][relative] = {
+                    "role": "merge",
+                    "baseline": agent_init.sha256_hex(content.encode("utf-8")),
+                }
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp), encoding="utf-8"
+                )
+
+                with patch.object(agent_init, "ANCHORED_WRITES_SUPPORTED", False):
+                    code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+                self.assertEqual(code, 1)
+                self.assertIn("reserved internal namespace", err)
+                self.assertEqual(path.read_text(encoding="utf-8"), content)
+
+    def test_upgrade_rejects_stamp_symlink_before_planning(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        stamp_path = target / agent_init.STAMP_RELATIVE
+        external_stamp = self.root / "external-stamp.json"
+        stamp_path.replace(external_stamp)
+        stamp_path.symlink_to(external_stamp)
+
+        code, _, err = self.run_agent_init("upgrade", str(target), "--apply")
+
+        self.assertEqual(code, 1)
+        self.assertIn("symbolic link", err)
+        self.assertTrue(external_stamp.is_file())
+
+    def test_repeated_adopt_and_baseline_reject_symlinked_stamp(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        stamp_path = target / agent_init.STAMP_RELATIVE
+        external_stamp = self.root / "external-stamp.json"
+        stamp_path.replace(external_stamp)
+        stamp_path.symlink_to(external_stamp)
+
+        for command in (("adopt", str(target)), ("baseline", str(target))):
+            with self.subTest(command=command[0]):
+                code, _, err = self.run_agent_init(*command)
+                self.assertEqual(code, 1)
+                self.assertIn("symbolic link", err)
+                self.assertTrue(stamp_path.is_symlink())
+                self.assertTrue(external_stamp.is_file())
 
     def test_upgrade_skip_leaves_file_untouched(self) -> None:
         target = self.make_adopted_target()
@@ -985,7 +1399,10 @@ class EmbeddedSkillLayoutTest(TargetTestCase):
     def test_embedded_packages_install_their_own_locale(self) -> None:
         repo_zh_package = agent_init.TEMPLATES_ROOT.parents[1]
         repo_en_package = repo_zh_package.parent / "trellium"
-        for package, locale_marker in ((repo_zh_package, "替换为"), (repo_en_package, "replace with")):
+        for package, locale_marker, profile_marker, excluded_marker in (
+            (repo_zh_package, "替换为", "## 模块和依赖管理", "## Modules, workspaces, and dependencies"),
+            (repo_en_package, "replace with", "## Modules, workspaces, and dependencies", "## 模块和依赖管理"),
+        ):
             with self.subTest(package=package.name):
                 copied = self.root / package.name
                 shutil.copytree(package, copied)
@@ -998,18 +1415,49 @@ class EmbeddedSkillLayoutTest(TargetTestCase):
 
                 target = self.root / f"target-{package.name}"
                 target.mkdir()
-                code, _, err = self.run_agent_init_module(embedded, "adopt", str(target))
+                code, _, err = self.run_agent_init_module(
+                    embedded, "adopt", str(target), "--profile", "go-backend=services/api"
+                )
                 self.assertEqual(code, 0, err)
                 handoff = (target / "vault/handoff.md").read_text(encoding="utf-8")
                 self.assertIn(locale_marker, handoff)
                 runtime = (target / "vault/runtime.md").read_text(encoding="utf-8")
                 self.assertIn("## Active Tasks", runtime)
                 self.assertIn("Trellium adoption recorded", runtime)
+                profile = (target / "docs/engineering/profiles/go-backend.md").read_text(encoding="utf-8")
+                self.assertIn(profile_marker, profile)
+                self.assertNotIn(excluded_marker, profile)
+                self.assertIn("`services/api`", profile)
+                if package.name == "trellium":
+                    self.assertIn("## Project Scope", profile)
+                    self.assertIn("Only apply this profile", profile)
+                else:
+                    self.assertIn("## 项目适用范围", profile)
+                    self.assertIn("仅当当前文件位于上述任一 root 下时应用本 profile", profile)
 
                 stamp = json.loads(
                     (target / embedded.STAMP_RELATIVE).read_text(encoding="utf-8")
                 )
                 self.assertEqual(stamp["protocol_version"], embedded.read_protocol_version())
+
+    def test_durable_profile_locale_comes_from_package_metadata_not_body_headings(self) -> None:
+        with self.patched_templates() as templates:
+            locale_file = templates / "PROFILE_LOCALE"
+            source = templates / agent_init.PROFILE_DOCUMENT_TEMPLATE_DIRECTORY / "go-backend.md"
+            original = source.read_text(encoding="utf-8")
+            profile = {"id": "go-backend", "roots": ["services/api"]}
+
+            locale_file.write_text("zh\n", encoding="utf-8")
+            source.write_text(original.replace("## 定位", "## 角色"), encoding="utf-8")
+            rendered = agent_init.render_durable_profile(profile)
+            self.assertIn("## 项目适用范围", rendered)
+            self.assertIn("仅当当前文件位于上述任一 root 下时应用本 profile", rendered)
+
+            locale_file.write_text("en\n", encoding="utf-8")
+            source.write_text(original + "\n## 定位\n\nHeading text must not select locale.\n", encoding="utf-8")
+            rendered = agent_init.render_durable_profile(profile)
+            self.assertIn("## Project Scope", rendered)
+            self.assertIn("Only apply this profile", rendered)
 
     def test_embedded_check_passes_on_fresh_adoption(self) -> None:
         # The shipped templates must be check-clean: a fresh adoption in both
@@ -2637,6 +3085,46 @@ class TemplatePackagingTest(TargetTestCase):
                     1,
                 )
             self.assertIn(agent_init.PROFILE_RULES_RELATIVE, agents)
+            self.assertIn(agent_init.PROFILE_DOCUMENT_DIRECTORY, agents)
+            if package == "trellium":
+                self.assertIn("take precedence as project customization", agents)
+                self.assertIn("still governs all other engineering concerns", agents)
+            else:
+                self.assertIn("以该兼容文档为项目定制优先", agents)
+                self.assertIn("完整 profile 继续约束其余工程事项", agents)
+            for profile_id in agent_init.PROFILE_IDS:
+                durable = templates / agent_init.PROFILE_DOCUMENT_TEMPLATE_DIRECTORY / f"{profile_id}.md"
+                self.assertTrue(durable.is_file())
+                text = durable.read_text(encoding="utf-8")
+                if package == "trellium":
+                    self.assertNotIn("## 定位", text)
+                    self.assertIn("## Purpose", text)
+                    expected = {
+                        "go-backend": (
+                            "Modules, workspaces, and dependencies",
+                            "Packages and structure",
+                            "Errors",
+                            "Resource lifecycle",
+                            "Context and concurrency",
+                            "HTTP and service lifecycle",
+                            "Tests and verification",
+                            "API documentation",
+                        ),
+                        "python-backend": (
+                            "Packages and dependencies",
+                            "API and models",
+                            "Configuration and security",
+                            "Async and resource lifecycle",
+                            "Errors",
+                            "Quality and tests",
+                            "documentation",
+                        ),
+                    }[profile_id]
+                    for category in expected:
+                        self.assertIn(category, text)
+                else:
+                    canonical = repo / "init/protocol/profiles" / f"{profile_id}.md"
+                    self.assertEqual(durable.read_bytes(), canonical.read_bytes())
             self.assertNotIn("vault/index.md ->", agents)
 
 
@@ -2685,6 +3173,35 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
         reported = self.reported_paths(uncommitted)
         for core in ("AGENTS.md", "vault/index.md", agent_init.STAMP_RELATIVE, "skills/agent-task/SKILL.md"):
             self.assertIn(core, reported)
+
+    def test_profile_documents_are_core_and_survive_fresh_clone(self) -> None:
+        target = self.root / "profile-project"
+        target.mkdir()
+        (target / "README.md").write_text("# Demo\n", encoding="utf-8")
+        self.init_git_repo(target)
+        self.git(target, "add", "README.md")
+        self.git(target, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(target, "--profile", "go-backend=services/api")
+        self.assertEqual(code, 0, err)
+        relative = agent_init.profile_document_relative("go-backend")
+
+        check_code, payload = self.check_payload(target)
+        uncommitted = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        self.assertIn(relative, self.reported_paths(uncommitted))
+
+        self.git(target, "add", ".")
+        self.git(target, "commit", "-q", "-m", "adopt")
+        clone = self.root / "fresh-clone"
+        subprocess.run(
+            ["git", "clone", "-q", str(target), str(clone)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertTrue((clone / relative).is_file())
+        clone_code, clone_payload = self.check_payload(clone)
+        self.assertEqual(clone_code, 0, clone_payload["findings"])
 
     def test_staged_only_core_is_still_uncommitted(self) -> None:
         target = self.adopted_repo()
@@ -2748,6 +3265,35 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
                 invalid = self.findings_with(payload, "CORE_STORAGE_INVALID")
                 self.assertEqual(len(invalid), 1, payload["findings"])
                 self.assertIn("schema_version", invalid[0]["message"])
+
+    def test_stamp_file_keys_reject_absolute_empty_and_noncanonical_paths(self) -> None:
+        invalid_paths = (
+            "/absolute.md",
+            "",
+            ".",
+            "../outside.md",
+            "vault/../outside.md",
+            "./vault/index.md",
+            "vault/./index.md",
+            "vault//index.md",
+            "vault/index.md/",
+        )
+        for index, relative in enumerate(invalid_paths):
+            with self.subTest(relative=relative):
+                target = self.adopted_repo(name=f"invalid-managed-path-{index}")
+                stamp = self.read_stamp(target)
+                stamp["files"][relative] = {"role": "merge", "baseline": "0" * 64}
+                (target / agent_init.STAMP_RELATIVE).write_text(
+                    json.dumps(stamp, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+
+                check_code, payload = self.check_payload(target)
+
+                self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+                invalid = self.findings_with(payload, "CORE_STORAGE_INVALID")
+                self.assertEqual(len(invalid), 1, payload["findings"])
+                self.assertIn("invalid managed path", invalid[0]["message"])
 
     def test_legacy_v1_stamp_schema_remains_supported(self) -> None:
         target = self.adopted_repo()
@@ -2844,6 +3390,71 @@ class AdoptionDurabilityTest(VaultCheckMixin, TargetTestCase):
         self.assertEqual(check_code, 0, payload["findings"])
         self.assertEqual(self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED"), [])
         self.assertEqual(self.findings_with(payload, "CORE_STORAGE_IGNORED"), [])
+
+    def test_head_marker_removal_is_reported_even_when_worktree_matches_head(self) -> None:
+        target = self.root / "project"
+        target.mkdir()
+        (target / "AGENTS.md").write_text("# Existing project rules\n", encoding="utf-8")
+        self.init_git_repo(target)
+        self.git(target, "add", "AGENTS.md")
+        self.git(target, "commit", "-q", "-m", "init")
+        code, _, err = self.adopt(target)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.read_stamp(target)["files"]["AGENTS.md"]["role"], "marker")
+        self.git(target, "add", "-A")
+        self.git(target, "commit", "-q", "-m", "adopt trellium")
+        agents = target / "AGENTS.md"
+        agents.write_text("# Existing project rules\n", encoding="utf-8")
+        self.git(target, "add", "AGENTS.md")
+        self.git(target, "commit", "-q", "-m", "remove managed marker")
+        # Marker requirements come from the committed stamp, not mutable
+        # worktree metadata that can be changed to suppress the HEAD check.
+        stamp = self.read_stamp(target)
+        stamp["files"]["AGENTS.md"]["role"] = "merge"
+        (target / agent_init.STAMP_RELATIVE).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        check_code, payload = self.check_payload(target)
+
+        self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+        findings = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+        self.assertIn("AGENTS.md", self.reported_paths(findings))
+
+    def test_head_marker_must_be_unique_and_well_formed(self) -> None:
+        malformed_regions = (
+            f"{agent_init.AGENTS_MARKER_START}\nmissing end\n",
+            (
+                f"{agent_init.AGENTS_MARKER_START}\none\n{agent_init.AGENTS_MARKER_END}\n"
+                f"{agent_init.AGENTS_MARKER_START}\ntwo\n{agent_init.AGENTS_MARKER_END}\n"
+            ),
+            f"{agent_init.AGENTS_MARKER_END}\n{agent_init.AGENTS_MARKER_START}\n",
+        )
+        for index, malformed in enumerate(malformed_regions):
+            with self.subTest(index=index):
+                target = self.root / f"malformed-marker-{index}"
+                target.mkdir()
+                (target / "AGENTS.md").write_text("# Existing project rules\n", encoding="utf-8")
+                self.init_git_repo(target)
+                self.git(target, "add", "AGENTS.md")
+                self.git(target, "commit", "-q", "-m", "init")
+                code, _, err = self.adopt(target)
+                self.assertEqual(code, 0, err)
+                self.git(target, "add", "-A")
+                self.git(target, "commit", "-q", "-m", "adopt trellium")
+                (target / "AGENTS.md").write_text(
+                    "# Existing project rules\n\n" + malformed,
+                    encoding="utf-8",
+                )
+                self.git(target, "add", "AGENTS.md")
+                self.git(target, "commit", "-q", "-m", "malform managed marker")
+
+                check_code, payload = self.check_payload(target)
+
+                self.assertEqual(check_code, agent_init.CHECK_ERROR_EXIT)
+                findings = self.findings_with(payload, "CORE_STORAGE_UNCOMMITTED")
+                self.assertIn("AGENTS.md", self.reported_paths(findings))
 
     def make_local_project(self, gitignore: str | None) -> Path:
         files = {} if gitignore is None else {".gitignore": gitignore}

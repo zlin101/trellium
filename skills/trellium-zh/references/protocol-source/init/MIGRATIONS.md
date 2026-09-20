@@ -9,6 +9,10 @@
 
 ## 2026.09.8 — 接入持久性 Gate 与 local Git 边界
 
+- Changed（TASK-0015）: Claude Code 项目入口统一为 `AGENTS.md`，协议不再生成、同步或要求独立 `CLAUDE.md`；其他工具专属兼容入口仍只在目标工具明确需要时保留。Claude Code 的用户级 Skill 安装支持不变。
+- Added（TASK-0014）: 每个显式选择的语言 profile 现在生成完整、项目内持久化的 `docs/engineering/profiles/<profile>.md`，文档内记录该 profile 的全部 roots；`AGENTS.md` 一跳按当前路径和实际语言读取，不依赖后续会话再次发现控制 Skill。stamp 的每项 profile 元数据新增 `project_profile`，`source_hash` 改为完整本地化 profile 源 hash；生成文件进入 Git core 与 upgrade/diff 管理。
+- Auto（TASK-0014）: legacy schema v1 继续按无 profile 读取；2026.09.7 schema v2 profile stamp 在 `upgrade --apply` 时新增缺失的完整 profile 文件。pristine 文件自动刷新，本地定制与上游同时变化只生成 proposal。既有 `docs/engineering/code-comments.md` 继续保留和升级，绝不因迁移删除或覆盖项目定制。
+- Security: stamp 只可列出当前安装明确纳管的文件（含当前已选 profile）或发布侧显式登记的 retired 文件；仅处于合法目录前缀下不构成授权。stamp/profile 路径、role、symlink、hardlink、特殊文件与非 canonical 路径均 fail closed，dirfd 与 portable fallback 的读取、哈希、写入和删除使用同一边界。
 - Added: `check` 新增接入持久性 Gate：从安装版本戳 `vault/.agent-init.json` 的受管路径派生协作核心集合（含 stamp 自身），逐路径核对 Git `HEAD`——未提交报 `CORE_STORAGE_UNCOMMITTED` error（合并式 AGENTS.md 的 HEAD 副本还须含受管区块；HEAD stamp 的 `protocol_version` 与核心 files 集合须和当前安装状态相容），被 ignore 规则命中报 `CORE_STORAGE_IGNORED` error 并给出规则来源。已存在但不可读、JSON 非法或 schema 非法的当前 stamp 报 `CORE_STORAGE_INVALID` error；durability 检查兼容 legacy schema v1 与 current v2，拒绝非严格整数或其他版本。Git 验证命令失败报 `CORE_STORAGE_UNVERIFIED` error，非 Git 目标仍报同码 warning。检查只读：读取 HEAD 快照与 `check-ignore --no-index` 规则，不写文件、不改 index、不 commit、不运行 clone；monorepo 子目录按 Git root 相对路径判定。
 - Added: `task_storage=local` 项目的边界检查：用固定 sentinel 路径经 `git check-ignore --no-index` 无写入验证未来 TASK（`vault/tasks/TASK-*.md`）、review 台账、`vault/tasks/archive/` 会被忽略，未覆盖报 `LOCAL_BOUNDARY_UNCONFIGURED` warning；`vault/tasks/README.md`、`vault/decisions/`、`vault/details/` 等 durable namespace 被宽泛规则误伤时报 `LOCAL_BOUNDARY_OVERREACH` error（附命中规则与修复方向）。不自动修改任何 `.gitignore`。
 - Added: `adopt` 结束输出以场景无关措辞明确"generated ≠ durable"，给出"语义配置 → 用户提交 → 复跑 check → fresh clone 验收"次序，不虚构 dry-run、重复 adopt、非 Git 或部分变化现场的提交状态。TASK-0013 P0/P1 预注册消融正式裁决 Inconclusive（P1 H3=1，未满足冻结 Gate），因此双语 Skill 不加入候选接入完成契约；材料见 `docs/evals/adoption-durability-2026-09/`。

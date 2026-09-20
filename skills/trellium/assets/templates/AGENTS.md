@@ -25,7 +25,7 @@ When resuming interrupted work, also read:
 
 For tracked or governed tasks, read the active task file under `vault/tasks/`.
 
-When modifying, generating, or reviewing source code, public APIs, comments, or TODO/FIXME items, read `docs/engineering/code-comments.md` directly when it exists and apply only the language sections whose paths match the work.
+When modifying or reviewing source code, public APIs, dependencies, builds, concurrency, lifecycle, comments, or TODO/FIXME items, read the profile under `docs/engineering/profiles/` whose declared root matches the current path. Apply only the profile for the file's actual language; do not load unmatched languages. For compatibility, also read `docs/engineering/code-comments.md` for comment/API work when it exists. Its overlapping comment/API rules take precedence as project customization; the complete profile still governs all other engineering concerns.
 
 ## Working Principles
 

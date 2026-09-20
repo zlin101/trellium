@@ -15,7 +15,7 @@
 | A1（辅助） | runtime 投影值得保留 | 初版 K2（同名异义） | 降为辅助指标 A1；初版 K2 表继续记录，不冒充 canonical K2 |
 | A2（辅助） | 预算测量确有价值 | 初版 K4（同名异义） | 降为辅助指标 A2；初版 K4 表继续记录，不冒充 canonical K4 |
 
-覆盖计数核对（**derived snapshot，截至 2026-09-18（TASK-0013 active），审计基准（固定锚点）：TASK-0006 的 rfr 提交为 `bf3f84b`（2026-09-08）、TASK-0007 的 rfr 提交为 `430de35`（2026-09-09）、TASK-0011 的 rfr 提交为 `aa8038e`（2026-09-16）、TASK-0012 的实现提交为 `bbae794`（2026-09-16）；对账补记提交为 `703b140`。2026-09-16 owner review 对账：K1 表原 22 行漏计 TASK-0006/0007 两笔 active→ready_for_review 转换（已补记），此前快照的 22 系漏计后与行数的巧合一致**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 13 个（TASK-0001…0013；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0007/0008/0009/0011/0012/0013 为 owner 立项的真实任务；TASK-0013 初建 draft，2026-09-18 接手实施时 draft→active（真实转换，见事件行）；TASK-0010 由 owner 2026-09-13 指示另立，初建 draft；方案 B 完成、push 与远端 CI 全绿后 owner 排期生效，draft→active（第 20 次转换，已按事件行补记）。观测到 lifecycle 转换 29 次（含 TASK-0011 ready_for_review→accepted、TASK-0004 blocked→active 与 TASK-0013 draft→active；历史明细保留在下方 K1 append-only 事件行），blocked→active 2 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
+覆盖计数核对（**derived snapshot，截至 2026-09-20（TASK-0013/0014/0015 ready_for_review），审计基准（固定锚点）：TASK-0006 的 rfr 提交为 `bf3f84b`（2026-09-08）、TASK-0007 的 rfr 提交为 `430de35`（2026-09-09）、TASK-0011 的 rfr 提交为 `aa8038e`（2026-09-16）、TASK-0012 的实现提交为 `bbae794`（2026-09-16）、TASK-0013 的修复提交为 `bcbc480`（2026-09-18）；对账补记提交为 `703b140`。TASK-0014/0015 尚未提交，不虚构提交 hash**；事实源为本文件下方 append-only lifecycle 事件行与实际任务文件，本段仅为派生汇总，不得在他处复制维护——D-0005）：真实 TASK 共 15 个（TASK-0001…0015；review ledger 非 TASK 实体）。计数规则：有 owner 立项且非演示交付的 Level B/C 任务计入；纯演示、纯为实验构造的 TASK 与一切 synthetic 实验样本不计入；TASK-0014/0015 由 owner 直接创建为 active，没有发生创建转换；TASK-0013 初建 draft，2026-09-18 接手实施时 draft→active（见事件行）。观测到 lifecycle 转换 37 次（新增 TASK-0015 一笔 active→ready_for_review 事件；历史明细保留在下方 K1 append-only 事件行），blocked→active 2 次。handoff 现存条目数 ≠ 历史跨 Agent handoff 次数；**已完成的跨 Agent handoff 事件 2 次，均有交接前 check 留档**。TASK-0001 的 coverage gate（5 TASK / 6 转换 / 2 handoff / 1 blocked→active）已达到，但不替代 canonical K1-K4 的跨项目证据要求。
 
 ### Canonical K3 — 不解析任意 Markdown 也能产生高价值检查（2026-09-08 起）
 
@@ -83,6 +83,14 @@ Kill criterion：状态准确率已接近 100%，checker 零有效发现，但�
 | 2026-09-16 | ready_for_review → accepted（owner 确认已 push，并明确指示 Codex 自行验收） | TASK-0012 | 2（状态块 + runtime 行） | 0 | 本地提交后终验 136 tests、check 0/0、status 0 unresolved；远端实时查询因平台容量未返回，不伪造 CI 证据；tag/Release 另行决定 |
 | 2026-09-18 | blocked → active（owner 提供 Orion 作为第二真实 local 项目并批准恢复 M2） | TASK-0004 | 2（状态块 + runtime 行） | 0 | Orion 首条观测为 Partial：checker 有 1 个真实 finding，tracked durable boundary 尚待闭合 |
 | 2026-09-18 | draft → active（GLM/Claude 接手实施；M0 预注册与红测先于任何 scripts/init/skills 产品修改） | TASK-0013 | 2（状态块 + runtime 行） | 0 | 预注册冻结于 `docs/evals/adoption-durability-2026-09/`；红测 6 格先红（含非 Git `CORE_STORAGE_UNVERIFIED` warning 契约），唯一即时绿格为 committed+dirty 控制 |
+| 2026-09-19 | active → ready_for_review（owner findings 全部闭合，提交态快照 check 0/0，独立 review 无 open P0/P1/P2） | TASK-0013 | 2（状态块 + runtime 行） | 0 | 共享工作区 2 errors 属 owner 排除文件，不冒充产品回归；无 push/tag/release |
+| 2026-09-19 | ready_for_review → accepted（owner 指令“修复然后验收”） | TASK-0013 | 2（状态块 + runtime 行） | 0 | 版本与发布仍为独立动作 |
+| 2026-09-19 | active → ready_for_review（完整 profile 持久化实现与 Round 1 findings 闭合；164 tests） | TASK-0014 | 2（状态块 + runtime 行） | 0 | 预注册/实现同属未提交变更集，无 Git DAG 时序证明 |
+| 2026-09-19 | accepted → active（独立增量 review 复现 HEAD marker fail-open 与发布级 fallback 路径安全问题） | TASK-0013 | 2（状态块 + runtime 行） | 0 | 原 accepted 结论撤回，红测修复与复审前禁止发布 |
+| 2026-09-19 | ready_for_review → active（增量 review 复现 legacy profile symlink 外部读取，locale 启发式需移除） | TASK-0014 | 2（状态块 + runtime 行） | 0 | 原 APPROVE 结论撤回，待修复与独立复审 |
+| 2026-09-20 | active → ready_for_review（HEAD marker、精确 managed-file 集合与统一 fallback 安全边界终验通过；177 tests） | TASK-0013 | 2（状态块 + runtime 行） | 0 | 无 open P0/P1/P2；owner accepted 与发布动作仍独立 |
+| 2026-09-20 | active → ready_for_review（显式 locale、legacy link 拒绝与 selected-profile-only 授权终验通过；177 tests） | TASK-0014 | 2（状态块 + runtime 行） | 0 | tracked 任务尚未提交，accepted gate 保持打开 |
+| 2026-09-20 | active → ready_for_review（Claude Code 项目入口统一为 AGENTS.md；11 tests、snapshot/whitespace 通过） | TASK-0015 | 2（状态块 + runtime 行） | 0 | 仓库与 HEAD 原本无 CLAUDE.md 实体；仅移除现行协议约定，保留 Skill 安装支持 |
 
 成功标准：不再出现静默状态冲突；每个 TASK 人工修正不超过 1 次。
 
@@ -146,3 +154,4 @@ Trellium 本仓库 = tracked 样本；另一个真实私有项目 = local 样本
 | 2026-09-16 | TASK-0012 M5 终验（实现提交 `bbae794` 后、Vault 收尾前） | 0 | 0 / 0 | 136/136 tests、status 0 unresolved、双 snapshot in sync、`git diff --check` clean；structured review 初轮 2×P1 已 fail-closed 修复，复审无 open P0/P1/P2 |
 | 2026-09-16 | TASK-0012 accepted push / 2026.09.7 发布门禁 | 0 | 0 / 0 | develop `cf7e06a` 对应 GitHub Actions run 35076645891 success；tag 与 Release 已发布；Release 非 draft/非 prerelease、正文为空，latest 解析 2026.09.7 |
 | 2026-09-18 | TASK-0004 M2：Orion 首次真实 local 项目检查 | 2 | 1 / 0 | `TASK_RUNTIME_CLOSED_LOCAL`：accepted local TASK-0001 仍在 runtime 与 Focus；修复待在 Orion 仓库执行，完成后需复跑至 0/0 |
+| 2026-09-20 | TASK-0013/0014 第二轮安全终验（提交前） | 2 | 2 / 1 | 177/177、双语 snapshots 与 whitespace 通过；2 errors 仅为 owner 排除的 code-comments/stamp 现场，1 warning 为未提交 tracked TASK-0014；status 无 unresolved |

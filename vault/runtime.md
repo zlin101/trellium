@@ -27,7 +27,9 @@ table holds pointers only.
 | TASK-0010 | Fix the three reproduced `status` defects found by the TASK-0009 experiment (short-row unresolved gap, refused-vault unresolved:0, pipe-truncation projection). | accepted | Closed 2026-09-15: three status-layer fixes (check byte-identical), 3 red-first tests (121 total), independent review APPROVE, CI green (34927880245). MIGRATIONS Unreleased section post-09.5-tag. |
 | TASK-0011 | Test whether a thin project-scoped `trellium-work` adds value beyond `AGENTS.md + vault`; only an ablation Go authorizes replacing `agent-task` with a project-scoped skill. | accepted | Closed 2026-09-18: verdict No-Go (zero observable gain over AGENTS.md+vault; A1 costs more; Codex project-discovery unverified); leak fix landed; direction closed per owner acceptance. |
 | TASK-0012 | Preserve code-comment and API-documentation knowledge through a one-hop, profile-aware project rule without growing Vault. | accepted | Closed 2026-09-16; develop/tag pushed, CI run 35076645891 green, Release 2026.09.7 live with empty body, and releases/latest resolves to it. |
-| TASK-0013 | Close the adoption durability and local Git-boundary false-health gap. | active | Independent review passed after all owner findings were fixed; commit the two owner-owned core paths, rerun self-check 0/0, then move to ready_for_review. |
+| TASK-0013 | Close the adoption durability and local Git-boundary false-health gap. | ready_for_review | Technical review APPROVE at 177/177; owner decides accepted/commit separately, with no push/tag/release performed. |
+| TASK-0014 | Persist complete selected language profiles inside adopted projects with one-hop scoped routing. | ready_for_review | Technical review APPROVE at 177/177; commit the tracked task and implementation before any accepted transition. |
+| TASK-0015 | Unify Claude Code project instructions on AGENTS.md and retire the CLAUDE.md convention. | ready_for_review | Protocol and packages now use AGENTS.md; 11/11 focused tests pass, awaiting owner review/commit. |
 
 Status values: draft | active | blocked | ready_for_review | accepted |
 superseded. For a task with a task file, the status here is a projection of
@@ -37,7 +39,9 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Current Progress
 
-- TASK-0013: active — owner review fixes implemented and independently reviewed (2026-09-18): M1 formal verdict corrected to **Inconclusive** because P1 H3=1 violates frozen §7; bilingual candidate contract withdrawn while checker and scenario-neutral `generated ≠ durable` output remain. Stamp corruption/schema (strict v1/v2), HEAD protocol/core-set mismatch, and Git verification failure now fail closed with regressions; full suite 157 OK and snapshots clean. No open P0/P1/P2. Self-check truthfully reports 2 errors on owner-owned state (`docs/engineering/code-comments.md` absent from HEAD; current stamp core set differs from HEAD); commit those paths and rerun 0/0 before ready_for_review.
+- TASK-0015: ready_for_review 2026-09-20 — Claude Code project instructions now use AGENTS.md only; Skill installation support remains unchanged and focused checks pass.
+- TASK-0014: ready_for_review 2026-09-20 — explicit locale, external-link rejection, selected-profile-only managed set and fresh-clone coverage pass; no open P0/P1/P2.
+- TASK-0013: ready_for_review 2026-09-20 — HEAD marker, explicit managed-file authorization and unified dirfd/fallback fail-closed paths pass 177/177; no open P0/P1/P2.
 - TASK-0012: accepted and released 2026-09-16 — develop and lightweight tag `2026.09.7` are pushed at `cf7e06a`; CI run 35076645891 success. Release is non-draft/non-prerelease, titled `Trellium 2026.09.7` with an empty body; `releases/latest` resolves to it.
 - TASK-0011: ready_for_review 2026-09-16 — M1 verdict **No-Go** (both arms zero key omissions/violations across three scenarios; A1 costs more; Codex project-discovery unverified). No-Go stop-condition leak fix landed (packages sanitized, adopt/upgrade unchanged); privacy history rewrite executed per owner authorization. Independent review APPROVE. Awaiting owner acceptance.
 - TASK-0009: accepted 2026-09-13 — preregistered R0/R1 ablation (19 sessions: 12 valid, 7 contamination-voided, 5 infra aborts archived). Formal verdict **Inconclusive** (plan §10.1 cap: double control_invalidated, both reproduced); decision record: S1 known-P0/P1 recall 25% (blocks any Go), wall-clock +24.4% median. Context-efficiency gains were real (visible bytes −57.6%, vault opens −46.2%). Independent review APPROVE ×4 rounds; owner accepted with conclusions locked (no No-Go/over-determined revival). D-0008.
@@ -59,6 +63,8 @@ the matching row. Demote paused-and-shelved tasks to `vault/parked.md`.
 
 ## Recent Changes
 
+- TASK-0015 ready_for_review (2026-09-20): retired the CLAUDE.md project-entry convention across canonical and distributed protocol docs; Claude Skill installation remains supported, 11/11 focused tests pass.
+- TASK-0013/0014 final technical review (2026-09-20): exact selected-profile managed set and unified fallback guards close the last release blocker; 177/177 tests, snapshots and whitespace pass; both tasks ready_for_review with owner excluded files untouched.
 - TASK-0013 owner review fixes implemented (2026-09-18): formal ablation verdict Inconclusive, unauthorized bilingual contract withdrawn, stamp/Git fail-open and adopt-output regressions closed; 157 tests and snapshots pass, self-check truthfully 2 errors on untouched owner state. Lifecycle remains active; no release actions authorized.
 - TASK-0013 draft → active (2026-09-18): M0 preregistration frozen at `docs/evals/adoption-durability-2026-09/` and the reproduction replayed as 6 expected-failure red tests plus a committed+dirty control; no `scripts/`, `init/`, or `skills/` product files touched yet.
 - Opened TASK-0013 draft (2026-09-18): fix the reproducible adoption false-health state with a preregistered prompt ablation plus deterministic HEAD/ignore-boundary checks; no automatic Git mutations and no Orion changes in scope.

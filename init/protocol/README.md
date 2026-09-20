@@ -32,7 +32,6 @@
 它们用于指导 Agent 生成或更新项目产物，包括：
 
 - `AGENTS.md`
-- `CLAUDE.md`
 - `README.md`
 - `vault/`
 - `skills/`

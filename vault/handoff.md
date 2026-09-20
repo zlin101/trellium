@@ -5,15 +5,15 @@
 
 分支、HEAD、脏文件在恢复时通过 Git 现场读取；不要把实时 Git 状态当权威记录。可选保留一条带观察时间、明确标注为历史观察的环境快照。累计计数（TASK/转换/handoff 等）不在 handoff 保存：条目中的数字仅为撰写时点快照，权威来源是 `vault/details/shadow-run-2026-09.md` 的 append-only 事件行与 dated 汇总（D-0005）。
 
-## TASK-0013 - 2026-09-18
+## TASK-0013 / TASK-0014 - 2026-09-19
 
-- Objective: 修复 `adopt` 后协作核心未进入 Git `HEAD`、checker 却报告 0/0 的假健康；同时收紧 local ignore 边界，并以冻结 Gate 决定提示词是否进入 Skill。
-- Completed: M0 预注册 + 红测已独立提交（c284557，早于全部产品修改）；M1 四格原始结果保留，owner review 按冻结 §7 正式改判 Inconclusive（P1 H3=1），双语候选契约已撤回；M2/M3 checker 主体、场景无关 `adopt` 提醒与 2026.09.8 文档保留。当前分支已有三笔 TASK-0013 本地提交（c284557、3eaa9d6、7b27cb6），均未 push/tag/release。
-- In progress: owner review 修复已实现并经 Codex 主 Agent 三轮独立复审通过（无 open P0/P1/P2）；任务仅因 owner 核心文件尚未进入 HEAD 而保持 active。
-- Failed attempts: checker 实现两次踩坑并由红测/自检暴露——`ls-tree` 需 `--full-name`（cwd 相对导致 monorepo 全漏报）；`check-ignore -v` 对取反模式也输出（本仓库白名单式 ignore 被整体误报 13 error，已按 `!` 前缀过滤并加回归测试）。
-- Blockers: 加固后的 self-check 当前 2 errors：owner 未提交 `docs/engineering/code-comments.md`，且 owner 工作区 stamp 的核心集合与 HEAD stamp 不同；两者均属禁止触碰的 owner 状态，不能据此勾选全量 self-check 通过。
-- Next best action: owner 决定并提交既有 `docs/engineering/code-comments.md` 与 `vault/.agent-init.json`，复跑 self-check 0/0 后转 ready_for_review；当前不 push/tag/release。TASK-0004 的 Orion 升级仍需后续 owner 授权。
-- Files to read first: `docs/evals/adoption-durability-2026-09/results.md`、`vault/tasks/TASK-0013-adoption-durability.md`、`scripts/trellium.py`（check_core_storage/check_local_boundary）、`scripts/test_trellium.py`（AdoptionDurabilityTest）。
+- Objective: 闭合 TASK-0013/0014 增量 review 中的 HEAD marker 漏报、fallback 路径穿越、profile symlink 外部读取与 locale 启发式四项 finding。
+- Completed: 四项原 finding 与二次复核发现的“未选 profile 仍可被删除”授权过宽均已闭合；精确 managed-file 集合、统一 dirfd/fallback 防护、显式 locale 与 HEAD marker 回归通过，177/177 全绿，两任务进入 ready_for_review。
+- In progress: 仅剩 owner 决定 accepted/commit；本轮未执行 commit/push/tag/release，TASK-0014 仍因 tracked 文件未提交产生预期 warning。
+- Failed attempts: 原验收仅覆盖正常 committed snapshot，没有覆盖 marker 被后续提交删除、恶意 stamp 和 symlink profile 边界。
+- Blockers: 技术层无 open P0/P1/P2；共享工作区 self-check 的 2 errors 仍只指向 owner 排除的 `vault/.agent-init.json` 与 `docs/engineering/code-comments.md`，不得由后续 Agent擅自修改或暂存。
+- Next best action: owner 审阅并决定是否 accepted/commit；如授权提交，保持 owner 排除文件边界，提交后复跑 check/status，再另行决定发布动作。
+- Files to read first: `vault/tasks/TASK-0013-adoption-durability.md`、`vault/tasks/TASK-0014-durable-language-profiles.md`、`scripts/trellium.py`、`scripts/test_trellium.py`。
 
 ## TASK-0004 - 2026-09-18
 

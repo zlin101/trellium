@@ -10,7 +10,7 @@ The core principle:
 
 ## Layers
 
-- Entry layer: `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, or similar project-level Agent instructions.
+- Entry layer: shared `AGENTS.md`, plus tool-specific compatibility files only when a target tool still requires one. Claude Code reads `AGENTS.md` directly.
 - Context layer: `vault/index.md`, `vault/project.md`, `vault/runtime.md`, and optional `vault/details/*`.
 - Governance layer: `vault/governance.md` and `vault/tasks/*`.
 - Decision layer: `vault/decisions.md`.
