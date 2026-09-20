@@ -6,7 +6,7 @@
   "task_id": "TASK-0013",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -213,7 +213,7 @@ Forbidden:
 - [x] check/status 既有行为、退出码契约与其他 finding 不回归。（HEAD marker 与 malformed stamp 回归已闭合；177 tests 全绿）
 - [x] 全量测试、self-check、snapshot、whitespace 通过。（suite 157 OK、snapshot/whitespace 通过；提交态 `bcbc480` 重建为独立 Git HEAD 后 self-check 0/0。当前共享工作区的 2 errors 来自 owner 明确排除于本任务提交之外的 `docs/engineering/code-comments.md` 与 stamp 现场，不作为产品回归或本任务发布阻断。）
 - [x] 独立 review 无 open P0/P1/P2。（2026-09-20 最终复审闭合 marker、精确 managed-file 集合与全部 fallback fail-closed 边界）
-- [ ] owner 重新决定 accepted；版本/tag/Release 仍为独立发布动作，本任务不代做。
+- [x] owner 重新决定 accepted（2026-09-20）；版本/tag/Release 仍为独立发布动作，本任务不代做。
 - [x] Orion 外部验证明确留给 TASK-0004，不在本任务伪造完成。（Orion 全程未触碰）
 
 ## Verification
@@ -404,3 +404,8 @@ Checks run:
 Review and reflection:
 
 - P0/P1/P2 全部闭合，技术结论 APPROVE；TASK-0013 进入 `ready_for_review`，但 owner accepted、commit/push/tag/release 均未代做。
+
+### 2026-09-20 - Agent: Codex — owner 验收收尾
+
+- Owner 明确确认验收无问题并授权 push；第二轮安全修复已随实现提交 `7582e7c` 进入 Git。
+- TASK-0013 从 `ready_for_review` 转为 `accepted`；tag 与 Release 仍未授权、未执行。

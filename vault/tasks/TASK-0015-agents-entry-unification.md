@@ -6,7 +6,7 @@
   "task_id": "TASK-0015",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -107,3 +107,8 @@ Review and reflection:
 - Round 1 coverage：新建、接入、入口协议、模块索引、双语分发参考全部改为 `AGENTS.md` 单入口。
 - Round 2 minimality：未删除 Claude Code Skill 安装能力，未改脚本行为、业务代码、历史证据或 owner 文件。
 - 无剩余阻断；任务进入 `ready_for_review`，未执行 commit/push/tag/release。
+
+### 2026-09-20 - Agent: Codex — owner 验收收尾
+
+- 变更已由提交 `7582e7c` 纳入 Git；Owner 确认验收无问题并授权 push。
+- TASK-0015 转为 `accepted`；未执行 tag 或 Release。

@@ -6,7 +6,7 @@
   "task_id": "TASK-0014",
   "level": "C",
   "authority_level": 3,
-  "lifecycle": "ready_for_review"
+  "lifecycle": "accepted"
 }
 -->
 
@@ -99,7 +99,7 @@ Kill criteria：候选遗漏任一关键类，或需要读取机器全局 Skill/
 - [x] 既有测试、checker/status 与 Skill snapshots 无回归。
 - [x] owner 文件未被覆盖、删除或暂存。
 - [x] 独立主 Agent review 无 open P0/P1/P2，技术验收 APPROVE。（2026-09-20 终验覆盖 symlink/hardlink、未选 profile、fallback 与显式 locale）
-- [ ] tracked 任务文件与实现提交后再进入 accepted；未授权 commit 前不得制造 `TASK_STORAGE_MISMATCH`。
+- [x] tracked 任务文件与实现已由提交 `7582e7c` 纳入 Git，随后按 owner 验收进入 accepted。
 
 ## Verification
 
@@ -219,3 +219,8 @@ Checks run:
 Review and reflection:
 
 - P0/P1/P2 全部闭合，技术结论 APPROVE；任务进入 `ready_for_review`。tracked task 与实现仍未提交，因此 accepted gate 保持打开，且未执行 commit/push/tag/release。
+
+### 2026-09-20 - Agent: Codex — owner 验收收尾
+
+- 实现与 tracked task 已先由提交 `7582e7c` 纳入 Git，满足 accepted 的存储前置门。
+- Owner 明确确认验收无问题并授权 push；TASK-0014 转为 `accepted`。tag 与 Release 未执行。
